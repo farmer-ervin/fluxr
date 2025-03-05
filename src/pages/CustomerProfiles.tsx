@@ -4,6 +4,7 @@ import { ArrowLeft, Briefcase, Target, XCircle, Star, Loader2, AlertTriangle, Ch
 import { Button } from '@/components/ui/button';
 import { generateMvpPrd, OpenAIError } from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
+import { trackStartCustomerProfileGeneration, trackSuccessfulCustomerProfileGeneration } from '@/lib/analytics';
 
 interface CustomerProfile {
   name: string;
@@ -217,6 +218,9 @@ export function CustomerProfiles() {
     setIsGenerating(true);
     setError(null);
     
+    // Track start of customer profile generation
+    trackStartCustomerProfileGeneration();
+    
     try {
       // First, get the product ID using the slug
       const { data: productData, error: productError } = await supabase
@@ -305,6 +309,9 @@ export function CustomerProfiles() {
         .eq('product_id', productData.id);
 
       if (prdError) throw prdError;
+      
+      // Track successful customer profile generation
+      trackSuccessfulCustomerProfileGeneration();
       
       // Navigate to the PRD editor with the MVP data
       navigate(`/product/${productSlug}/prd`, { state: { mvpData } });

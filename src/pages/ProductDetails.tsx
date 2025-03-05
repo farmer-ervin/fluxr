@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { PageTitle } from '@/components/PageTitle';
+import { trackNewProduct } from '@/lib/analytics';
 
 interface ProductForm {
   name: string;
@@ -59,6 +60,9 @@ export function ProductDetails() {
 
       if (error) throw error;
       if (!data) throw new Error('No data returned from the server');
+
+      // Track new product creation
+      trackNewProduct(formData.name);
 
       // Get the product's slug
       const { data: productData, error: productError } = await supabase

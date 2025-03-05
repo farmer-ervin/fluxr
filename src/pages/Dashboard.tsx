@@ -26,7 +26,7 @@ interface Product {
 export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { setCurrentProduct } = useProduct();
+  const { setCurrentProduct, deleteProduct } = useProduct();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,13 +66,7 @@ export function Dashboard() {
     if (!productToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productToDelete.id);
-
-      if (error) throw error;
-
+      await deleteProduct(productToDelete.id);
       setProducts(products.filter(p => p.id !== productToDelete.id));
       setProductToDelete(null);
     } catch (err) {

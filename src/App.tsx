@@ -25,6 +25,7 @@ import { AlertTriangle, Check } from 'lucide-react';
 import { clearSubscriptionCache } from '@/lib/subscription';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useNavigationTracking } from '@/hooks/useNavigationTracking';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -277,6 +278,7 @@ function AuthCallback() {
 
 function AppRoutes() {
   const { user, isWelcomePopupVisible, setWelcomePopupVisible } = useAuth();
+  useNavigationTracking();
 
   return (
     <Layout>

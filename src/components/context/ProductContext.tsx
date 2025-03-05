@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase, handleSupabaseError } from '@/lib/supabase';
+import { trackProductDeleted, trackProductUpdated, trackProductNameUpdated } from '@/lib/analytics';
 
 interface Product {
   id: string;
@@ -13,6 +14,8 @@ interface ProductContextType {
   currentProduct: Product | null;
   setCurrentProduct: (product: Product | null) => void;
   loadProductBySlug: (slug: string) => Promise<Product | null>;
+  updateProduct: (id: string, updates: Partial<Product>) => Promise<Product>;
+  deleteProduct: (id: string) => Promise<boolean>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -89,12 +92,59 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Function to update product
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Track product updates
+      if (updates.name) {
+        trackProductNameUpdated(updates.name);
+      }
+      trackProductUpdated();
+
+      return data;
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  };
+
+  // Function to delete product
+  const deleteProduct = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Track product deletion
+      trackProductDeleted();
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
+  };
+
   return (
     <ProductContext.Provider 
       value={{ 
         currentProduct, 
         setCurrentProduct: handleSetCurrentProduct,
-        loadProductBySlug
+        loadProductBySlug,
+        updateProduct,
+        deleteProduct
       }}
     >
       {children}

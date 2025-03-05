@@ -77,7 +77,7 @@ export function PrdEditor() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { setCurrentProduct } = useProduct();
+  const { setCurrentProduct, updateProduct } = useProduct();
   const { productSlug } = useParams();
   
   const [loading, setLoading] = useState(true);
@@ -97,14 +97,7 @@ export function PrdEditor() {
     debounce(async (id: string, updates: Partial<ProductDetails>) => {
       try {
         setSaveStatus('saving');
-        const { error } = await supabase
-          .from('products')
-          .update(updates)
-          .eq('id', id);
-
-        if (error) {
-          throw error;
-        }
+        await updateProduct(id, updates);
 
         if (updates.name) {
           const { data: updatedProduct } = await supabase
@@ -124,7 +117,7 @@ export function PrdEditor() {
         setSaveError('Failed to save product details');
       }
     }, 1000),
-    []
+    [updateProduct]
   );
 
   const debouncedPrdUpdate = useCallback(

@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
 import { supabase, handleSupabaseError } from '@/lib/supabase';
+import { identifyUser, updateUserProfile, resetUser } from '@/lib/mixpanel';
+import { trackSignUp, trackLogin, trackLogout, trackPasswordResetRequested, trackPasswordResetCompleted } from '@/lib/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -116,6 +118,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         setUser(session?.user ?? null);
+        
+        // Identify user in Mixpanel if session exists
+        if (session?.user) {
+          identifyUser(session.user.id);
+          updateUserProfile({
+            name: session.user.user_metadata.full_name || '',
+            email: session.user.email || '',
+            created_at: session.user.created_at
+          });
+        }
       } catch (err) {
         console.error('Auth initialization error:', err);
         handleAuthError(err);
@@ -136,6 +148,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_UP') {
         console.log('New user signed up, showing welcome popup');
         setWelcomePopupVisible(true);
+        
+        // Identify new user in Mixpanel
+        if (session?.user) {
+          identifyUser(session.user.id);
+          updateUserProfile({
+            name: session.user.user_metadata.full_name || '',
+            email: session.user.email || '',
+            created_at: session.user.created_at
+          });
+        }
       }
       
       // Set user state
@@ -146,6 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Clear local storage on signout to prevent stale data
         localStorage.removeItem('fluxr_current_product');
         localStorage.removeItem('sb-' + supabase.supabaseUrl + '-auth-token');
+        // Reset Mixpanel user
+        resetUser();
       }
       
       // Clear any auth errors when the state changes
@@ -163,7 +187,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       
-      // Check if offline
       if (isOffline) {
         throw new Error('You appear to be offline. Please check your internet connection and try again.');
       }
@@ -178,6 +201,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw handleSupabaseError(error);
       
+      // Identify user in Mixpanel after successful sign in
+      if (data.user) {
+        identifyUser(data.user.id);
+        updateUserProfile({
+          name: data.user.user_metadata.full_name || '',
+          email: data.user.email || '',
+          created_at: data.user.created_at
+        });
+        trackLogin('email');
+      }
+      
       return data;
     } catch (error) {
       handleAuthError(error);
@@ -190,7 +224,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       
-      // Check if offline
       if (isOffline) {
         throw new Error('You appear to be offline. Please check your internet connection and try again.');
       }
@@ -211,6 +244,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Show welcome popup immediately after successful sign up
       setWelcomePopupVisible(true);
       
+      // Identify new user in Mixpanel
+      if (data.user) {
+        identifyUser(data.user.id);
+        updateUserProfile({
+          name: fullName,
+          email: email,
+          created_at: data.user.created_at
+        });
+        trackSignUp('email');
+      }
+      
       return data;
     } catch (error) {
       handleAuthError(error);
@@ -227,6 +271,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       localStorage.removeItem('fluxr_current_product');
       localStorage.removeItem('sb-' + supabase.supabaseUrl + '-auth-token');
+      
+      // Reset Mixpanel user and track logout
+      resetUser();
+      trackLogout();
       
       // Then attempt to sign out from Supabase
       try {
@@ -262,6 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) throw handleSupabaseError(error);
+      trackPasswordResetRequested();
     } catch (error) {
       handleAuthError(error);
       const formattedError = error instanceof Error ? error : new Error('An unexpected error occurred');
