@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
-      input: path.resolve(__dirname, 'index.html'),
+      external: ['mixpanel-browser'],
       onwarn(warning, warn) {
         if (warning.code === 'THIS_IS_UNDEFINED') return;
         warn(warning);
@@ -26,6 +26,5 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  root: path.resolve(__dirname),
   root: path.resolve(__dirname),
 });
