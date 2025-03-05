@@ -1,0 +1,146 @@
+@import url('https://rsms.me/inter/inter.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter var', system-ui, sans-serif;
+  }
+
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-brand-purple hover:bg-brand-purple/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6;
+  }
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  @apply min-h-[200px] outline-none px-0 whitespace-pre-wrap;
+}
+
+.ProseMirror > * + * {
+  @apply mt-4;
+}
+
+.ProseMirror p {
+  @apply text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap;
+}
+
+.ProseMirror h1 {
+  @apply text-3xl font-bold mt-8 mb-4;
+}
+
+.ProseMirror h2 {
+  @apply text-2xl font-bold mt-6 mb-3;
+}
+
+.ProseMirror h3 {
+  @apply text-xl font-bold mt-5 mb-2;
+}
+
+.ProseMirror ul {
+  @apply list-disc pl-6 my-4;
+}
+
+.ProseMirror ol {
+  @apply list-decimal pl-6 my-4;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-700 my-6;
+}
+
+.ProseMirror pre {
+  @apply bg-gray-100 p-4 rounded-lg font-mono text-sm my-6;
+}
+
+.ProseMirror code {
+  @apply bg-gray-100 px-1.5 py-0.5 rounded font-mono text-sm;
+}
+
+.ProseMirror a {
+  @apply text-brand-purple hover:underline;
+}
+
+/* Preserve whitespace */
+.ProseMirror p,
+.ProseMirror li {
+  white-space: pre-wrap;
+}
+
+/* Ensure empty paragraphs are visible */
+.ProseMirror p:empty::before {
+  content: '\00a0';
+}
+
+/* Smooth section transitions */
+.section-transition {
+  @apply transition-opacity duration-300;
+}
+
+.section-transition-enter {
+  @apply opacity-0;
+}
+
+.section-transition-enter-active {
+  @apply opacity-100;
+}
+
+.section-transition-exit {
+  @apply opacity-100;
+}
+
+.section-transition-exit-active {
+  @apply opacity-0;
+}
+
+/* Save indicator styles */
+.save-indicator {
+  @apply inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg transition-all duration-200;
+}
+
+.save-indicator-saved {
+  @apply bg-green-50 text-green-700;
+}
+
+.save-indicator-saving {
+  @apply bg-brand-purple/10 text-brand-purple;
+}
+
+.save-indicator-error {
+  @apply bg-red-50 text-red-700;
+}
