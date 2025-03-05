@@ -34,6 +34,7 @@ import { PrdTooltip } from '@/components/PrdTooltip';
 import { SectionBlock } from '@/components/SectionBlock';
 import { CustomSectionDialog } from '@/components/CustomSectionDialog';
 import { UploadPrdDialog, ParsedPrdData } from '@/components/UploadPrdDialog';
+import { trackUploadPRD, trackSuccessfulPRDUpload, trackStartPRDGeneration, trackSuccessfulPRDGeneration } from '@/lib/analytics';
 
 interface Section {
   id: string;
@@ -590,6 +591,9 @@ export function PrdEditor() {
   const handlePrdParsed = (parsedData: ParsedPrdData) => {
     if (!prdData || !productDetails) return;
     
+    // Track successful PRD upload
+    trackSuccessfulPRDUpload(JSON.stringify(parsedData).length);
+    
     const updates: Partial<PRDData> = {};
     
     if (parsedData.problem) {
@@ -696,6 +700,19 @@ export function PrdEditor() {
         });
     }
   };
+
+  // Add tracking for PRD generation start
+  const handleStartGeneration = () => {
+    trackStartPRDGeneration();
+    // ... rest of your existing generation logic ...
+  };
+
+  // Add tracking for successful PRD generation
+  useEffect(() => {
+    if (location.state?.mvpData) {
+      trackSuccessfulPRDGeneration();
+    }
+  }, [location.state]);
 
   if (loading) {
     return (
