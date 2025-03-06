@@ -5,6 +5,7 @@ import { useProduct } from './context/ProductContext';
 import { LogOut, FileText, GitBranch, Kanban, MessageSquare, StickyNote, AlertCircle, PlusCircle, X, User, ChevronDown } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Button } from './ui/button';
+import { EnvironmentBanner } from './EnvironmentBanner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -275,7 +276,8 @@ export function Layout({ children }: LayoutProps) {
   const navItems = isProductContext ? productNavItems : mainNavItems;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
+      <EnvironmentBanner />
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
