@@ -190,6 +190,49 @@ function ProfileCard({
   );
 }
 
+// Add this helper function before the CustomerProfiles component
+function transformProfileToHtml(profile: CustomerProfile): string {
+  return `
+<h3><strong>${profile.name}<h3><strong>
+
+<div class="overview">
+  <p>${profile.overview.paragraph1}</p>
+  <p>${profile.overview.paragraph2}</p>
+  <p>${profile.overview.paragraph3}</p>
+</div>
+
+<h3>Background</h3>
+<ul>
+  <li><strong>Role:</strong> ${profile.background.role}</li>
+  <li><strong>Industry:</strong> ${profile.background.industry}</li>
+  <li><strong>Company:</strong> ${profile.background.companySize} • ${profile.background.companyType}</li>
+</ul>
+
+<h3>Daily Responsibilities</h3>
+<ul>
+  ${profile.background.dailyResponsibilities.map(resp => `<li>${resp}</li>`).join('\n  ')}
+</ul>
+
+<h3>Current Tools</h3>
+<ul>
+  ${profile.background.currentTools.map(tool => `<li>${tool}</li>`).join('\n  ')}
+</ul>
+
+<h3>Problems & Pain Points</h3>
+<p><strong>Biggest Frustration:</strong> ${profile.problems.biggestFrustration}</p>
+<p><strong>Pain Points:</strong> ${profile.problems.painPoints}</p>
+
+<h3>Manual Tasks</h3>
+<ul>
+  ${profile.problems.manualTasks.map(task => `<li>${task}</li>`).join('\n  ')}
+</ul>
+
+<h3>Inefficiencies</h3>
+<ul>
+  ${profile.problems.inefficiencies.map(inefficiency => `<li>${inefficiency}</li>`).join('\n  ')}
+</ul>`;
+}
+
 export function CustomerProfiles() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -274,6 +317,9 @@ export function CustomerProfiles() {
       // Parse the JSON response
       const mvpData = JSON.parse(mvpContent);
       
+      // Transform the selected profile into HTML format
+      const targetAudienceHtml = transformProfileToHtml(selectedProfile);
+      
       // Insert the generated features into the features table
       if (mvpData.prd?.features && Array.isArray(mvpData.prd.features)) {
         const features = mvpData.prd.features.map((feature: any) => ({
@@ -296,13 +342,13 @@ export function CustomerProfiles() {
         }
       }
       
-      // Update the PRD in the database
+      // Update the PRD in the database with the transformed target audience HTML
       const { error: prdError } = await supabase
         .from('prds')
         .update({
           problem: mvpData.prd.problem,
           solution: mvpData.prd.solution,
-          target_audience: mvpData.prd.targetAudience,
+          target_audience: targetAudienceHtml,
           tech_stack: JSON.stringify(mvpData.prd.technologyStack),
           success_metrics: JSON.stringify(mvpData.prd.successMetrics)
         })

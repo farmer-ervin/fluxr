@@ -16,7 +16,9 @@ import {
   Plus,
   Pencil,
   Settings,
-  Upload
+  Upload,
+  AlertCircle,
+  Lightbulb
 } from 'lucide-react';
 import { SaveIndicator, SaveStatus } from '../components/SaveIndicator';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -182,7 +184,7 @@ export function PrdEditor() {
     {
       id: 'problem',
       title: 'Problem',
-      icon: <Puzzle className="w-5 h-5" />,
+      icon: <AlertCircle className="w-5 h-5" />,
       content: '',
       placeholder: `<h2>Problem Statement</h2>
 <p>Clearly define the problem your product solves:</p>
@@ -195,7 +197,7 @@ export function PrdEditor() {
     {
       id: 'solution',
       title: 'Solution',
-      icon: <Puzzle className="w-5 h-5" />,
+      icon: <Lightbulb className="w-5 h-5" />,
       content: '',
       placeholder: `<h2>Solution</h2>
 <p>Describe how your product solves these problems:</p>
@@ -226,83 +228,6 @@ export function PrdEditor() {
       icon: <Target className="w-5 h-5" />,
       content: JSON.stringify(defaultFeatureBucket),
       placeholder: JSON.stringify(defaultFeatureBucket)
-    },
-    {
-      id: 'tech_stack',
-      title: 'Technology Stack',
-      icon: <Server className="w-5 h-5" />,
-      content: '',
-      placeholder: `<h2>Technology Stack</h2>
-<h3>Frontend Technologies</h3>
-<ul>
-  <li>Framework: React with TypeScript</li>
-  <li>State Management: React Context</li>
-  <li>Styling: Tailwind CSS</li>
-</ul>
-
-<h3>Backend Technologies</h3>
-<ul>
-  <li>Database: Supabase (PostgreSQL)</li>
-  <li>Authentication: Supabase Auth</li>
-  <li>API: Supabase REST API</li>
-</ul>
-
-<h3>Development Tools</h3>
-<ul>
-  <li>Version Control: Git</li>
-  <li>Package Manager: npm</li>
-  <li>Build Tool: Vite</li>
-</ul>
-
-<h3>Third-party Services</h3>
-<ul>
-  <li>OpenAI API for AI features</li>
-  <li>Analytics: TBD</li>
-</ul>
-
-<h3>Deployment</h3>
-<ul>
-  <li>Hosting: Netlify</li>
-  <li>CI/CD: GitHub Actions</li>
-</ul>`
-    },
-    {
-      id: 'success_metrics',
-      title: 'Success Metrics & KPIs',
-      icon: <BarChart3 className="w-5 h-5" />,
-      content: '',
-      placeholder: `<h2>Success Metrics & KPIs</h2>
-
-<h3>User Engagement Metrics</h3>
-<ul>
-  <li>Daily/Monthly Active Users (DAU/MAU)</li>
-  <li>Session Duration</li>
-  <li>Feature Adoption Rate</li>
-  <li>User Retention Rate</li>
-</ul>
-
-<h3>Business Metrics</h3>
-<ul>
-  <li>Customer Acquisition Cost (CAC)</li>
-  <li>Customer Lifetime Value (CLV)</li>
-  <li>Monthly Recurring Revenue (MRR)</li>
-  <li>Churn Rate</li>
-</ul>
-
-<h3>Technical Performance Metrics</h3>
-<ul>
-  <li>Page Load Time</li>
-  <li>API Response Time</li>
-  <li>Error Rate</li>
-  <li>System Uptime</li>
-</ul>
-
-<h3>Success Criteria</h3>
-<ul>
-  <li>Achieve X% user growth within Y months</li>
-  <li>Maintain Z% user retention rate</li>
-  <li>Reach break-even point by Q4 2025</li>
-</ul>`
     }
   ]);
 
@@ -470,59 +395,44 @@ export function PrdEditor() {
   }, [productDetails?.id]);
 
   const handleSectionContentChange = (sectionId: string, subsectionId: string | null, content: string) => {
-    if (!productDetails?.id || !prdData) return;
+    if (!prdData) return;
 
-    let processedContent = content;
-    
-    // Remove quotes from the beginning and end if they exist
-    if (content.startsWith('"') && content.endsWith('"')) {
-      processedContent = content.slice(1, -1);
-    }
-    
-    // Replace \n with actual line breaks
-    processedContent = processedContent.replace(/\\n/g, '\n');
-
-    // Update sections in state
-    setSections(prev => 
-      prev.map(section => {
-        if (section.id === sectionId) {
-          if (section.subsections && subsectionId) {
-            return {
-              ...section,
-              subsections: section.subsections.map(subsection =>
-                subsection.id === subsectionId
-                  ? { ...subsection, content: processedContent }
-                  : subsection
-              )
-            };
+    const updatedSections = sections.map(section => {
+      if (section.id === sectionId) {
+        if (subsectionId) {
+          return {
+            ...section,
+            subsections: section.subsections?.map(subsection => 
+              subsection.id === subsectionId
+                ? { ...subsection, content }
+                : subsection
+            )
+          };
+        } else {
+          if (sectionId === 'features') {
+            return section;
           }
-          return { ...section, content: processedContent };
+          return { ...section, content };
         }
-        return section;
-      })
-    );
+      }
+      return section;
+    });
 
-    // Handle updating the database differently based on section type
-    let updates: Partial<PRDData> = {};
-    
-    if (subsectionId) {
-      // Update standard subsection fields directly
-      updates[subsectionId] = processedContent;
-    } else if (sectionId.startsWith('custom_')) {
-      // For custom sections, update the JSONB field
-      const customSections = { ...(prdData.custom_sections || {}) };
-      customSections[sectionId] = processedContent;
-      updates.custom_sections = customSections;
-    } else {
-      // For standard sections, update the column directly
-      updates[sectionId] = processedContent;
+    setSections(updatedSections);
+
+    if (sectionId === 'description') {
+      // Update product description
+      if (productDetails) {
+        setProductDetails(prev => prev ? { ...prev, description: content } : null);
+        debouncedProductUpdate(productDetails.id, { description: content });
+      }
+    } else if (sectionId !== 'features') {
+      // Update PRD section content
+      const updates: Partial<PRDData> = {
+        [sectionId]: content
+      };
+      debouncedPrdUpdate(prdData.id, updates);
     }
-
-    // Update local state
-    setPrdData(prev => prev ? { ...prev, ...updates } : null);
-    
-    // Send updates to the database
-    debouncedPrdUpdate(prdData.id, updates);
   };
 
   const handleProductDetailsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -932,13 +842,15 @@ export function PrdEditor() {
         <div className="bg-white rounded-lg shadow-lg h-full overflow-auto">
           <div className="section-transition">
             {sections.map((section) => (
-              <SectionBlock
-                key={section.id}
-                section={section}
-                onContentChange={handleSectionContentChange}
-                productDetails={productDetails}
-                onRenameSection={handleStartRenameSection}
-              />
+              <div key={section.id} className="mb-6">
+                <SectionBlock
+                  section={section}
+                  onContentChange={handleSectionContentChange}
+                  productDetails={productDetails}
+                  onRenameSection={handleStartRenameSection}
+                  onProductNameChange={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as React.ChangeEvent<HTMLInputElement>)}
+                />
+              </div>
             ))}
           </div>
         </div>

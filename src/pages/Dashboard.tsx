@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ProductDescription } from '@/components/ProductDescription';
 
 interface Product {
   id: string;
@@ -190,9 +191,9 @@ export function Dashboard() {
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-gray-600 text-sm mb-4 cursor-pointer" onClick={() => handleProductSelect(product)}>
-                {product.description}
-              </p>
+              <div className="mb-4 cursor-pointer" onClick={() => handleProductSelect(product)}>
+                <ProductDescription description={product.description} className="text-sm text-gray-600" />
+              </div>
               <div className="text-sm text-gray-500">
                 Created {new Date(product.created_at).toLocaleDateString()}
               </div>

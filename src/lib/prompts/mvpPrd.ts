@@ -1,5 +1,8 @@
 import { openai, OpenAIError } from '../openai';
 import { supabase } from '../supabase';
+import { ChatCompletionMessageParam } from 'openai/resources/chat';
+import { Database } from '../database.types';
+import { Json } from '../types';
 
 interface GenerateMvpPrdParams {
   customerProfile: any;
@@ -11,6 +14,9 @@ interface GenerateMvpPrdParams {
     inefficiencies: string[];
   };
 }
+
+// Define the OpenAI log entry type to match Supabase schema
+type OpenAILogEntry = Database['public']['Tables']['openai_logs']['Insert'];
 
 async function logOpenAICall({
   model,
@@ -33,16 +39,18 @@ async function logOpenAICall({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase.from('openai_logs').insert({
+    const logEntry: OpenAILogEntry = {
       user_id: user.id,
       request_type: requestType,
       model,
       request_payload: requestPayload,
-      response_payload: responsePayload,
-      error: error?.message || error?.toString(),
-      input_tokens,
-      output_tokens
-    });
+      response_payload: responsePayload || null,
+      error: error?.message || error?.toString() || null,
+      input_tokens: input_tokens || null,
+      output_tokens: output_tokens || null
+    };
+
+    await supabase.from('openai_logs').insert([logEntry]);
   } catch (err) {
     // Silent failure for logging errors
   }
@@ -59,86 +67,99 @@ export async function generateMvpPrd({
     problems
   };
 
-  const messages = [
-    {
-      role: "system",
-      content: `You are an elite product strategist and MVP expert specializing in creating focused, impactful minimum viable products. Your task is to analyze the product opportunity and define the optimal MVP that delivers maximum value with minimal complexity.
+  const systemPrompt = `You are an elite product strategist and PRD expert specializing in creating focused, impactful products. Your task is to analyze the product opportunity and define the product, and prioritize features for the MVP that delivers the maximum value with minimal complexity. MVP features are must haves, while other features are prioritized as nice to have or not prioritized.`;
 
-Your analysis should cover:
+  const userPrompt = `Help me define the PRD and optimal MVP version of this product that solves the main problem for this customer persona.
 
-1. Problem Analysis
-   - Core pain point identification and impact assessment
-   - Current workarounds and their limitations
+Product Description: ${productDescription}
+
+Target Persona Details:
+<h3><strong>Target Persona</strong></h3>
+
+Overview:
+${customerProfile.overview.paragraph1}
+${customerProfile.overview.paragraph2}
+${customerProfile.overview.paragraph3}
+
+<h3><strong>Background</strong></h3>
+<ul>
+  <li><strong>Role:</strong> ${customerProfile.background.role}</li>
+  <li><strong>Industry:</strong> ${customerProfile.background.industry}</li>
+  <li><strong>Company Size:</strong> ${customerProfile.background.companySize}</li>
+  <li><strong>Company Type:</strong> ${customerProfile.background.companyType}</li>
+</ul>
+
+<h3><strong>Daily Responsibilities</strong></h3>
+<ul>
+${customerProfile.background.dailyResponsibilities.map((resp: string) => `<li>${resp}</li>`).join('\n')}
+</ul>
+
+<h3><strong>Current Tools</strong></h3>
+<ul>
+${customerProfile.background.currentTools.map((tool: string) => `<li>${tool}</li>`).join('\n')}
+</ul>
+
+<h3><strong>Problems & Pain Points</strong></h3>
+<ul>
+  <li><strong>Biggest Frustration:</strong> ${customerProfile.problems.biggestFrustration}</li>
+  <li><strong>Pain Points:</strong> ${customerProfile.problems.painPoints}</li>
+</ul>
+
+<h3><strong>Manual Tasks</strong></h3>
+<ul>
+${customerProfile.problems.manualTasks.map((task: string) => `<li>${task}</li>`).join('\n')}
+</ul>
+
+<h3><strong>Inefficiencies</strong></h3>
+<ul>
+${customerProfile.problems.inefficiencies.map((inefficiency: string) => `<li>${inefficiency}</li>`).join('\n')}
+</ul>
+
+Your analysis should be thorough and detailed, and should include the following:
+
+1. Problem
+   - Core pain point
+   - Market and competitor gaps including how the target audience is solving this today and the areas competitors are failing to address
    - Solution urgency and market readiness
-   - Competitive landscape and market gaps
-   - User behavior patterns and friction points
 
 2. Solution Strategy  
-   - Core value proposition
-   - Key differentiators
-   - Technical feasibility assessment
-   - Implementation complexity analysis
-   - Resource requirements
-   - Time to market estimation
+   - One line value proposition
+   - Detailed solution including key capabilities and how it addresses the problem and the market gap
+   - Key differentiators from current solutions and competitors
+   - Critical assumptions
 
-3. Success Criteria
-   - Key performance indicators
-   - User adoption metrics
-   - Business impact measures
-   - Technical performance metrics
-   - Learning objectives
-
-4. Risk Assessment
-   - Technical limitations
-   - User adoption barriers
-   - Market risks
-   - Resource constraints
-   - Scaling challenges
-
-5. Growth Strategy
-   - Feature expansion roadmap
-   - Market expansion opportunities
-   - Revenue model evolution
-   - Partnership potential
-   - Platform scalability
+3. Features needed for a v1 product with MVP features being must haves. Features should be prioritized based on the value they add to the customer and the effort to implement. Features should include a name, description, priority (must-have, nice-to-have, or not-prioritized), and implementation status of not-started. Include must have items like user authentication and database setup and every other item needed to build the product. For features that require API integrations, include that in the feature description.
+    - MVP features are must haves. Limit this to the bare minimum core value.
+    - Nice to have features are features that are P2 and would be critical to compete in the market.
+    - Not prioritized features are features that are P3 and beyond.
+  Output at least 15 features.
 
 Always return your response as a JSON object with the following structure:
 {
   "prd": {
-    "problem": "<p>[One-line problem statement]</p><h3><strong>Details</strong></h3><p>[Comprehensive problem analysis including market context, user impact, and current solutions]</p><h3><strong>Market Gap</strong></h3><p>[Specific gap in the market this addresses]</p><h3><strong>Why Now?</strong></h3><p>[Why this needs solving now]</p><h3><strong>Problem Impact</strong></h3><p>[Quantified problem impact on users]</p>",
+    "problem": "<p>[One-line problem statement]</p><h3><strong>Details</strong></h3><p>[Comprehensive problem analysis]</p><h3><strong>Market Gap</strong></h3><p>[Specific gaps in the market including competitive gaps and how users are solving this today.]</p><h3><strong>Why Now?</strong></h3><p>[Why this needs solving now]</p><h3><strong>Problem Impact</strong></h3><p>[Quantified problem impact on users]</p>",
     
-    "solution": "<p>[One-line solution value proposition]</p><h3><strong>Solution Details</strong></h3><p>[Comprehensive solution description including approach, architecture, and key capabilities]</p><h3><strong>Key Differentiators</strong></h3><ul><li>[Competitive advantage 1]</li><li>[Competitive advantage 2]</li></ul><h3><strong>Constraints & Limitations</strong></h3><ul><li>[Limitation 1]</li><li>[Limitation 2]</li></ul><h3><strong>Critical Assumptions</strong></h3><ul><li>[Assumption 1]</li><li>[Assumption 2]</li></ul>",
-    
-    "targetAudience": "<h2><strong>Primary User Persona</strong></h2><p>[Detailed primary user persona]</p><h3><strong>Secondary Users</strong></h3><p>[Secondary user personas]</p><h3><strong>Key Demographics</strong></h3><ul><li>[Demographic factor 1]</li><li>[Demographic factor 2]</li></ul><h3><strong>Psychographic Profile</strong></h3><ul><li>[Psychographic detail 1]</li><li>[Psychographic detail 2]</li></ul><h3><strong>User Behaviors</strong></h3><ul><li>[Behavior pattern 1]</li><li>[Behavior pattern 2]</li></ul><h3><strong>Critical User Needs</strong></h3><ul><li>[Need 1]</li><li>[Need 2]</li></ul>",
+    "solution": "<p>[One-line solution value proposition]</p><h3><strong>Details</strong></h3><p>[Comprehensive solution description including value prop, key capabilities, and how it addresses the problem and the market gap]</p><h3><strong>Key Differentiators</strong></h3><ul><li>[2 sentences explaining #1 key differentiator]</li><li>[2 sentences explaining #2 key differentiator]</li></ul><h3><strong>MVP Constraints & Limitations</strong></h3><ul><li>[Limitation of MVP 1]</li><li>[Limitation of MVP 2]</li></ul><h3><strong>Critical Assumptions</strong></h3><ul><li>[Assumption 1]</li><li>[Assumption 2]</li></ul>",
     
     "features": [
       {
         "name": "Feature name",
-        "description": "Detailed feature description",
-        "priority": "must-have",
+        "description": "Multiple sentence feature description including key functionality anddetails needed to implement the feature.",
+        "priority": "[must-have | nice-to-have | not-prioritized]",
         "implementation_status": "not_started"
       }
-    ],
-    
-    "tech_stack": "<h2>Technology Stack</h2><h3>Frontend Technologies</h3><ul><li>[Frontend tech 1]</li><li>[Frontend tech 2]</li></ul><h3>Backend Technologies</h3><ul><li>[Backend tech 1]</li><li>[Backend tech 2]</li></ul><h3>Infrastructure</h3><ul><li>[Infrastructure need 1]</li><li>[Infrastructure need 2]</li></ul><h3>Third-Party Integrations</h3><ul><li>[Integration 1]</li><li>[Integration 2]</li></ul><h3>Security Requirements</h3><p>[Security requirements and considerations]</p><h3>Scalability Considerations</h3><p>[Scalability requirements and approach]</p>",
-    
-    "success_metrics": "<h2>Success Metrics & KPIs</h2><h3>User Success Metrics</h3><ul><li>[User metric 1]</li><li>[User metric 2]</li></ul><h3>Business Success Metrics</h3><ul><li>[Business metric 1]</li><li>[Business metric 2]</li></ul><h3>Technical Performance Metrics</h3><ul><li>[Performance metric 1]</li><li>[Performance metric 2]</li></ul><h3>Key Learning Objectives</h3><ul><li>[Learning goal 1]</li><li>[Learning goal 2]</li></ul><h3>Success Validation</h3><p>[How to validate success]</p><h3>Timeline & Milestones</h3><p>[Expected time to validation with key milestones]</p>"
+    ]
   }
-}`
+}`;
+
+  const messages: ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: systemPrompt
     },
     {
       role: "user", 
-      content: `Help me define the optimal MVP version of this product that solves the main problem for this customer persona.
-
-Product Description: ${productDescription}
-
-Main Problem: ${problems.biggestFrustration}
-Additional Problems:
-- Pain Points: ${problems.painPoints}
-- Manual Tasks: ${problems.manualTasks.join(', ')}
-- Inefficiencies: ${problems.inefficiencies.join(', ')}
-
-Customer Persona: ${JSON.stringify(customerProfile, null, 2)}`
+      content: userPrompt
     }
   ];
 
@@ -146,8 +167,8 @@ Customer Persona: ${JSON.stringify(customerProfile, null, 2)}`
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
-      temperature: 0.7,
-      max_tokens: 4000,
+      temperature: 0.6,
+      max_tokens: 8000,
       response_format: { type: "json_object" }
     });
 
