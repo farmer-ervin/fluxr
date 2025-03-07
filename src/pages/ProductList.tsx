@@ -4,6 +4,7 @@ import { Plus, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { ProductDescription } from '@/components/ProductDescription';
 
 interface Product {
   id: string;
@@ -102,9 +103,9 @@ export function ProductList() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {product.name}
               </h3>
-              <p className="text-gray-600 text-sm mb-4">
-                {product.description}
-              </p>
+              <div className="mb-4">
+                <ProductDescription description={product.description} className="text-sm text-gray-600" />
+              </div>
               <div className="text-sm text-gray-500">
                 Created {new Date(product.created_at).toLocaleDateString()}
               </div>

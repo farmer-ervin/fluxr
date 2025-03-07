@@ -37,8 +37,11 @@ import {
   generateFlowLayout, 
   reviewUserFlow, 
   OpenAIError, 
-  FlowPage 
+  FlowPage,
+  refineUserFlow,
+  RefinementResponse
 } from '@/lib/openai';
+import { RefinementChangesDialog } from '@/components/flow/RefinementChangesDialog';
 
 function CustomEdge({
   id,
@@ -114,6 +117,33 @@ const edgeTypes = {
   default: CustomEdge,
 };
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface PRD {
+  problem: string;
+  solution: string;
+}
+
+interface FlowPageDB {
+  id: string;
+  name: string;
+  description: string;
+  layout_description: string;
+  features: string[];
+  position_x: number;
+  position_y: number;
+}
+
+interface FlowConnection {
+  id: string;
+  source_id: string;
+  target_id: string;
+}
+
 function UserFlowsContent() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -125,8 +155,6 @@ function UserFlowsContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPages, setGeneratedPages] = useState<FlowPage[]>([]);
   const [showPageSelection, setShowPageSelection] = useState(false);
-  const [showFlowPatternDialog, setShowFlowPatternDialog] = useState(false);
-  const [selectedFlowPattern, setSelectedFlowPattern] = useState<FlowPattern>('auto');
   
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
@@ -151,6 +179,10 @@ function UserFlowsContent() {
   
   const [showAddPageDialog, setShowAddPageDialog] = useState(false);
   const [isAddingPage, setIsAddingPage] = useState(false);
+  const [originalSelectedPages, setOriginalSelectedPages] = useState<FlowPage[]>([]);
+  const [refinementResult, setRefinementResult] = useState<RefinementResponse | null>(null);
+  const [showRefinementChanges, setShowRefinementChanges] = useState(false);
+  const [isGeneratingLayout, setIsGeneratingLayout] = useState(false);
 
   useEffect(() => {
     async function loadFlowData() {
@@ -174,7 +206,7 @@ function UserFlowsContent() {
           .select('id, name, description')
           .eq('slug', productSlug)
           .eq('user_id', user.id)
-          .single();
+          .single() as { data: Product | null; error: any };
 
         if (productError || !product) {
           console.error('Error loading product:', productError);
@@ -188,14 +220,10 @@ function UserFlowsContent() {
           .from('prds')
           .select('problem, solution')
           .eq('product_id', product.id)
-          .single();
+          .single() as { data: PRD | null; error: any };
 
-        if (prdError) {
+        if (prdError || !prd) {
           throw new Error('Failed to load PRD data');
-        }
-
-        if (!prd) {
-          throw new Error('PRD not found');
         }
 
         setProductData({
@@ -207,7 +235,7 @@ function UserFlowsContent() {
         const { data: pages, error: pagesError } = await supabase
           .from('flow_pages')
           .select('*')
-          .eq('product_id', product.id);
+          .eq('product_id', product.id) as { data: FlowPageDB[] | null; error: any };
 
         if (pagesError) {
           throw new Error('Failed to load flow pages');
@@ -216,15 +244,15 @@ function UserFlowsContent() {
         const { data: connections, error: connectionsError } = await supabase
           .from('flow_connections')
           .select('id, source_id, target_id')
-          .eq('product_id', product.id);
+          .eq('product_id', product.id) as { data: FlowConnection[] | null; error: any };
 
         if (connectionsError) {
           throw new Error('Failed to load flow connections');
         }
 
-        const flowNodes = pages?.map(page => ({
+        const flowNodes = (pages || []).map(page => ({
           id: page.id,
-          type: 'page',
+          type: 'page' as const,
           position: { x: page.position_x, y: page.position_y },
           data: {
             name: page.name,
@@ -232,13 +260,13 @@ function UserFlowsContent() {
             layout_description: page.layout_description || '',
             features: page.features || []
           }
-        })) || [];
+        }));
 
-        const flowEdges = connections?.map(conn => ({
+        const flowEdges = (connections || []).map(conn => ({
           id: conn.id,
           source: conn.source_id,
           target: conn.target_id
-        })) || [];
+        }));
 
         setNodes(flowNodes);
         setEdges(flowEdges);
@@ -384,15 +412,7 @@ function UserFlowsContent() {
     setEdges(nextState.edges);
   };
 
-  const handleCreateFlow = () => {
-    setShowFlowPatternDialog(true);
-  };
-
-  const handleSelectFlowPattern = (pattern: FlowPattern) => {
-    setSelectedFlowPattern(pattern);
-  };
-
-  const handleGenerateFlow = async () => {
+  const handleCreateFlow = async () => {
     if (!productId || !productData) return;
 
     try {
@@ -410,12 +430,11 @@ function UserFlowsContent() {
         productDescription: productData.description,
         problemStatement: productData.problem,
         solutionDescription: productData.solution,
-        features: features || [],
-        flowPattern: selectedFlowPattern
+        targetAudience: '',  // You'll need to add this to your productData if needed
+        features: features || []
       });
 
       setGeneratedPages(result.pages);
-      setShowFlowPatternDialog(false);
       setShowPageSelection(true);
     } catch (error) {
       if (error instanceof OpenAIError) {
@@ -434,8 +453,9 @@ function UserFlowsContent() {
     try {
       setIsGenerating(true);
       setError(null);
+      setOriginalSelectedPages(selectedPages);
 
-      // If there are additional requirements, regenerate the flow
+      // If there are additional requirements, use refinement flow
       if (additionalRequirements) {
         const { data: features, error: featuresError } = await supabase
           .from('features')
@@ -444,22 +464,22 @@ function UserFlowsContent() {
 
         if (featuresError) throw new Error('Failed to load features');
 
-        const result = await generateUserFlow({
+        const result = await refineUserFlow({
           productDescription: productData.description,
           problemStatement: productData.problem,
           solutionDescription: productData.solution,
+          targetAudience: '',  // You'll need to add this to your productData if needed
           features: features || [],
-          flowPattern: selectedFlowPattern,
-          additionalRequirements // Pass the additional requirements
+          selectedPages,
+          additionalRequirements
         });
 
-        // Update the pages with the new generated content
-        selectedPages = result.pages;
+        setRefinementResult(result);
+        setShowRefinementChanges(true);
+      } else {
+        // No additional requirements, proceed directly to layout
+        handleFinalizeFlow(selectedPages);
       }
-
-      setSelectedPages(selectedPages);
-      setShowPageSelection(false);
-      setShowRefinementDialog(true);
     } catch (error) {
       if (error instanceof OpenAIError) {
         setError(error.message);
@@ -469,6 +489,16 @@ function UserFlowsContent() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleAcceptRefinement = (refinedPages: FlowPage[]) => {
+    setShowRefinementChanges(false);
+    handleFinalizeFlow(refinedPages);
+  };
+
+  const handleRevertRefinement = () => {
+    setShowRefinementChanges(false);
+    handleFinalizeFlow(originalSelectedPages);
   };
 
   const handleStartOptionalRefinement = async () => {
@@ -512,10 +542,15 @@ function UserFlowsContent() {
     if (!productId) return;
     
     try {
-      setIsGenerating(true);
+      setIsGeneratingLayout(true);
       setError(null);
+      // Close all dialogs
+      setShowPageSelection(false);
+      setShowRefinementDialog(false);
+      setShowRefinementChanges(false);
+      setShowReviewDialog(false);
       
-      const layout = await generateFlowLayout(finalPages, selectedFlowPattern);
+      const layout = await generateFlowLayout(finalPages, 'auto');
       
       const { error: deleteError } = await supabase
         .from('flow_pages')
@@ -597,7 +632,6 @@ function UserFlowsContent() {
       
       setNodes(flowNodes);
       setEdges(flowEdges);
-      setShowRefinementDialog(false);
       
     } catch (error) {
       console.error('Error finalizing flow:', error);
@@ -607,7 +641,7 @@ function UserFlowsContent() {
         setError('Failed to generate flow. Please try again.');
       }
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingLayout(false);
     }
   };
 
@@ -681,12 +715,17 @@ function UserFlowsContent() {
     }
   };
 
-  if (loading) {
+  if (loading || isGeneratingLayout) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-purple mx-auto mb-4" />
-          <p className="text-gray-600">Loading user flows...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-brand-purple mx-auto mb-4" />
+          <p className="text-xl font-medium text-gray-900">
+            {isGeneratingLayout ? 'Generating Flow Layout...' : 'Loading...'}
+          </p>
+          <p className="text-gray-600 mt-2">
+            {isGeneratingLayout ? 'This may take a few moments' : 'Loading user flows...'}
+          </p>
         </div>
       </div>
     );
@@ -782,6 +821,14 @@ function UserFlowsContent() {
           edgeTypes={edgeTypes}
           deleteKeyCode="Delete"
           fitView
+          fitViewOptions={{
+            padding: 0.5,
+            minZoom: 0.5,
+            maxZoom: 1.5
+          }}
+          minZoom={0.2}
+          maxZoom={2}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.75 }}
           snapToGrid
           snapGrid={[15, 15]}
           defaultEdgeOptions={{
@@ -798,15 +845,6 @@ function UserFlowsContent() {
           <MiniMap />
         </ReactFlow>
       </div>
-      
-      <FlowPatternDialog
-        isOpen={showFlowPatternDialog}
-        onClose={() => setShowFlowPatternDialog(false)}
-        selectedPattern={selectedFlowPattern}
-        onSelectPattern={handleSelectFlowPattern}
-        onConfirm={handleGenerateFlow}
-        isLoading={isGenerating}
-      />
       
       <FlowGenerationDialog
         isOpen={showPageSelection}
@@ -836,6 +874,15 @@ function UserFlowsContent() {
         refinedPages={refinedPages}
         error={error}
         onStartRefinement={handleStartOptionalRefinement}
+      />
+      
+      <RefinementChangesDialog
+        isOpen={showRefinementChanges}
+        onClose={() => setShowRefinementChanges(false)}
+        refinementResult={refinementResult}
+        onAccept={handleAcceptRefinement}
+        onRevert={handleRevertRefinement}
+        error={error}
       />
       
       <AddPageDialog
