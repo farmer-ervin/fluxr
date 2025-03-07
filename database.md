@@ -1,10 +1,40 @@
 # Database Schema
 
-## Public Schema Overview
+## Tables
+
+### users
+- `id` (uuid, primary key)
+- `email` (text, unique)
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone)
+- `full_name` (text)
+- `avatar_url` (text)
+
+### products
+- `id` (uuid, primary key)
+- `user_id` (uuid, foreign key)
+- `name` (text)
+- `description` (text)
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone)
+- `slug` (text, unique)
+
+### bugs
+- `id` (uuid, primary key)
+- `name` (text, not null)
+- `description` (text)
+- `bug_url` (text)
+- `screenshot_url` (text)
+- `status` (text, default 'not_started')
+- `priority` (text, default 'not-prioritized')
+- `position` (integer)
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone, default now())
+- `product_id` (uuid, foreign key, ON DELETE CASCADE)
 
 ### customer_profiles
 - `id` (uuid, primary key)
-- `product_id` (uuid, foreign key)
+- `product_id` (uuid, foreign key, ON DELETE CASCADE)
 - `name` (text)
 - `overview` (jsonb)
 - `background` (jsonb)
@@ -14,28 +44,9 @@
 - `created_at` (timestamp with time zone, default now())
 - `updated_at` (timestamp with time zone, default now())
 
-### error_logs
-- `id` (uuid, primary key)
-- `user_id` (uuid, foreign key)
-- `error_type` (text)
-- `error_code` (text)
-- `error_message` (text)
-- `stack_trace` (text)
-- `severity` (text)
-- `metadata` (jsonb, default '{}')
-- `request_payload` (jsonb)
-- `browser_info` (jsonb)
-- `created_at` (timestamp with time zone, default now())
-
-### feature_dependencies
-- `id` (uuid, primary key)
-- `feature_id` (uuid, foreign key)
-- `depends_on_id` (uuid, foreign key)
-- `created_at` (timestamp with time zone, default now())
-
 ### features
 - `id` (uuid, primary key)
-- `product_id` (uuid, foreign key)
+- `product_id` (uuid, foreign key, ON DELETE CASCADE)
 - `name` (text)
 - `description` (text)
 - `priority` (text)
@@ -43,97 +54,17 @@
 - `updated_at` (timestamp with time zone, default now())
 - `implementation_status` (text, default 'not_started')
 - `position` (integer)
-- `type` (text, default 'feature')
 
-### flow_connections
+### tasks
 - `id` (uuid, primary key)
-- `source_id` (uuid, foreign key)
-- `target_id` (uuid, foreign key)
-- `created_at` (timestamp with time zone, default now())
-- `product_id` (uuid, foreign key)
-
-### flow_layouts
-- `id` (uuid, primary key)
-- `product_id` (uuid, foreign key)
-- `layout_data` (jsonb)
-- `created_at` (timestamp with time zone, default now())
-
-### flow_pages
-- `id` (uuid, primary key)
-- `product_id` (uuid, foreign key)
-- `name` (text)
+- `name` (text, not null)
 - `description` (text)
-- `position_x` (double precision, default 0)
-- `position_y` (double precision, default 0)
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone, default now())
-- `layout_description` (text)
-- `features` (jsonb, default '[]')
-- `implementation_status` (text, default 'not_started')
-
-### notes
-- `id` (uuid, primary key)
-- `user_id` (uuid, foreign key)
+- `status` (text, default 'not_started')
+- `priority` (text, default 'not-prioritized')
+- `position` (integer, default 0)
 - `product_id` (uuid, foreign key)
-- `title` (text, default 'Untitled Note')
-- `content` (text, default '')
 - `created_at` (timestamp with time zone, default now())
 - `updated_at` (timestamp with time zone, default now())
-
-### openai_logs
-- `id` (uuid, primary key)
-- `user_id` (uuid, foreign key)
-- `request_type` (text)
-- `request_payload` (jsonb)
-- `response_payload` (jsonb)
-- `error` (text)
-- `created_at` (timestamp with time zone, default now())
-- `model` (text, default 'gpt-4')
-- `input_tokens` (integer)
-- `output_tokens` (integer)
-
-### payment_history
-- `id` (uuid, primary key)
-- `user_id` (uuid, foreign key)
-- `subscription_id` (uuid, foreign key)
-- `amount` (numeric)
-- `currency` (text, default 'usd')
-- `status` (text)
-- `stripe_payment_intent_id` (text)
-- `stripe_payment_method` (text)
-- `error_message` (text)
-- `created_at` (timestamp with time zone, default now())
-
-### prds
-- `id` (uuid, primary key)
-- `product_id` (uuid, foreign key)
-- `problem` (text, default '')
-- `solution` (text, default '')
-- `target_audience` (text, default '')
-- `tech_stack` (text, default '')
-- `success_metrics` (text, default '')
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone, default now())
-- `custom_sections` (jsonb, default '{}')
-
-### product_prompts
-- `id` (uuid, primary key)
-- `product_id` (uuid, foreign key)
-- `template_id` (uuid, foreign key)
-- `name` (text)
-- `description` (text)
-- `prompt` (text)
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone, default now())
-
-### products
-- `id` (uuid, primary key)
-- `user_id` (uuid, foreign key)
-- `name` (text)
-- `description` (text)
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone, default now())
-- `slug` (text, unique)
 
 ### prompt_templates
 - `id` (uuid, primary key)
@@ -146,43 +77,50 @@
 - `updated_at` (timestamp with time zone, default now())
 - `is_public` (boolean, default false)
 
-### subscription_plans
-- `id` (uuid, primary key)
-- `name` (text)
-- `description` (text)
-- `price` (numeric)
-- `currency` (text, default 'usd')
-- `interval` (text)
-- `stripe_product_id` (text)
-- `stripe_price_id` (text)
-- `is_active` (boolean, default true)
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone, default now())
-
-### user_subscriptions
-- `id` (uuid, primary key)
-- `user_id` (uuid, foreign key)
-- `plan_id` (uuid, foreign key)
-- `stripe_customer_id` (text)
-- `stripe_subscription_id` (text)
-- `status` (text)
-- `current_period_start` (timestamp with time zone)
-- `current_period_end` (timestamp with time zone)
-- `cancel_at_period_end` (boolean, default false)
-- `payment_type` (text)
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone, default now())
-- `trial_end` (timestamp with time zone)
-
-### users
-- `id` (uuid, primary key)
-- `email` (text, unique)
-- `created_at` (timestamp with time zone, default now())
-- `updated_at` (timestamp with time zone)
-- `full_name` (text)
-- `avatar_url` (text)
-
 ## Row Level Security (RLS) Policies
+
+### Prompt Templates
+1. **Users can read public prompt templates**
+   - Action: SELECT
+   - Definition: Allows users to read prompt templates that are marked as public (is_public = true)
+
+2. **Users can manage own prompt templates**
+   - Action: ALL
+   - Definition: Allows users to manage their own prompt templates (user_id = auth.uid())
+
+### Bugs
+1. **Users can view bugs for their own products**
+   - Action: SELECT
+   - Definition: Allows users to view bugs if the product_id is associated with their own products
+
+2. **Users can insert bugs for their own products**
+   - Action: INSERT
+   - Definition: Allows users to insert bugs if the product_id is associated with their own products
+
+3. **Users can update bugs for their own products**
+   - Action: UPDATE
+   - Definition: Allows users to update bugs if the product_id is associated with their own products
+
+4. **Users can delete bugs for their own products**
+   - Action: DELETE
+   - Definition: Allows users to delete bugs if the product_id is associated with their own products
+
+### Tasks
+1. **Users can read their own tasks**
+   - Action: SELECT
+   - Definition: Allows users to read tasks if the product_id is associated with their own products
+
+2. **Users can insert their own tasks**
+   - Action: INSERT
+   - Definition: Allows users to insert tasks if the product_id is associated with their own products
+
+3. **Users can update their own tasks**
+   - Action: UPDATE
+   - Definition: Allows users to update tasks if the product_id is associated with their own products
+
+4. **Users can delete their own tasks**
+   - Action: DELETE
+   - Definition: Allows users to delete tasks if the product_id is associated with their own products
 
 ### Subscription and Payment Policies
 - **Anyone can view active plans**

@@ -1,14 +1,22 @@
 import { openai, OpenAIError } from '../openai';
 import { supabase } from '../supabase';
-import { Feature } from '../database.types';
+import { Database } from '../database.types';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+
+type Feature = Database['public']['Tables']['features']['Row'];
+type OpenAILogInsert = Database['public']['Tables']['openai_logs']['Insert'];
 
 interface GenerateFlowParams {
   productDescription: string;
   problemStatement: string;
   solutionDescription: string;
+  targetAudience: string;
   features: Feature[];
-  flowPattern?: string;
-  additionalRequirements?: string;
+}
+
+interface RefineFlowParams extends GenerateFlowParams {
+  selectedPages: FlowPage[];
+  additionalRequirements: string;
 }
 
 export interface FlowPage {
@@ -16,6 +24,17 @@ export interface FlowPage {
   description: string;
   layout_description?: string;
   features?: string[];
+}
+
+export interface RefinementResponse {
+  pages: FlowPage[];
+  changes: {
+    added_pages: string[];
+    modified_pages: {
+      page_name: string;
+      modifications: string[];
+    }[];
+  };
 }
 
 async function logOpenAICall({
@@ -39,16 +58,19 @@ async function logOpenAICall({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase.from('openai_logs').insert({
+    const logEntry: OpenAILogInsert = {
       user_id: user.id,
       request_type: requestType,
       model,
       request_payload: requestPayload,
       response_payload: responsePayload,
-      error: error?.message || error?.toString(),
-      input_tokens,
-      output_tokens
-    });
+      error: error?.message || error?.toString() || null,
+      input_tokens: input_tokens || null,
+      output_tokens: output_tokens || null
+    };
+
+    // @ts-ignore - Type mismatch with Supabase client, but this works in practice
+    await supabase.from('openai_logs').insert(logEntry);
   } catch (err) {
     // Silent failure for logging errors
   }
@@ -58,9 +80,8 @@ export async function generateUserFlow({
   productDescription,
   problemStatement,
   solutionDescription,
-  features,
-  flowPattern = 'auto',
-  additionalRequirements
+  targetAudience,
+  features
 }: GenerateFlowParams) {
   const featuresFormatted = features.map(f => ({
     name: f.name,
@@ -73,15 +94,14 @@ export async function generateUserFlow({
     productDescription,
     problemStatement,
     solutionDescription,
-    features: featuresFormatted,
-    flowPattern,
-    additionalRequirements
+    targetAudience,
+    features: featuresFormatted
   };
 
-  const messages = [
+  const messages: ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an expert product manager and UX designer. Your task is to generate a comprehensive user flow based on the provided product requirements.
+      content: `You are an expert product manager and UX designer. Your task is to generate a comprehensive user flow based on the provided product requirements. Provide the most logical user flow for the product, while keeping it an intuitive and easy to use product. If a feature can be included on a page, include it on a page instead of creating a separate page. Only include features that are part of the product already. Do not add features.
 
 Your response must be a valid JSON object with the following structure:
 {
@@ -99,26 +119,29 @@ Your response must be a valid JSON object with the following structure:
       role: "user",
       content: `Create a comprehensive user flow with detailed page information for this product:
 
-Product Description: ${productDescription}
+Product Description:
+${productDescription}
 
-Problem Statement: ${problemStatement}
+Problem Statement:
+${problemStatement}
 
-Solution Description: ${solutionDescription}
+Solution Description:
+${solutionDescription}
+
+Target Audience:
+${targetAudience}
 
 Features:
 ${featuresFormatted.map(f => `- ${f.name}: ${f.description}
-  Priority: ${f.priority}
-  Status: ${f.status}`).join('\n')}
-
-${additionalRequirements ? `\nAdditional Requirements:\n${additionalRequirements}` : ''}`
+  Status: ${f.status}`).join('\n')}`
     }
   ];
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
-      temperature: 0.7,
+      temperature: 0.5,
       response_format: { type: "json_object" }
     });
 
@@ -126,7 +149,7 @@ ${additionalRequirements ? `\nAdditional Requirements:\n${additionalRequirements
     const tokenUsage = completion.usage;
 
     await logOpenAICall({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       requestType: 'generate_user_flow',
       requestPayload,
       responsePayload: response,
@@ -134,12 +157,143 @@ ${additionalRequirements ? `\nAdditional Requirements:\n${additionalRequirements
       output_tokens: tokenUsage?.completion_tokens
     });
 
+    if (!response) {
+      throw new Error('No response from OpenAI');
+    }
+
     return JSON.parse(response);
   } catch (error) {
     // Silent console error, but still log to database
     await logOpenAICall({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       requestType: 'generate_user_flow',
+      requestPayload,
+      error
+    });
+    
+    // Throw user-friendly error
+    throw new OpenAIError(getUserFriendlyErrorMessage(error), error);
+  }
+}
+
+export async function refineUserFlow({
+  productDescription,
+  problemStatement,
+  solutionDescription,
+  targetAudience,
+  features,
+  selectedPages,
+  additionalRequirements
+}: RefineFlowParams): Promise<RefinementResponse> {
+  const featuresFormatted = features.map(f => ({
+    name: f.name,
+    description: f.description,
+    priority: f.priority,
+    status: f.implementation_status
+  }));
+
+  const requestPayload = {
+    productDescription,
+    problemStatement,
+    solutionDescription,
+    targetAudience,
+    features: featuresFormatted,
+    selectedPages,
+    additionalRequirements
+  };
+
+  const messages: ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: `You are an expert product manager and UX designer. Your task is to refine an existing user flow based on additional requirements. You should ONLY modify the flow to address the specific requirements provided. Do not make any other changes.
+
+IMPORTANT RULES:
+1. Do not add new pages unless necessary to meet the additional requirements
+2. Maintain the same structure and format for all pages unless necessary to meet the additional requirements
+3. Document all changes made in the changes section of the response
+
+Your response must be a valid JSON object with the following structure:
+{
+  "pages": [
+    {
+      "name": "Page name",
+      "description": "Detailed description of the page's purpose and content",
+      "layout_description": "Design terminology description of the page layout",
+      "features": ["Feature Name 1", "Feature Name 2"]
+    }
+  ],
+  "changes": {
+    "added_pages": ["Page Name 1", "Page Name 2"],
+    "modified_pages": [
+      {
+        "page_name": "Page Name",
+        "modifications": [
+          "Changed description to better reflect X",
+          "Added feature Y to page",
+          "Modified layout to include Z"
+        ]
+      }
+    ]
+  }
+}`
+    },
+    {
+      role: "user",
+      content: `Refine the following user flow based on additional requirements:
+
+Product Context:
+Product Description: ${productDescription}
+Problem Statement: ${problemStatement}
+Solution Description: ${solutionDescription}
+Target Audience: ${targetAudience}
+
+Features:
+${featuresFormatted.map(f => `- ${f.name}: ${f.description}
+  Status: ${f.status}`).join('\n')}
+
+Current Selected Pages:
+${JSON.stringify(selectedPages, null, 2)}
+
+Additional Requirements to Address:
+${additionalRequirements}
+
+Remember:
+- Only make changes necessary to meet the additional requirements
+- Preserve existing structure where possible
+- Document all changes made`
+    }
+  ];
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      temperature: 0.2,
+      response_format: { type: "json_object" }
+    });
+
+    const response = completion.choices[0].message.content;
+    const tokenUsage = completion.usage;
+
+    await logOpenAICall({
+      model: "gpt-4o",
+      requestType: 'refine_user_flow',
+      requestPayload,
+      responsePayload: response,
+      input_tokens: tokenUsage?.prompt_tokens,
+      output_tokens: tokenUsage?.completion_tokens
+    });
+
+    if (!response) {
+      throw new Error('No response from OpenAI');
+    }
+
+    return JSON.parse(response);
+  } catch (error) {
+    // Silent console error, but still log to database
+    await logOpenAICall({
+      model: "gpt-4o",
+      requestType: 'refine_user_flow',
       requestPayload,
       error
     });

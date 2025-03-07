@@ -25,6 +25,7 @@ import { Textarea } from "./ui/textarea"
 import { generatePrdContent, OpenAIError } from "@/lib/openai"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
+import { ProductDescription } from '@/components/ProductDescription'
 
 interface Step {
   title: string;
