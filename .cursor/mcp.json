@@ -1,0 +1,23 @@
+{
+    "mcpServers": {
+      "postgres": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-postgres",
+          "postgresql://postgres.lmomfddmypameoffnbcq:ejx1ncw7rqc6xgm@ZAN@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
+        ]
+      },
+      "github": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-github"
+        ],
+        "env": {
+          "GITHUB_TOKEN": "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"
+        }
+      }
+    }
+  }
+  
