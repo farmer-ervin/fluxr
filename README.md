@@ -3,7 +3,7 @@
 ## Environment Setup
 
 1. Copy `.env.example` to create your local `.env` file:
-   ```bash
+   ```bash 
    cp .env.example .env
    ```
 
