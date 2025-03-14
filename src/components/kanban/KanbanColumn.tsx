@@ -139,12 +139,14 @@ export function KanbanColumn({
                         feature={item}
                         index={index}
                         onUpdate={handlePageUpdate}
+                        onDelete={onDeletePage}
                       />
                     ) : (
                       <KanbanCard
                         feature={item}
                         index={index}
                         onUpdate={handleFeatureUpdate}
+                        onDelete={onDeleteFeature}
                       />
                     )}
                   </div>
