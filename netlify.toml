@@ -10,7 +10,22 @@
 
 # Configure secret scanning to ignore specific keys
 [secrets]
-  scan_omit_keys = ["SUPABASE_REGION"]
+  scan_omit_keys = [
+    "SUPABASE_REGION"
+  ]
+
+# Branch-specific settings
+[context.main]
+  [context.main.secrets]
+    scan_omit_keys = [
+      "SUPABASE_REGION"
+    ]
+
+[context.beta]
+  [context.beta.secrets]
+    scan_omit_keys = [
+      "SUPABASE_REGION"
+    ]
 
 # SPA redirect rule - this ensures all routes are handled by React Router
 [[redirects]]

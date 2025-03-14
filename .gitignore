@@ -24,8 +24,6 @@ dist/assets/*.js
 .env.production.local
 .env.example
 .env*
-SUPABASE_REGION
-**/SUPABASE_REGION
 
 # Supabase files
 supabase/.temp/
