@@ -6,7 +6,7 @@ export function EnvironmentBanner() {
   if (hostname === 'localhost') {
     return (
       <div className="sticky top-0 z-50 bg-red-500 text-white text-xs py-1 text-center">
-        Local Development Environment
+        Local
       </div>
     );
   }
