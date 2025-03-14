@@ -8,7 +8,7 @@
    ```bash 
    cp .env.example .env
    ```
-
+ 
 2. Fill in your local `.env` file with the appropriate values:
    - `VITE_SUPABASE_URL`: Your Supabase project URL
    - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
