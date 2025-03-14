@@ -1,0 +1,127 @@
+name: Deploy with Environment Variables
+
+on:
+  push:
+    branches:
+      - beta
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Verify required secrets
+        run: |
+          missing_secrets=()
+          
+          # Check for required secrets
+          [ -z "${{ secrets.NETLIFY_SITE_ID }}" ] && missing_secrets+=("NETLIFY_SITE_ID")
+          [ -z "${{ secrets.NETLIFY_AUTH_TOKEN }}" ] && missing_secrets+=("NETLIFY_AUTH_TOKEN")
+          [ -z "${{ secrets.VITE_SUPABASE_URL }}" ] && missing_secrets+=("VITE_SUPABASE_URL")
+          [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ] && missing_secrets+=("VITE_SUPABASE_ANON_KEY")
+          [ -z "${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}" ] && missing_secrets+=("VITE_SUPABASE_SERVICE_ROLE_KEY")
+          [ -z "${{ secrets.VITE_OPENAI_API_KEY }}" ] && missing_secrets+=("VITE_OPENAI_API_KEY")
+          [ -z "${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}" ] && missing_secrets+=("VITE_STRIPE_PUBLISHABLE_KEY")
+          [ -z "${{ secrets.STRIPE_SECRET_KEY }}" ] && missing_secrets+=("STRIPE_SECRET_KEY")
+          
+          if [ ${#missing_secrets[@]} -ne 0 ]; then
+            echo "Error: The following required secrets are missing:"
+            printf "  - %s\n" "${missing_secrets[@]}"
+            exit 1
+          fi
+          
+          echo "All required secrets are present."
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Set environment variables based on branch
+        id: set-env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+            echo "SITE_URL=https://sub.fluxr.ai" >> $GITHUB_ENV
+            echo "env=production" >> $GITHUB_OUTPUT
+            echo "DEPLOY_ALIAS=main" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=development" >> $GITHUB_ENV
+            echo "SITE_URL=https://beta--fluxr.netlify.app" >> $GITHUB_ENV
+            echo "env=development" >> $GITHUB_OUTPUT
+            echo "DEPLOY_ALIAS=beta" >> $GITHUB_ENV
+          fi
+          
+          # Set Netlify site ID for both branches
+          echo "NETLIFY_SITE_ID=${{ secrets.NETLIFY_SITE_ID }}" >> $GITHUB_ENV
+      
+      - name: Create .env file for build
+        run: |
+          cat > .env << EOL
+          # Supabase Configuration
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_SERVICE_ROLE_KEY=${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_OPENAI_API_KEY=${{ secrets.VITE_OPENAI_API_KEY }}
+          VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          
+          # Environment Configuration
+          VITE_ENVIRONMENT=${{ env.ENVIRONMENT }}
+          VITE_SITE_URL=${{ env.SITE_URL }}
+          EOL
+      
+      - name: Update Netlify environment variables
+        run: |
+          # Install Netlify CLI
+          npm install -g netlify-cli
+          
+          # Update environment variables in Netlify
+          netlify env:set VITE_SUPABASE_URL "${{ secrets.VITE_SUPABASE_URL }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_SUPABASE_ANON_KEY "${{ secrets.VITE_SUPABASE_ANON_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_SUPABASE_SERVICE_ROLE_KEY "${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_OPENAI_API_KEY "${{ secrets.VITE_OPENAI_API_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_STRIPE_PUBLISHABLE_KEY "${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_ENVIRONMENT "${{ env.ENVIRONMENT }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_SITE_URL "${{ env.SITE_URL }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Update Supabase Edge Function secrets
+        run: |
+          # Set up Supabase config
+          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --password ${{ secrets.SUPABASE_DB_PASSWORD }}
+          
+          # Update Supabase Edge Function secrets
+          supabase secrets set STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+          supabase secrets set SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          supabase secrets set SUPABASE_SERVICE_ROLE_KEY=${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}
+      
+      - name: Build application
+        run: npm run build
+      
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2
+        with:
+          publish-dir: './dist'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+          alias: ${{ env.DEPLOY_ALIAS }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ env.NETLIFY_SITE_ID }}
+        timeout-minutes: 10 
