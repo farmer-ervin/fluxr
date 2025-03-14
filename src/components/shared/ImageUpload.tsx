@@ -12,7 +12,7 @@ interface ImageUploadProps {
   error?: string | null;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_FILE_TYPES = {
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/png': ['.png'],
@@ -20,8 +20,8 @@ const ALLOWED_FILE_TYPES = {
   'image/webp': ['.webp']
 };
 const MAX_DIMENSIONS = {
-  width: 2048,
-  height: 2048
+  width: 8192,
+  height: 8192
 };
 
 export function ImageUpload({
