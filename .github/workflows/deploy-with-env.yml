@@ -27,6 +27,8 @@ jobs:
           [ -z "${{ secrets.VITE_OPENAI_API_KEY }}" ] && missing_secrets+=("VITE_OPENAI_API_KEY")
           [ -z "${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}" ] && missing_secrets+=("VITE_STRIPE_PUBLISHABLE_KEY")
           [ -z "${{ secrets.STRIPE_SECRET_KEY }}" ] && missing_secrets+=("STRIPE_SECRET_KEY")
+          [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ] && missing_secrets+=("SUPABASE_ACCESS_TOKEN")
+          [ -z "${{ secrets.SUPABASE_PROJECT_REF }}" ] && missing_secrets+=("SUPABASE_PROJECT_REF")
           
           if [ ${#missing_secrets[@]} -ne 0 ]; then
             echo "Error: The following required secrets are missing:"
@@ -50,12 +52,12 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "ENVIRONMENT=production" >> $GITHUB_ENV
-            echo "SITE_URL=https://sub.fluxr.ai" >> $GITHUB_ENV
+            echo "SITE_URL=https://app.fluxr.ai" >> $GITHUB_ENV
             echo "env=production" >> $GITHUB_OUTPUT
             echo "DEPLOY_ALIAS=main" >> $GITHUB_ENV
           else
             echo "ENVIRONMENT=development" >> $GITHUB_ENV
-            echo "SITE_URL=https://beta--fluxr.netlify.app" >> $GITHUB_ENV
+            echo "SITE_URL=https://beta.app.fluxr.ai" >> $GITHUB_ENV
             echo "env=development" >> $GITHUB_OUTPUT
             echo "DEPLOY_ALIAS=beta" >> $GITHUB_ENV
           fi
@@ -79,18 +81,25 @@ jobs:
           EOL
       
       - name: Update Netlify environment variables
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ env.NETLIFY_SITE_ID }}
         run: |
           # Install Netlify CLI
           npm install -g netlify-cli
           
+          # Create .netlify/state.json file with site ID
+          mkdir -p .netlify
+          echo "{\"siteId\":\"$NETLIFY_SITE_ID\"}" > .netlify/state.json
+          
           # Update environment variables in Netlify
-          netlify env:set VITE_SUPABASE_URL "${{ secrets.VITE_SUPABASE_URL }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          netlify env:set VITE_SUPABASE_ANON_KEY "${{ secrets.VITE_SUPABASE_ANON_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          netlify env:set VITE_SUPABASE_SERVICE_ROLE_KEY "${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          netlify env:set VITE_OPENAI_API_KEY "${{ secrets.VITE_OPENAI_API_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          netlify env:set VITE_STRIPE_PUBLISHABLE_KEY "${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          netlify env:set VITE_ENVIRONMENT "${{ env.ENVIRONMENT }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          netlify env:set VITE_SITE_URL "${{ env.SITE_URL }}" --site-id ${{ env.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          netlify env:set VITE_SUPABASE_URL "${{ secrets.VITE_SUPABASE_URL }}"
+          netlify env:set VITE_SUPABASE_ANON_KEY "${{ secrets.VITE_SUPABASE_ANON_KEY }}"
+          netlify env:set VITE_SUPABASE_SERVICE_ROLE_KEY "${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}"
+          netlify env:set VITE_OPENAI_API_KEY "${{ secrets.VITE_OPENAI_API_KEY }}"
+          netlify env:set VITE_STRIPE_PUBLISHABLE_KEY "${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}"
+          netlify env:set VITE_ENVIRONMENT "${{ env.ENVIRONMENT }}"
+          netlify env:set VITE_SITE_URL "${{ env.SITE_URL }}"
       
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v1
@@ -98,14 +107,17 @@ jobs:
           version: latest
       
       - name: Update Supabase Edge Function secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
-          # Set up Supabase config
-          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --password ${{ secrets.SUPABASE_DB_PASSWORD }}
+          # Link to Supabase project
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
           
           # Update Supabase Edge Function secrets
-          supabase secrets set STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
-          supabase secrets set SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-          supabase secrets set SUPABASE_SERVICE_ROLE_KEY=${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}
+          supabase secrets set STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}"
+          supabase secrets set SUPABASE_URL="${{ secrets.VITE_SUPABASE_URL }}"
+          supabase secrets set SUPABASE_SERVICE_ROLE_KEY="${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}"
       
       - name: Build application
         run: npm run build

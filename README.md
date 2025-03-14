@@ -42,16 +42,16 @@ To enable the GitHub Actions workflow, you need to set up the following secrets 
    - `VITE_OPENAI_API_KEY`: Your OpenAI API key
    - `VITE_STRIPE_PUBLISHABLE_KEY`: Your Stripe publishable key
    - `STRIPE_SECRET_KEY`: Your Stripe secret key
+   - `SUPABASE_ACCESS_TOKEN`: Your Supabase access token
    - `SUPABASE_PROJECT_REF`: Your Supabase project reference ID
-   - `SUPABASE_DB_PASSWORD`: Your Supabase database password
 
 #### Deployment Process
 
 The workflow automatically:
 1. Verifies all required secrets are present
 2. Sets up the environment based on the branch:
-   - `beta` branch deploys to development environment (beta--fluxr.netlify.app)
-   - `main` branch deploys to production environment (sub.fluxr.ai)
+   - `beta` branch deploys to development environment (beta.app.fluxr.ai)
+   - `main` branch deploys to production environment (app.fluxr.ai)
 3. Creates a temporary `.env` file for the build process
 4. Updates Netlify's environment variables via their API
 5. Updates Supabase Edge Function secrets
