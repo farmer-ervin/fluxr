@@ -34,6 +34,7 @@ supabase/config.toml
 supabase/.DS_Store
 supabase-mcp-server/
 supabase-mcp-server/supabase_mcp/.env.example
+supabase-mcp-server/supabase_mcp/.env
 
 # MCP configuration
 .mcp/
