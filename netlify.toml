@@ -18,6 +18,7 @@
 # Environment variable inheritance
 [build.environment]
   NODE_VERSION = "20"
+  VITE_MIXPANEL_TOKEN = "cc245e521eca3af89d7063811a233f53"
 
 # Set cache headers for assets
 [[headers]]
