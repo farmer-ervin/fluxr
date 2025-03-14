@@ -61,32 +61,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      product_shares: {
-        Row: {
-          id: string
-          product_id: string
-          shared_with_user_id: string
-          permission_level: 'read' | 'edit'
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          product_id: string
-          shared_with_user_id: string
-          permission_level?: 'read' | 'edit'
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          product_id?: string
-          shared_with_user_id?: string
-          permission_level?: 'read' | 'edit'
-          created_at?: string
-          updated_at?: string
-        }
-      }
       prds: {
         Row: {
           id: string

@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Trash2, FileUp, GitBranch, Kanban, Share2 } from 'lucide-react';
+import { Plus, FileText, Trash2, FileUp, GitBranch, Kanban } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useProduct } from '@/components/context/ProductContext';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { PageTitle } from '@/components/PageTitle';
-import { ShareProductDialog } from '@/components/ShareProductDialog';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +23,6 @@ interface Product {
   slug: string;
   created_at: string;
   user_id: string;
-  is_shared?: boolean;
-  permission_level?: 'read' | 'edit';
 }
 
 export function Dashboard() {
@@ -40,39 +37,15 @@ export function Dashboard() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        // Fetch products owned by the user
         const { data: ownedProducts, error: ownedError } = await supabase
           .from('products')
-          .select('*, product_shares!product_shares_shared_with_user_id_fkey(*)')
+          .select('*')
           .eq('user_id', user?.id)
           .order('created_at', { ascending: false });
 
         if (ownedError) throw ownedError;
 
-        // Fetch products shared with the user
-        const { data: sharedProducts, error: sharedError } = await supabase
-          .from('products')
-          .select('*, product_shares!product_shares_shared_with_user_id_fkey(*)')
-          .neq('user_id', user?.id)
-          .eq('product_shares.shared_with_user_id', user?.id)
-          .order('created_at', { ascending: false });
-
-        if (sharedError) throw sharedError;
-
-        // Combine and format products
-        const formattedProducts = [
-          ...(ownedProducts || []).map(p => ({
-            ...p,
-            is_shared: false
-          })),
-          ...(sharedProducts || []).map(p => ({
-            ...p,
-            is_shared: true,
-            permission_level: p.product_shares[0]?.permission_level
-          }))
-        ];
-
-        setProducts(formattedProducts);
+        setProducts(ownedProducts || []);
       } catch (err) {
         console.error('Error fetching products:', err);
         setError('Failed to load products. Please try again.');
@@ -199,11 +172,10 @@ export function Dashboard() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Owned Products */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Products</h3>
             <div className="grid gap-6 md:grid-cols-2">
-              {products.filter(p => !p.is_shared).map((product) => (
+              {products.map((product) => (
                 <div
                   key={product.id}
                   className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
@@ -216,10 +188,6 @@ export function Dashboard() {
                       {product.name}
                     </h3>
                     <div className="flex items-center gap-2">
-                      <ShareProductDialog
-                        productId={product.id}
-                        productName={product.name}
-                      />
                       <Button
                         variant="ghost"
                         size="sm"
@@ -243,41 +211,6 @@ export function Dashboard() {
               ))}
             </div>
           </div>
-
-          {/* Shared Products */}
-          {products.some(p => p.is_shared) && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Shared with You</h3>
-              <div className="grid gap-6 md:grid-cols-2">
-                {products.filter(p => p.is_shared).map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 
-                        className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-brand-purple"
-                        onClick={() => handleProductSelect(product)}
-                      >
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center">
-                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                          {product.permission_level === 'edit' ? 'Can edit' : 'Read only'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mb-4 cursor-pointer" onClick={() => handleProductSelect(product)}>
-                      <ProductDescription description={product.description} className="text-sm text-gray-600" />
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Created {new Date(product.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
