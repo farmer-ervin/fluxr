@@ -10,9 +10,9 @@
           "GITHUB_TOKEN": "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"
         }
       },
-      "supabase": {
+      "supabase1": {
         "command": "supabase-mcp-server",
-        "cwd": "/Users/ervins/Fluxr - Cursor/.mcp/server",
+        "cwd": "/Users/ervins/Fluxr/.mcp/server",
         "shell": "source .venv/bin/activate && $COMMAND",
         "env": {
           "SUPABASE_PROJECT_REF": "lmomfddmypameoffnbcq",
@@ -26,6 +26,11 @@
           "MCP_SERVER_PORT": "54322",
           "MCP_SERVER_HOST": "0.0.0.0"
         }
+      },
+      "supabase": {
+        "command": "supabase-mcp-server",
+        "cwd": "/Users/ervins/fluxr/.mcp/server",
+        "shell": "source .venv/bin/activate && $COMMAND"
       }
     }
 }
