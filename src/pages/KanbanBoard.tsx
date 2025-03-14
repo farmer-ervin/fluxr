@@ -15,6 +15,7 @@ import { AddTaskDialog } from '@/components/kanban/AddTaskDialog';
 import { COLUMNS, updateNodePositions, handleEdgeChanges, loadInitialData } from '@/lib/kanban';
 import { getAllBugs, createBug, updateBug, deleteBug } from '@/services/bugService';
 import { createTask, getAllTasks, updateTask, deleteTask } from '@/services/taskService';
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 
 interface Feature {
   id: string;
@@ -59,6 +60,17 @@ export function KanbanBoard() {
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [isTaskLoading, setIsTaskLoading] = useState(false);
+  const [deleteDialogState, setDeleteDialogState] = useState<{
+    isOpen: boolean;
+    itemType: string;
+    itemId: string | null;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    itemType: '',
+    itemId: null,
+    isDeleting: false
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -196,6 +208,89 @@ export function KanbanBoard() {
     } catch (error) {
       console.error('Error updating item:', error);
       setError('Failed to update item position. Please try again.');
+    }
+  };
+
+  const handleDeleteFeature = async (featureId: string) => {
+    setDeleteDialogState({
+      isOpen: true,
+      itemType: 'Feature',
+      itemId: featureId,
+      isDeleting: false
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteDialogState.itemId) return;
+    
+    try {
+      setDeleteDialogState(prev => ({ ...prev, isDeleting: true }));
+
+      switch (deleteDialogState.itemType) {
+        case 'Feature':
+          // First get the feature to check if it has a screenshot
+          const { data: feature, error: fetchError } = await supabase
+            .from('features')
+            .select('screenshot_url')
+            .eq('id', deleteDialogState.itemId)
+            .single();
+          
+          if (fetchError) throw fetchError;
+
+          // If there's a screenshot, delete it from storage
+          if (feature?.screenshot_url) {
+            const path = feature.screenshot_url.split('/').pop(); // Get filename from URL
+            if (path) {
+              const { error: storageError } = await supabase.storage
+                .from('feature-screenshots')
+                .remove([path]);
+              
+              if (storageError) {
+                console.error('Error deleting screenshot:', storageError);
+              }
+            }
+          }
+
+          // Now delete the feature
+          const { error } = await supabase
+            .from('features')
+            .delete()
+            .match({ id: deleteDialogState.itemId });
+          
+          if (error) throw error;
+          setFeatures(prev => prev.filter(f => f.id !== deleteDialogState.itemId));
+          break;
+
+        case 'Page':
+          const { error: pageError } = await supabase
+            .from('flow_pages')
+            .delete()
+            .match({ id: deleteDialogState.itemId });
+          
+          if (pageError) throw pageError;
+          setPages(prev => prev.filter(p => p.id !== deleteDialogState.itemId));
+          break;
+
+        case 'Bug':
+          await deleteBug(deleteDialogState.itemId);
+          setBugs(prev => prev.filter(b => b.id !== deleteDialogState.itemId));
+          break;
+
+        case 'Task':
+          await deleteTask(deleteDialogState.itemId);
+          setTasks(prev => prev.filter(t => t.id !== deleteDialogState.itemId));
+          break;
+      }
+
+      setDeleteDialogState({
+        isOpen: false,
+        itemType: '',
+        itemId: null,
+        isDeleting: false
+      });
+    } catch (error) {
+      console.error(`Error deleting ${deleteDialogState.itemType.toLowerCase()}:`, error);
+      setError(`Failed to delete ${deleteDialogState.itemType.toLowerCase()}`);
     }
   };
 
@@ -338,37 +433,30 @@ export function KanbanBoard() {
                   await updateTask(taskId, { status: newStatus });
                   await getAllTasks().then(setTasks);
                 }}
-                onDeleteFeature={async (featureId) => {
-                  const { error } = await supabase
-                    .from('features')
-                    .delete()
-                    .eq('id', featureId);
-                  
-                  if (error) {
-                    setError('Failed to delete feature');
-                  } else {
-                    setFeatures(prev => prev.filter(f => f.id !== featureId));
-                  }
+                onDeleteFeature={handleDeleteFeature}
+                onDeletePage={(pageId) => {
+                  setDeleteDialogState({
+                    isOpen: true,
+                    itemType: 'Page',
+                    itemId: pageId,
+                    isDeleting: false
+                  });
                 }}
-                onDeletePage={async (pageId) => {
-                  const { error } = await supabase
-                    .from('flow_pages')
-                    .delete()
-                    .eq('id', pageId);
-                  
-                  if (error) {
-                    setError('Failed to delete page');
-                  } else {
-                    setPages(prev => prev.filter(p => p.id !== pageId));
-                  }
+                onDeleteBug={(bugId) => {
+                  setDeleteDialogState({
+                    isOpen: true,
+                    itemType: 'Bug',
+                    itemId: bugId,
+                    isDeleting: false
+                  });
                 }}
-                onDeleteBug={async (bugId) => {
-                  await deleteBug(bugId);
-                  await getAllBugs().then(setBugs);
-                }}
-                onDeleteTask={async (taskId) => {
-                  await deleteTask(taskId);
-                  await getAllTasks().then(setTasks);
+                onDeleteTask={(taskId) => {
+                  setDeleteDialogState({
+                    isOpen: true,
+                    itemType: 'Task',
+                    itemId: taskId,
+                    isDeleting: false
+                  });
                 }}
               />
             </div>
@@ -480,6 +568,19 @@ export function KanbanBoard() {
         isLoading={isLoadingTasks}
         error={taskError}
         productId={productId || ''}
+      />
+
+      <ConfirmDeleteDialog
+        isOpen={deleteDialogState.isOpen}
+        onClose={() => setDeleteDialogState({
+          isOpen: false,
+          itemType: '',
+          itemId: null,
+          isDeleting: false
+        })}
+        onConfirm={handleConfirmDelete}
+        itemType={deleteDialogState.itemType}
+        isDeleting={deleteDialogState.isDeleting}
       />
     </div>
   );

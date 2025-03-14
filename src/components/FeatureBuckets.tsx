@@ -442,6 +442,31 @@ export function FeatureBuckets({ content, onChange }: FeatureBucketsProps) {
 
   const deleteFeature = async (featureId: string) => {
     try {
+      // First get the feature to check if it has a screenshot
+      const { data: feature, error: fetchError } = await supabase
+        .from('features')
+        .select('screenshot_url')
+        .eq('id', featureId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+
+      // If there's a screenshot, delete it from storage
+      if (feature?.screenshot_url) {
+        const path = feature.screenshot_url.split('/').pop(); // Get filename from URL
+        if (path) {
+          const { error: storageError } = await supabase.storage
+            .from('feature-screenshots')
+            .remove([path]);
+          
+          if (storageError) {
+            console.error('Error deleting screenshot:', storageError);
+            // Continue with feature deletion even if screenshot deletion fails
+          }
+        }
+      }
+
+      // Now delete the feature
       const { error } = await supabase
         .from('features')
         .delete()

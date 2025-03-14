@@ -37,6 +37,7 @@ import { PrdTooltip } from '@/components/PrdTooltip';
 import { SectionBlock } from '@/components/SectionBlock';
 import { CustomSectionDialog } from '@/components/CustomSectionDialog';
 import { UploadPrdDialog, ParsedPrdData } from '@/components/UploadPrdDialog';
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 
 interface Section {
   id: string;
@@ -94,6 +95,17 @@ export function PrdEditor() {
   const [editingSection, setEditingSection] = useState<{id: string, title: string} | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteDialogState, setDeleteDialogState] = useState<{
+    isOpen: boolean;
+    itemType: string;
+    itemId: string | null;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    itemType: '',
+    itemId: null,
+    isDeleting: false
+  });
 
   const debouncedProductUpdate = useCallback(
     debounce(async (id: string, updates: Partial<ProductDetails>) => {
@@ -577,34 +589,57 @@ export function PrdEditor() {
   };
 
   // Function to handle section deletion
-  const handleDeleteSection = (sectionId: string) => {
-    if (!prdData) return;
+  const handleDeleteSection = async (sectionId: string) => {
+    setDeleteDialogState({
+      isOpen: true,
+      itemType: 'Section',
+      itemId: sectionId,
+      isDeleting: false
+    });
+  };
+
+  const handleConfirmDeleteSection = async () => {
+    if (!prdData || !deleteDialogState.itemId) return;
     
-    // Get the section to delete
-    const sectionToDelete = sections.find(s => s.id === sectionId);
-    if (!sectionToDelete || !sectionToDelete.isCustom) return;
-    
-    // Get the current custom sections data
-    const customSections = { ...(prdData.custom_sections || {}) };
-    
-    // Remove the section from the custom sections object
-    delete customSections[sectionId];
-    
-    // Create the updates for the database
-    const updates = {
-      custom_sections: customSections
-    };
-    
-    // Update the PRD data in the database
-    setPrdData(prev => prev ? { ...prev, custom_sections: customSections } : null);
-    debouncedPrdUpdate(prdData.id, updates);
-    
-    // Remove the section from our local state
-    setSections(prev => prev.filter(s => s.id !== sectionId));
-    
-    // If the active section was deleted, set active section to overview
-    if (activeSectionId === sectionId) {
-      setActiveSectionId('overview');
+    try {
+      setDeleteDialogState(prev => ({ ...prev, isDeleting: true }));
+      
+      // Get the section to delete
+      const sectionToDelete = sections.find(s => s.id === deleteDialogState.itemId);
+      if (!sectionToDelete || !sectionToDelete.isCustom) return;
+      
+      // Get the current custom sections data
+      const customSections = { ...(prdData.custom_sections || {}) };
+      
+      // Remove the section from the custom sections object
+      delete customSections[deleteDialogState.itemId];
+      
+      // Create the updates for the database
+      const updates = {
+        custom_sections: customSections
+      };
+      
+      // Update the PRD data in the database
+      setPrdData(prev => prev ? { ...prev, custom_sections: customSections } : null);
+      debouncedPrdUpdate(prdData.id, updates);
+      
+      // Remove the section from our local state
+      setSections(prev => prev.filter(s => s.id !== deleteDialogState.itemId));
+      
+      // If the active section was deleted, set active section to overview
+      if (activeSectionId === deleteDialogState.itemId) {
+        setActiveSectionId('overview');
+      }
+
+      setDeleteDialogState({
+        isOpen: false,
+        itemType: '',
+        itemId: null,
+        isDeleting: false
+      });
+    } catch (error) {
+      console.error('Error deleting section:', error);
+      setError('Failed to delete section');
     }
   };
 
@@ -732,6 +767,81 @@ export function PrdEditor() {
             console.error('Error inserting features:', error);
           }
         });
+    }
+  };
+
+  // Update handleDeleteFeature to show confirmation
+  const handleDeleteFeature = async (featureId: string) => {
+    setDeleteDialogState({
+      isOpen: true,
+      itemType: 'Feature',
+      itemId: featureId,
+      isDeleting: false
+    });
+  };
+
+  const handleConfirmDeleteFeature = async () => {
+    if (!deleteDialogState.itemId) return;
+    
+    try {
+      setDeleteDialogState(prev => ({ ...prev, isDeleting: true }));
+
+      // First get the feature to check if it has a screenshot
+      const { data: feature, error: fetchError } = await supabase
+        .from('features')
+        .select('screenshot_url')
+        .eq('id', deleteDialogState.itemId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+
+      // If there's a screenshot, delete it from storage
+      if (feature?.screenshot_url) {
+        const path = feature.screenshot_url.split('/').pop(); // Get filename from URL
+        if (path) {
+          const { error: storageError } = await supabase.storage
+            .from('feature-screenshots')
+            .remove([path]);
+          
+          if (storageError) {
+            console.error('Error deleting screenshot:', storageError);
+          }
+        }
+      }
+
+      // Now delete the feature
+      const { error } = await supabase
+        .from('features')
+        .delete()
+        .match({ id: deleteDialogState.itemId });
+      
+      if (error) throw error;
+      
+      // Update the features section with the feature removed
+      setSections(prev => prev.map(section => {
+        if (section.id === 'features') {
+          const currentFeatures = JSON.parse(section.content);
+          const updatedFeatures = currentFeatures.map((bucket: any) => ({
+            ...bucket,
+            features: bucket.features.filter((f: any) => f.id !== deleteDialogState.itemId)
+          }));
+          return {
+            ...section,
+            content: JSON.stringify(updatedFeatures)
+          };
+        }
+        return section;
+      }));
+
+      setDeleteDialogState({
+        isOpen: false,
+        itemType: '',
+        itemId: null,
+        isDeleting: false
+      });
+    } catch (error) {
+      console.error('Error deleting feature:', error);
+      setError('Failed to delete feature');
     }
   };
 
@@ -867,6 +977,21 @@ export function PrdEditor() {
         onRenameSection={handleRenameSection}
         onDeleteSection={handleDeleteSection}
         editingSection={editingSection}
+      />
+      
+      <ConfirmDeleteDialog
+        isOpen={deleteDialogState.isOpen}
+        onClose={() => setDeleteDialogState({
+          isOpen: false,
+          itemType: '',
+          itemId: null,
+          isDeleting: false
+        })}
+        onConfirm={deleteDialogState.itemType === 'Section' 
+          ? handleConfirmDeleteSection 
+          : handleConfirmDeleteFeature}
+        itemType={deleteDialogState.itemType}
+        isDeleting={deleteDialogState.isDeleting}
       />
     </div>
   );
