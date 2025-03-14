@@ -110,14 +110,15 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        continue-on-error: true
         run: |
           # Link to Supabase project
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
           
           # Update Supabase Edge Function secrets
           supabase secrets set STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}"
-          supabase secrets set SUPABASE_URL="${{ secrets.VITE_SUPABASE_URL }}"
-          supabase secrets set SUPABASE_SERVICE_ROLE_KEY="${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}"
+          supabase secrets set API_SUPABASE_URL="${{ secrets.VITE_SUPABASE_URL }}"
+          supabase secrets set API_SERVICE_ROLE_KEY="${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}"
       
       - name: Build application
         run: npm run build

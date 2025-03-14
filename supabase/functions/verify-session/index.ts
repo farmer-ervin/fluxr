@@ -13,8 +13,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   httpClient: Stripe.createFetchHttpClient()
 })
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+const supabaseUrl = Deno.env.get('API_SUPABASE_URL') || ''
+const supabaseServiceRoleKey = Deno.env.get('API_SERVICE_ROLE_KEY') || ''
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
 // Retry configuration
