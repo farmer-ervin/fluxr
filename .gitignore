@@ -20,6 +20,31 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+/supabase-mcp-server/supabase_mcp/.env.example
+.mcp/config.json
+
+# Build output
+dist/
+dist/assets/
+
+# Supabase files
+supabase/.temp/
+supabase/config.toml
+supabase/.DS_Store
+
+# MCP configuration
+.mcp/
+.mcp/config.json
+
+# Local configuration
+*.local
+.env*
+!.env.example
+
+# Temporary files
+.temp/
+.tmp/
+*.tmp
 
 npm-debug.log*
 yarn-debug.log*
