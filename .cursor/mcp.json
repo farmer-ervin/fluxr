@@ -1,13 +1,5 @@
 {
     "mcpServers": {
-      "postgres": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-postgres",
-          "postgresql://postgres.lmomfddmypameoffnbcq:ejx1ncw7rqc6xgm@ZAN@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
-        ]
-      },
       "github": {
         "command": "npx",
         "args": [
@@ -17,7 +9,24 @@
         "env": {
           "GITHUB_TOKEN": "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"
         }
+      },
+      "supabase": {
+        "command": "supabase-mcp-server",
+        "cwd": "/Users/ervins/Fluxr - Cursor/.mcp/server",
+        "shell": "source .venv/bin/activate && $COMMAND",
+        "env": {
+          "SUPABASE_PROJECT_REF": "lmomfddmypameoffnbcq",
+          "SUPABASE_DB_PASSWORD": "ejx1ncw7rqc6xgm!ZAN",
+          "SUPABASE_REGION": "us-east-1",
+          "SUPABASE_ACCESS_TOKEN": "sbp_aaee81c435373219338f7f522eb07d1953508a54",
+          "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb21mZGRteXBhbWVvZmZuYmNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MDYwMjk3NCwiZXhwIjoyMDU2MTc4OTc0fQ.7q7dLGJ7SnyGgG2MyB2wxieJ8krBdkc7n0ZeFCgeV_8",
+          "SUPABASE_URL": "https://lmomfddmypameoffnbcq.supabase.co",
+          "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb21mZGRteXBhbWVvZmZuYmNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MDYwMjk3NCwiZXhwIjoyMDU2MTc4OTc0fQ.7q7dLGJ7SnyGgG2MyB2wxieJ8krBdkc7n0ZeFCgeV_8",
+          "DATABASE_URL": "postgresql://postgres:ejx1ncw7rqc6xgm!ZAN@db.lmomfddmypameoffnbcq.supabase.co:5432/postgres",
+          "MCP_SERVER_PORT": "54322",
+          "MCP_SERVER_HOST": "0.0.0.0"
+        }
       }
     }
-  }
+}
   
