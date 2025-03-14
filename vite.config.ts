@@ -5,6 +5,10 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: parseInt(process.env.VITE_PORT || '5174'),
+    strictPort: true, // Fail if port is in use
+  },
   optimizeDeps: {
     exclude: ['lucide-react'],
   },

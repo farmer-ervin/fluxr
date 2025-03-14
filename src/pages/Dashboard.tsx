@@ -22,6 +22,7 @@ interface Product {
   description: string;
   slug: string;
   created_at: string;
+  user_id: string;
 }
 
 export function Dashboard() {
@@ -36,13 +37,15 @@ export function Dashboard() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const { data, error } = await supabase
+        const { data: ownedProducts, error: ownedError } = await supabase
           .from('products')
           .select('*')
+          .eq('user_id', user?.id)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setProducts(data || []);
+        if (ownedError) throw ownedError;
+
+        setProducts(ownedProducts || []);
       } catch (err) {
         console.error('Error fetching products:', err);
         setError('Failed to load products. Please try again.');
@@ -51,8 +54,10 @@ export function Dashboard() {
       }
     }
 
-    fetchProducts();
-  }, []);
+    if (user) {
+      fetchProducts();
+    }
+  }, [user]);
 
   const handleProductSelect = (product: Product) => {
     if (!product.slug) {
@@ -166,39 +171,46 @@ export function Dashboard() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h3 
-                  className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-brand-purple"
-                  onClick={() => handleProductSelect(product)}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Products</h3>
+            <div className="grid gap-6 md:grid-cols-2">
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
                 >
-                  {product.name}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProductToDelete(product);
-                  }}
-                  className="ml-2 hover:bg-gray-100"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="mb-4 cursor-pointer" onClick={() => handleProductSelect(product)}>
-                <ProductDescription description={product.description} className="text-sm text-gray-600" />
-              </div>
-              <div className="text-sm text-gray-500">
-                Created {new Date(product.created_at).toLocaleDateString()}
-              </div>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 
+                      className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-brand-purple"
+                      onClick={() => handleProductSelect(product)}
+                    >
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProductToDelete(product);
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mb-4 cursor-pointer" onClick={() => handleProductSelect(product)}>
+                    <ProductDescription description={product.description} className="text-sm text-gray-600" />
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Created {new Date(product.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
 
