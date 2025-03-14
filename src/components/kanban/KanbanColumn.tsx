@@ -4,6 +4,7 @@ import { KanbanCard } from './KanbanCard';
 import { BugCard } from './BugCard';
 import { TaskCard } from './TaskCard';
 import { Task } from '@/types/task';
+import { supabase } from '@/lib/supabase';
 
 interface Item {
   id: string;
@@ -45,6 +46,48 @@ export function KanbanColumn({
   onDeleteBug,
   onDeleteTask
 }: KanbanColumnProps) {
+  const handleFeatureUpdate = async (featureId: string, updates: Partial<Item>) => {
+    try {
+      const { error } = await supabase
+        .from('features')
+        .update(updates)
+        .eq('id', featureId);
+      
+      if (error) {
+        console.error('Error updating feature:', error);
+        throw new Error('Failed to update feature');
+      }
+      
+      // If status is being updated, also call the status change handler
+      if (updates.implementation_status && onFeatureStatusChange) {
+        onFeatureStatusChange(featureId, updates.implementation_status);
+      }
+    } catch (error) {
+      console.error('Error in handleFeatureUpdate:', error);
+    }
+  };
+
+  const handlePageUpdate = async (pageId: string, updates: Partial<Item>) => {
+    try {
+      const { error } = await supabase
+        .from('flow_pages')
+        .update(updates)
+        .eq('id', pageId);
+      
+      if (error) {
+        console.error('Error updating page:', error);
+        throw new Error('Failed to update page');
+      }
+      
+      // If status is being updated, also call the status change handler
+      if (updates.implementation_status && onPageStatusChange) {
+        onPageStatusChange(pageId, updates.implementation_status);
+      }
+    } catch (error) {
+      console.error('Error in handlePageUpdate:', error);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 w-full h-full">
       <div className="flex items-center justify-between">
@@ -95,13 +138,13 @@ export function KanbanColumn({
                       <KanbanCard
                         feature={item}
                         index={index}
-                        onUpdate={() => onPageStatusChange?.(item.id, item.implementation_status || 'not_started')}
+                        onUpdate={handlePageUpdate}
                       />
                     ) : (
                       <KanbanCard
                         feature={item}
                         index={index}
-                        onUpdate={() => onFeatureStatusChange?.(item.id, item.implementation_status || 'not_started')}
+                        onUpdate={handleFeatureUpdate}
                       />
                     )}
                   </div>
