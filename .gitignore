@@ -52,3 +52,9 @@ supabase-mcp-server/supabase_mcp/.env
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Backups
+backups/
+/backups
+**/backups/
+/Users/ervins/backups/
