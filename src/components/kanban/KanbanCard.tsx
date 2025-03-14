@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Button } from '@/components/ui/button';
-import { Pencil, Loader2, AlertCircle, Tag, Image } from 'lucide-react';
+import { Pencil, Loader2, AlertCircle, Tag, Image, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
   Dialog,
@@ -32,9 +32,10 @@ interface KanbanCardProps {
   feature: Feature;
   index: number;
   onUpdate: (featureId: string, updates: Partial<Feature>) => Promise<void>;
+  onDelete?: (featureId: string) => Promise<void>;
 }
 
-export function KanbanCard({ feature, index, onUpdate }: KanbanCardProps) {
+export function KanbanCard({ feature, index, onUpdate, onDelete }: KanbanCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -95,17 +96,37 @@ export function KanbanCard({ feature, index, onUpdate }: KanbanCardProps) {
     <>
       <div className="flex justify-between items-start">
         <h4 className="font-medium text-gray-900">{feature.name}</h4>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  await onDelete(feature.id);
+                } catch (error) {
+                  console.error('Error deleting item:', error);
+                  setError('Failed to delete item');
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-gray-600 line-clamp-2">{feature.description}</p>
