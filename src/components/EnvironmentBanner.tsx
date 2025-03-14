@@ -11,7 +11,7 @@ export function EnvironmentBanner() {
     );
   }
   
-  if (hostname === 'beta.fluxr.ai') {
+  if (hostname === 'beta.app.fluxr.ai') {
     return (
       <div className="sticky top-0 z-50 bg-blue-500 text-white text-xs py-1 text-center">
         Beta
