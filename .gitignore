@@ -27,3 +27,6 @@ yarn-error.log*
 
 # Supabase MCP Server files
 supabase-mcp-server/
+
+# Cursor files
+.cursor/
