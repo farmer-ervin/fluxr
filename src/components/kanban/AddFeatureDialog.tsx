@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,12 +12,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { uploadFile } from '@/lib/fileUpload';
+import { ImageUpload } from '@/components/shared/ImageUpload';
 
 interface Feature {
   name: string;
   description: string;
   priority: 'must-have' | 'nice-to-have' | 'not-prioritized';
   implementation_status: 'not_started' | 'in_progress' | 'completed';
+  screenshot_url?: string;
   type: 'feature';
 }
 
@@ -26,9 +29,10 @@ interface AddFeatureDialogProps {
   onClose: () => void;
   onAdd: (feature: Omit<Feature, 'id' | 'position'>) => Promise<void>;
   isLoading?: boolean;
+  error?: string | null;
 }
 
-export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatureDialogProps) {
+export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading, error }: AddFeatureDialogProps) {
   const [feature, setFeature] = useState<Omit<Feature, 'id' | 'position'>>({
     name: '',
     description: '',
@@ -36,17 +40,55 @@ export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatu
     implementation_status: 'not_started',
     type: 'feature'
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFeature(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleImageSelect = async (file: File) => {
+    setSelectedFile(file);
+    setUploadError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onAdd(feature);
-    setFeature({
-      name: '',
-      description: '',
-      priority: 'not-prioritized',
-      implementation_status: 'not_started',
-      type: 'feature'
-    });
+    setUploadProgress(true);
+    setUploadError(null);
+    let screenshotUrl = '';
+
+    try {
+      if (selectedFile) {
+        const uploadedUrl = await uploadFile(selectedFile, 'feature-screenshots', 'features');
+        if (uploadedUrl) {
+          screenshotUrl = uploadedUrl;
+        }
+      }
+
+      await onAdd({
+        ...feature,
+        screenshot_url: screenshotUrl || undefined
+      });
+
+      setFeature({
+        name: '',
+        description: '',
+        priority: 'not-prioritized',
+        implementation_status: 'not_started',
+        type: 'feature'
+      });
+      setSelectedFile(null);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      setUploadProgress(false);
+    }
   };
 
   return (
@@ -59,14 +101,22 @@ export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatu
           </DialogDescription>
         </DialogHeader>
 
+        {error && (
+          <div className="bg-red-50 text-red-700 p-3 rounded-lg flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            <p>{error}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Feature Name</Label>
               <Input
                 id="name"
+                name="name"
                 value={feature.name}
-                onChange={(e) => setFeature(prev => ({ ...prev, name: e.target.value }))}
+                onChange={handleChange}
                 placeholder="Enter feature name"
                 required
               />
@@ -76,10 +126,21 @@ export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatu
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
+                name="description"
                 value={feature.description}
-                onChange={(e) => setFeature(prev => ({ ...prev, description: e.target.value }))}
+                onChange={handleChange}
                 placeholder="Describe the feature and its benefits"
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Screenshot</Label>
+              <ImageUpload
+                onImageSelect={handleImageSelect}
+                onImageRemove={() => setSelectedFile(null)}
+                isUploading={uploadProgress}
+                error={uploadError}
               />
             </div>
 
@@ -87,8 +148,9 @@ export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatu
               <Label htmlFor="priority">Priority</Label>
               <select
                 id="priority"
+                name="priority"
                 value={feature.priority}
-                onChange={(e) => setFeature(prev => ({ ...prev, priority: e.target.value as Feature['priority'] }))}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                 required
               >
@@ -102,8 +164,9 @@ export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatu
               <Label htmlFor="implementation_status">Implementation Status</Label>
               <select
                 id="implementation_status"
+                name="implementation_status"
                 value={feature.implementation_status}
-                onChange={(e) => setFeature(prev => ({ ...prev, implementation_status: e.target.value as Feature['implementation_status'] }))}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                 required
               >
@@ -115,18 +178,18 @@ export function AddFeatureDialog({ isOpen, onClose, onAdd, isLoading }: AddFeatu
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={onClose} type="button">
+            <Button variant="outline" onClick={onClose} type="button" disabled={isLoading || uploadProgress}>
               Cancel
             </Button>
             <Button 
               variant="secondary" 
               type="submit"
-              disabled={isLoading || !feature.name.trim() || !feature.description.trim()}
+              disabled={isLoading || uploadProgress || !feature.name.trim() || !feature.description.trim()}
             >
-              {isLoading ? (
+              {(isLoading || uploadProgress) ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Adding...
+                  {uploadProgress ? 'Uploading...' : 'Adding...'}
                 </span>
               ) : (
                 'Add Feature'
