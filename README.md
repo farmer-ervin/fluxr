@@ -1,4 +1,4 @@
-# Fluxr
+# Fluxr.
 
 ## Environment Setup
 
