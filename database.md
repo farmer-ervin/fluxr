@@ -196,12 +196,15 @@ Indexes:
 
 ### Customer Profiles
 
-1. Users can manage own customer profiles
+1. Users can manage own customer profiles 
    - Action: ALL
    - Roles: authenticated
    - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = customer_profiles.product_id AND products.user_id = auth.uid())))
 
+
+=======
 ### Bugs 
+
 
 1. Users can view bugs for their own products
    - Action: SELECT
