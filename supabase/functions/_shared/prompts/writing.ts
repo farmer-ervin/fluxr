@@ -3,7 +3,7 @@ import { TextActionRequest } from '../types.ts';
 export const sectionGuidance = {
   overview: `This section should provide a high-level overview of the product, including the vision statement, key objectives, market opportunity, and strategic alignment.`,
   problem: `This section should clearly articulate the problem statement, current pain points, existing solutions, and why a new solution is needed.`,
-  solution: `This section should describe how the product solves the identified problems, including key differentiators, unique value proposition, and competitive advantages.`,
+  solution: `This section should describe how the product solves the identified problems, including key differentiators, unique value proposition, and the competitive advantages.`,
   target_audience: `This section should define the target users and stakeholders, including user personas, market segments, demographics, and user behaviors/needs.`,
   tech_stack: `This section should detail the technology choices, including frontend, backend, development tools, third-party services, and deployment infrastructure.`,
   success_metrics: `This section should outline the key performance indicators (KPIs), success criteria, and measurement methods for evaluating product success.`
