@@ -32,20 +32,24 @@ export async function callOpenAI(text: string, action: 'improve' | 'expand' | 's
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          text,
-          action,
-          context
+          type: 'text_action',
+          data: {
+            text,
+            action,
+            context
+          },
+          model: 'gpt-4'
         })
       }
     );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new OpenAIError(error.message || 'Failed to process text');
+      throw new OpenAIError(error.error || 'Failed to process text');
     }
 
     const data = await response.json();
-    return data;
+    return { content: data.result };
   } catch (error) {
     if (error instanceof OpenAIError) {
       throw error;

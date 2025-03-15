@@ -1,4 +1,4 @@
-export interface TextActionRequest {
+export interface TextActionData {
   text: string;
   action: 'improve' | 'expand' | 'shorten';
   context?: {
@@ -9,12 +9,12 @@ export interface TextActionRequest {
 
 export interface OpenAIRequest {
   type: 'text_action';
-  data: TextActionRequest;
+  data: TextActionData;
   model?: string;
 }
 
 export interface OpenAIResponse {
-  result: any;
+  result: string | null;
   status: 'success' | 'error';
   error?: string;
   usage?: {
