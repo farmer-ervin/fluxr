@@ -194,7 +194,7 @@ Indexes:
    - Roles: authenticated
    - Definition: (user_id = auth.uid())
 
-### Customer Profiles 
+### Customer Profiles
 
 1. Users can manage own customer profiles 
    - Action: ALL
