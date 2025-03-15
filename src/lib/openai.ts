@@ -1,16 +1,49 @@
-import OpenAI from 'openai';
-
-// Initialize the OpenAI client
-export const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true // Note: In production, API calls should be made from a backend
-});
+import { supabase } from './supabase';
 
 // Create a custom error class for user-friendly OpenAI errors
 export class OpenAIError extends Error {
   constructor(message: string, public originalError?: any) {
     super(message);
     this.name = 'OpenAIError';
+  }
+}
+
+// Function to call our OpenAI edge function
+export async function callOpenAI(text: string, action: 'improve' | 'expand' | 'shorten', context: any) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new OpenAIError('Authentication required');
+    }
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/beta_openAI`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          text,
+          action,
+          context
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new OpenAIError(error.message || 'Failed to process text');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof OpenAIError) {
+      throw error;
+    }
+    throw new OpenAIError('Failed to process text', error);
   }
 }
 

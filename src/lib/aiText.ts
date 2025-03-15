@@ -1,4 +1,4 @@
-import { openai, OpenAIError } from './openai';
+import { OpenAIError, callOpenAI } from './openai';
 import { supabase } from './supabase';
 
 interface AiTextRequest {
@@ -85,78 +85,9 @@ const promptTemplates = {
 
 export async function processAiText({ text, action, context }: AiTextRequest): Promise<AiTextResponse> {
   try {
-    const template = promptTemplates[action];
-    if (!template) {
-      throw new Error('Invalid action type');
-    }
-
-    // Calculate target word count for expand/shorten
-    const wordCount = text.trim().split(/\s+/).length;
-    const targetWordCount = action === 'expand' 
-      ? Math.round(wordCount * 1.4)  // 40% longer
-      : action === 'shorten'
-      ? Math.round(wordCount * 0.6)  // 40% shorter
-      : 0;
-
-    // Add context to the system prompt if available
-    let systemPrompt = template.systemPrompt;
-    if (context) {
-      systemPrompt += `\n\nContext (for understanding only, do not include in output):\n`;
-      if (context.section) {
-        // Add section-specific guidance
-        const guidance = sectionGuidance[context.section as keyof typeof sectionGuidance];
-        if (guidance) {
-          systemPrompt += `Current Section: ${context.section}\nSection Purpose: ${guidance}\n`;
-        } else {
-          systemPrompt += `Current Section: ${context.section}\n`;
-        }
-      }
-      if (context.productContext) {
-        systemPrompt += `Product Context: ${context.productContext}\n`;
-      }
-      
-      // Add explicit reminder about section titles
-      systemPrompt += `\nREMINDER: Do not include any section titles or headers in your response. Return only the content text.\n`;
-    }
-
-    // Add word count requirements for expand/shorten
-    if (targetWordCount > 0) {
-      systemPrompt += `\n\nOriginal word count: ${wordCount}\nRequired word count: ${targetWordCount}\n`;
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: text
-        }
-      ],
-      temperature: template.temperature,
-      max_tokens: template.maxTokens
-    });
-
-    const response = completion.choices[0].message.content;
-    const tokenUsage = completion.usage;
-
-    // Log the OpenAI call
-    await supabase.from('openai_logs').insert({
-      user_id: (await supabase.auth.getUser()).data.user?.id,
-      request_type: `text_${action}`,
-      model: 'gpt-4o-mini',
-      request_payload: { text, context },
-      response_payload: response,
-      input_tokens: tokenUsage?.prompt_tokens,
-      output_tokens: tokenUsage?.completion_tokens
-    });
-
-    return { content: response || '' };
+    const response = await callOpenAI(text, action, context);
+    return { content: response.content || '' };
   } catch (error) {
-    // Log error but with a user-friendly message
     if (error instanceof OpenAIError) {
       throw error;
     } else {
