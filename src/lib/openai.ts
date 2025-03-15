@@ -1,4 +1,11 @@
+import OpenAI from 'openai';
 import { supabase } from './supabase';
+
+// Initialize the OpenAI client
+export const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true // Note: In production, API calls should be made from a backend
+});
 
 // Create a custom error class for user-friendly OpenAI errors
 export class OpenAIError extends Error {
@@ -8,7 +15,7 @@ export class OpenAIError extends Error {
   }
 }
 
-// Function to call our OpenAI edge function
+// Function to call our OpenAI edge function for text processing
 export async function callOpenAI(text: string, action: 'improve' | 'expand' | 'shorten', context: any) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
