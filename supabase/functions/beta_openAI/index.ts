@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import OpenAI from 'https://esm.sh/openai@4.20.1';
+import { OpenAI } from 'https://deno.land/x/openai@v4.24.0/mod.ts';
 import { verifyAuth, logOpenAICall } from '../_shared/auth.ts';
 import { OpenAIRequest, OpenAIResponse } from '../_shared/types.ts';
 import { prepareTextActionPrompt } from '../_shared/prompts/writing.ts';
@@ -31,7 +31,8 @@ serve(async (req) => {
 
     // Initialize OpenAI
     const openai = new OpenAI({
-      apiKey: Deno.env.get('OPENAI_API_KEY')
+      apiKey: Deno.env.get('OPENAI_API_KEY') || '',
+      dangerouslyAllowBrowser: true
     });
 
     let result;
@@ -43,21 +44,26 @@ serve(async (req) => {
         const prompt = prepareTextActionPrompt(body.data);
         const model = body.model || 'gpt-4';
         
-        const completion = await openai.chat.completions.create({
-          model,
-          messages: [
-            { role: 'system', content: prompt.systemPrompt },
-            { role: 'user', content: prompt.userPrompt }
-          ],
-          temperature: prompt.temperature,
-          max_tokens: prompt.maxTokens
-        });
+        try {
+          const completion = await openai.chat.completions.create({
+            model,
+            messages: [
+              { role: 'system', content: prompt.systemPrompt },
+              { role: 'user', content: prompt.userPrompt }
+            ],
+            temperature: prompt.temperature,
+            max_tokens: prompt.maxTokens
+          });
 
-        result = completion.choices[0]?.message?.content;
-        usage = {
-          input_tokens: completion.usage?.prompt_tokens || 0,
-          output_tokens: completion.usage?.completion_tokens || 0
-        };
+          result = completion.choices[0]?.message?.content;
+          usage = {
+            input_tokens: completion.usage?.prompt_tokens || 0,
+            output_tokens: completion.usage?.completion_tokens || 0
+          };
+        } catch (openaiError) {
+          console.error('OpenAI API Error:', openaiError);
+          throw new Error(openaiError.message || 'Failed to process text with OpenAI');
+        }
         break;
       }
       default:
@@ -97,7 +103,7 @@ serve(async (req) => {
     const response: OpenAIResponse = {
       result: null,
       status: 'error',
-      error: error.message
+      error: error.message || 'An unexpected error occurred'
     };
 
     return new Response(
