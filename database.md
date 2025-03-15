@@ -201,7 +201,10 @@ Indexes:
    - Roles: authenticated
    - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = customer_profiles.product_id AND products.user_id = auth.uid())))
 
-### Bugs  
+
+=======
+### Bugs 
+
 
 1. Users can view bugs for their own products
    - Action: SELECT
