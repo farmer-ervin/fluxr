@@ -4,6 +4,12 @@ import { verifyAuth, logOpenAICall } from '../_shared/auth.ts';
 import { OpenAIRequest, OpenAIResponse } from '../_shared/types.ts';
 import { prepareTextActionPrompt } from '../_shared/prompts/writing.ts';
 
+// Initialize OpenAI client once, outside the request handler
+const openai = new OpenAI({
+  apiKey: Deno.env.get('OPENAI_API_KEY') || '',
+  dangerouslyAllowBrowser: true
+});
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -20,20 +26,15 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
-    const user = await verifyAuth(req);
+    // Start auth verification and request parsing in parallel
+    const [user, body] = await Promise.all([
+      verifyAuth(req),
+      req.json() as Promise<OpenAIRequest>
+    ]);
     
-    // Parse and validate request
-    const body = await req.json() as OpenAIRequest;
     if (!body.type || !body.data) {
       throw new Error('Invalid request format');
     }
-
-    // Initialize OpenAI
-    const openai = new OpenAI({
-      apiKey: Deno.env.get('OPENAI_API_KEY') || '',
-      dangerouslyAllowBrowser: true
-    });
 
     let result;
     let usage;
@@ -60,6 +61,18 @@ serve(async (req) => {
             input_tokens: completion.usage?.prompt_tokens || 0,
             output_tokens: completion.usage?.completion_tokens || 0
           };
+
+          // Fire and forget logging - don't await
+          logOpenAICall(
+            user.id,
+            body.type,
+            body.data,
+            result,
+            model,
+            usage?.input_tokens,
+            usage?.output_tokens
+          ).catch(console.error); // Log any errors but don't block response
+
         } catch (openaiError) {
           console.error('OpenAI API Error:', openaiError);
           throw new Error(openaiError.message || 'Failed to process text with OpenAI');
@@ -69,17 +82,6 @@ serve(async (req) => {
       default:
         throw new Error(`Unsupported request type: ${body.type}`);
     }
-
-    // Log the API call
-    await logOpenAICall(
-      user.id,
-      body.type,
-      body.data,
-      result,
-      body.model || 'gpt-4',
-      usage?.input_tokens,
-      usage?.output_tokens
-    );
 
     const response: OpenAIResponse = {
       result,
