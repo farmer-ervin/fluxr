@@ -2,6 +2,101 @@
 
 This document outlines the implementation of OpenAI API calls using Supabase Edge Functions. The implementation provides a secure way to make OpenAI API calls while protecting API keys and implementing proper logging and authentication.
 
+## Environment Architecture
+
+The implementation follows a two-environment architecture with a development workflow:
+
+### Development Workflow
+- All development work is done against the **beta environment**
+- Developers work on feature branches, then merge to `beta` branch
+- The beta edge function (`beta_openAI`) is used for all development and testing
+- This ensures development matches production conditions exactly
+
+### Beta Environment
+- Triggered by pushes to the `beta` branch
+- Uses `beta_openAI` edge function
+- Connected to beta Supabase project
+- Used for:
+  - Active development
+  - Testing new features
+  - Integration testing
+  - User acceptance testing
+
+### Production Environment
+- Triggered by pushes to the `main` branch
+- Uses `main_openAI` edge function
+- Connected to production Supabase project
+- Only receives code that has been tested in beta
+- Updated through PR merges from `beta` to `main`
+
+### Workflow Example
+1. Developer creates a feature branch from `beta`
+2. Development and testing is done using the beta edge function
+3. Changes are pushed to `beta` branch, triggering beta deployment
+4. After testing in beta environment, PR is created to merge `beta` into `main`
+5. When PR is merged, changes are deployed to production
+
+### GitHub Actions Configuration
+
+The deployment process is managed by two GitHub Action workflows:
+
+1. **Beta Deployment** (`.github/workflows/deploy-beta.yml`):
+```yaml
+name: Deploy to Beta
+on:
+  push:
+    branches: [ beta ]
+jobs:
+  deploy:
+    steps:
+      - Setup Supabase CLI
+      - Deploy Edge Functions
+      - Set Environment Variables
+```
+
+2. **Production Deployment** (`.github/workflows/deploy-main.yml`):
+```yaml
+name: Deploy to Production
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    steps:
+      - Setup Supabase CLI
+      - Deploy Edge Functions
+      - Set Environment Variables
+```
+
+### Environment Variables
+
+Each environment has its own set of variables in GitHub Secrets:
+- Beta Environment:
+  - `supabase_access_token`: Beta project access token
+  - `supabase_project_ref`: Beta project reference
+  - `VITE_OPENAI_API_KEY`: OpenAI API key for beta
+
+- Production Environment:
+  - Same variables but with production values
+  - Managed separately for security
+
+### Important Notes
+
+1. **No Local Development Environment**
+   - Unlike traditional setups, we don't use local Supabase for development
+   - All development is done against the beta environment
+   - This ensures consistency and prevents environment-specific issues
+
+2. **Testing Process**
+   - All testing is done in the beta environment
+   - This includes both development testing and QA
+   - Production is only updated after successful beta testing
+
+3. **Deployment Safety**
+   - Beta deployments can happen frequently during development
+   - Production deployments only occur through reviewed PRs
+   - This maintains stability in the production environment
+
 ## Architecture Overview
 
 The implementation follows a three-environment architecture:
