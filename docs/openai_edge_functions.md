@@ -2,7 +2,7 @@
 
 This document outlines the implementation of OpenAI API calls using Supabase Edge Functions. The implementation provides a secure way to make OpenAI API calls while protecting API keys and implementing proper logging and authentication.
 
-## Environment Architecture
+## Environment Architecture 
 
 The implementation follows a two-environment architecture with a development workflow:
 
