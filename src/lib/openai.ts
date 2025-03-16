@@ -23,8 +23,11 @@ export async function callOpenAI(text: string, action: 'improve' | 'expand' | 's
       throw new OpenAIError('Authentication required');
     }
 
+    // Use main_openAI in production, beta_openAI in beta
+    const functionName = import.meta.env.PROD ? 'main_openAI' : 'beta_openAI';
+
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/beta_openAI`,
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
       {
         method: 'POST',
         headers: {
