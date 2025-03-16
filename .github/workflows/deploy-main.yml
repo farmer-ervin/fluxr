@@ -28,6 +28,20 @@ jobs:
           VITE_MIXPANEL_TOKEN: ${{ secrets.VITE_MIXPANEL_TOKEN }}
         run: npm run build
         
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Supabase Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.supabase_access_token }}
+          PROJECT_REF: ${{ secrets.supabase_project_ref }}
+          OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+        run: |
+          supabase functions deploy main_openAI --project-ref $PROJECT_REF
+          supabase secrets set --project-ref $PROJECT_REF OPENAI_API_KEY=$OPENAI_API_KEY
+        
       - name: Deploy to Netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

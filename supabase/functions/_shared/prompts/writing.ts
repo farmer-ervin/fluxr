@@ -1,29 +1,15 @@
-import { OpenAIError, callOpenAI } from './openai';
-import { supabase } from './supabase';
+import { TextActionRequest } from '../types.ts';
 
-interface AiTextRequest {
-  text: string;
-  action: 'improve' | 'expand' | 'shorten';
-  context?: {
-    section?: string;
-    productContext?: string;
-  };
-}
-
-interface AiTextResponse {
-  content: string;
-}
-
-const sectionGuidance = {
+export const sectionGuidance = {
   overview: `This section should provide a high-level overview of the product, including the vision statement, key objectives, market opportunity, and strategic alignment.`,
   problem: `This section should clearly articulate the problem statement, current pain points, existing solutions, and why a new solution is needed.`,
-  solution: `This section should describe how the product solves the identified problems, including key differentiators, unique value proposition, and competitive advantages.`,
+  solution: `This section should describe how the product solves the identified problems, including key differentiators, unique value proposition, and the competitive advantages.`,
   target_audience: `This section should define the target users and stakeholders, including user personas, market segments, demographics, and user behaviors/needs.`,
   tech_stack: `This section should detail the technology choices, including frontend, backend, development tools, third-party services, and deployment infrastructure.`,
   success_metrics: `This section should outline the key performance indicators (KPIs), success criteria, and measurement methods for evaluating product success.`
 };
 
-const promptTemplates = {
+export const promptTemplates = {
   improve: {
     systemPrompt: `You are an expert editor focused on improving writing clarity, professionalism, and impact. 
     You are specifically editing a section of a Product Requirements Document (PRD).
@@ -83,15 +69,59 @@ const promptTemplates = {
   }
 };
 
-export async function processAiText({ text, action, context }: AiTextRequest): Promise<AiTextResponse> {
-  try {
-    const response = await callOpenAI(text, action, context);
-    return { content: response.content || '' };
-  } catch (error) {
-    if (error instanceof OpenAIError) {
-      throw error;
-    } else {
-      throw new OpenAIError('Failed to process text. Please try again.');
-    }
+export function prepareTextActionPrompt(data: TextActionRequest): {
+  systemPrompt: string;
+  userPrompt: string;
+  temperature: number;
+  maxTokens: number;
+  defaultModel: string;
+} {
+  const { text, action, context } = data;
+  
+  const template = promptTemplates[action];
+  if (!template) {
+    throw new Error(`Invalid action type: ${action}`);
   }
-}
+  
+  // Calculate target word count for expand/shorten
+  const wordCount = text.trim().split(/\s+/).length;
+  const targetWordCount = action === 'expand' 
+    ? Math.round(wordCount * 1.4)  // 40% longer
+    : action === 'shorten'
+    ? Math.round(wordCount * 0.6)  // 40% shorter
+    : 0;
+  
+  // Add context to the system prompt if available
+  let systemPrompt = template.systemPrompt;
+  if (context) {
+    systemPrompt += `\n\nContext (for understanding only, do not include in output):\n`;
+    if (context.section) {
+      // Add section-specific guidance
+      const guidance = sectionGuidance[context.section as keyof typeof sectionGuidance];
+      if (guidance) {
+        systemPrompt += `Current Section: ${context.section}\nSection Purpose: ${guidance}\n`;
+      } else {
+        systemPrompt += `Current Section: ${context.section}\n`;
+      }
+    }
+    if (context.productContext) {
+      systemPrompt += `Product Context: ${context.productContext}\n`;
+    }
+    
+    // Add explicit reminder about section titles
+    systemPrompt += `\nREMINDER: Do not include any section titles or headers in your response. Return only the content text.\n`;
+  }
+  
+  // Add word count requirements for expand/shorten
+  if (targetWordCount > 0) {
+    systemPrompt += `\n\nOriginal word count: ${wordCount}\nRequired word count: ${targetWordCount}\n`;
+  }
+  
+  return {
+    systemPrompt,
+    userPrompt: text,
+    temperature: template.temperature,
+    maxTokens: template.maxTokens,
+    defaultModel: 'gpt-4o-mini'  // Match your existing implementation
+  };
+} 

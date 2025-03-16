@@ -24,7 +24,6 @@ import { SaveIndicator, SaveStatus } from '../components/SaveIndicator';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { FeatureBuckets } from '../components/FeatureBuckets';
 import { AiDialog } from '../components/AiDialog';
-import { FeaturesChat } from '../components/FeaturesChat';
 import { EditableField } from '../components/EditableField';
 import { EditableList } from '../components/EditableList';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
