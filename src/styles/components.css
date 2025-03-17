@@ -1,0 +1,132 @@
+/* Ship It Card */
+.ship-it-card {
+  @apply bg-card p-6 rounded-xl border border-border hover:shadow-blue-glow transition-all duration-300;
+}
+
+/* Card Variants */
+.bordered-card {
+  @apply shadow-blue-glow border-primary-opacity-40 dark:shadow-blue-glow dark:border-primary/40;
+}
+
+.hover-blue {
+  @apply transition-all duration-300 hover:shadow-blue-glow dark:hover:shadow-blue-glow border border-border hover:border-primary-opacity-40 dark:hover:border-primary/40;
+}
+
+/* Accordion */
+.accordion-default {
+  @apply w-full;
+}
+
+.accordion-item-header {
+  @apply flex items-center gap-2;
+}
+
+/* Scroll Area */
+.scroll-area-default {
+  @apply h-[200px] w-[350px] rounded-md border p-4;
+}
+
+.scroll-area-item {
+  @apply flex items-center gap-4 p-2 rounded-lg hover:bg-primary-opacity-5 transition-all duration-300;
+}
+
+.scroll-area-item-icon {
+  @apply h-4 w-4 text-primary-opacity-60;
+}
+
+.scroll-area-item-title {
+  @apply font-medium;
+}
+
+.scroll-area-content {
+  @apply space-y-4;
+}
+
+/* Progress */
+.progress-default {
+  @apply w-[60%];
+}
+
+/* HoverCard */
+.hover-card-default {
+  @apply w-80;
+}
+
+/* Search */
+.search-container {
+  @apply relative;
+}
+
+.search-icon {
+  @apply absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground;
+}
+
+.search-input {
+  @apply pl-10;
+}
+
+/* Table */
+.table-container {
+  @apply rounded-md border;
+}
+
+.table-action-button {
+  @apply h-8 w-8;
+}
+
+.table-action-icon {
+  @apply h-4 w-4;
+}
+
+/* Avatar */
+.avatar-sm {
+  @apply h-10 w-10 cursor-pointer;
+}
+
+.avatar-md {
+  @apply h-12 w-12;
+}
+
+/* Slider */
+.slider-container {
+  @apply w-full max-w-sm space-y-4;
+}
+
+.slider-group {
+  @apply space-y-4;
+}
+
+.slider-default {
+  @apply w-full;
+}
+
+/* Toggle */
+.toggle-icon {
+  @apply h-4 w-4 mr-2;
+}
+
+/* Popover */
+.popover-calendar {
+  @apply w-auto p-0;
+}
+
+/* Form */
+.form-container {
+  @apply grid gap-6 max-w-sm;
+}
+
+.form-field {
+  @apply space-y-2;
+}
+
+.form-section {
+  @apply space-y-6;
+}
+
+.form-group {
+  @apply space-y-4;
+}
+
+.form-row {
+  @apply flex items-center space-x-2;
+} 

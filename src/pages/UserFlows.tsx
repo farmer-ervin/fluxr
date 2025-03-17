@@ -21,7 +21,6 @@ import ReactFlow, {
   getBezierPath
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { PageTitle } from '@/components/PageTitle';
 import { Button } from '@/components/ui/button';
 import { Plus, Undo, Redo, Loader2, Sparkles, AlertCircle, Trash2 } from 'lucide-react';
 import { FlowGenerationDialog } from '@/components/flow/FlowGenerationDialog';
@@ -42,6 +41,7 @@ import {
   RefinementResponse
 } from '@/lib/openai';
 import { RefinementChangesDialog } from '@/components/flow/RefinementChangesDialog';
+import { PageHeader } from '@/components/PageHeader';
 
 function CustomEdge({
   id,
@@ -715,6 +715,15 @@ function UserFlowsContent() {
     }
   };
 
+  const handleDeleteFeature = async (featureId: string) => {
+    try {
+      setDeleteFeatureId(featureId);
+      setShowDeleteDialog(true);
+    } catch (error) {
+      console.error('Error showing delete dialog:', error);
+    }
+  };
+
   if (loading || isGeneratingLayout) {
     return (
       <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
@@ -732,25 +741,18 @@ function UserFlowsContent() {
   }
 
   return (
-    <div className="h-[calc(100vh-16rem)]">
-      <PageTitle title="User Flows" />
-      
-      {error && (
-        <div className="bg-red-50 text-red-700 p-4 mb-4 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p>{error}</p>
-        </div>
-      )}
-      
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">User Flows</h1>
-        
+    <div className="flex flex-col h-full">
+      <PageHeader
+        title="User Flows"
+        description="Create and manage user flows for your product"
+      >
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleUndo}
             disabled={undoStack.length === 0}
+            className="shrink-0"
           >
             <Undo className="w-4 h-4" />
           </Button>
@@ -760,6 +762,7 @@ function UserFlowsContent() {
             size="sm"
             onClick={handleRedo}
             disabled={redoStack.length === 0}
+            className="shrink-0"
           >
             <Redo className="w-4 h-4" />
           </Button>
@@ -768,6 +771,7 @@ function UserFlowsContent() {
             variant="outline"
             size="sm"
             onClick={() => setShowAddPageDialog(true)}
+            className="shrink-0"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Page
@@ -777,6 +781,7 @@ function UserFlowsContent() {
             variant="secondary"
             onClick={handleCreateFlow}
             disabled={isGenerating}
+            className="w-full sm:w-auto"
           >
             {isGenerating ? (
               <span className="flex items-center gap-2">
@@ -791,9 +796,16 @@ function UserFlowsContent() {
             )}
           </Button>
         </div>
-      </div>
+      </PageHeader>
       
-      <div className="w-full h-full border rounded-lg overflow-hidden">
+      {error && (
+        <div className="bg-red-50 text-red-700 p-4 mb-4 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+      
+      <div className="flex-1 border rounded-lg overflow-hidden bg-white">
         <ReactFlow
           nodes={nodes}
           edges={edges.map(edge => ({

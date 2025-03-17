@@ -33,7 +33,7 @@ export function AutoTextarea({ className, value, onChange, ...props }: AutoTexta
         adjustHeight();
       }}
       className={cn(
-        "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent min-h-[80px] transition-height duration-200 resize-none overflow-hidden",
+        "flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-card dark:border-input hover:border-input focus:border-input resize-none overflow-hidden transition-height duration-200",
         className
       )}
       {...props}

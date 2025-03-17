@@ -18,7 +18,9 @@ import {
   Settings,
   Upload,
   AlertCircle,
-  Lightbulb
+  Lightbulb,
+  Search,
+  ChevronDown
 } from 'lucide-react';
 import { SaveIndicator, SaveStatus } from '../components/SaveIndicator';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -28,7 +30,6 @@ import { EditableField } from '../components/EditableField';
 import { EditableList } from '../components/EditableList';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScoreBar } from '@/components/ScoreBar';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useProduct } from '@/components/context/ProductContext';
 import { supabase } from '@/lib/supabase';
@@ -37,6 +38,33 @@ import { SectionBlock } from '@/components/SectionBlock';
 import { CustomSectionDialog } from '@/components/CustomSectionDialog';
 import { UploadPrdDialog, ParsedPrdData } from '@/components/UploadPrdDialog';
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
+import { PageHeader } from '@/components/PageHeader';
+
+// shadcn components
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface Section {
   id: string;
@@ -82,6 +110,7 @@ export function PrdEditor() {
   const { setCurrentProduct, updateProduct } = useProduct();
   const { productSlug } = useParams();
   
+  const [isTopStuck, setIsTopStuck] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSectionId, setActiveSectionId] = useState('overview');
@@ -91,6 +120,7 @@ export function PrdEditor() {
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [editingSection, setEditingSection] = useState<{id: string, title: string} | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -105,6 +135,29 @@ export function PrdEditor() {
     itemId: null,
     isDeleting: false
   });
+  // State for feature buckets
+  const [featureBuckets, setFeatureBuckets] = useState<any[]>(defaultFeatureBucket);
+
+  // Error handler for feature operations
+  const handleError = (error: string) => {
+    setError(error);
+  };
+
+  // Feature update handler
+  const handleFeatureUpdate = async (feature: any) => {
+    if (!productDetails?.id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('features')
+        .upsert({ ...feature, product_id: productDetails.id });
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating feature:', error);
+      setError('Failed to update feature');
+    }
+  };
 
   const debouncedProductUpdate = useCallback(
     debounce(async (id: string, updates: Partial<ProductDetails>) => {
@@ -336,6 +389,19 @@ export function PrdEditor() {
         });
 
         setSections(finalSections);
+        
+        // If there's a features section, parse it to initialize featureBuckets
+        const featuresSection = finalSections.find(section => section.id === 'features');
+        if (featuresSection && featuresSection.content) {
+          try {
+            const parsedFeatures = JSON.parse(featuresSection.content);
+            setFeatureBuckets(parsedFeatures || defaultFeatureBucket);
+          } catch (err) {
+            console.error('Error parsing features data:', err);
+            // Use default if parsing fails
+            setFeatureBuckets(defaultFeatureBucket);
+          }
+        }
 
       } catch (error) {
         console.error('Error loading product data:', error);
@@ -352,6 +418,8 @@ export function PrdEditor() {
   useEffect(() => {
     if (!productDetails?.id) return;
     
+    let isSubscribed = true;
+    
     // Subscribe to changes in the features table for this product
     const featuresSubscription = supabase.channel('features-changes')
       .on('postgres_changes', 
@@ -362,6 +430,7 @@ export function PrdEditor() {
             filter: `product_id=eq.${productDetails.id}` 
           }, 
           (payload) => {
+            if (!isSubscribed) return;
             console.log('Features changed:', payload);
             
             // Update the features section
@@ -372,6 +441,7 @@ export function PrdEditor() {
               .eq('product_id', productDetails.id)
               .order('position', { ascending: true })
               .then(({ data, error }) => {
+                if (!isSubscribed) return;
                 if (error) {
                   console.error('Error fetching updated features:', error);
                   return;
@@ -401,6 +471,7 @@ export function PrdEditor() {
       
     // Clean up the subscription when component unmounts
     return () => {
+      isSubscribed = false;
       supabase.removeChannel(featuresSubscription);
     };
   }, [productDetails?.id]);
@@ -844,12 +915,90 @@ export function PrdEditor() {
     }
   };
 
+  // Add intersection observer for top section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTopStuck(!entry.isIntersecting);
+      },
+      { threshold: 1 }
+    );
+
+    const element = document.getElementById('prd-header');
+    if (element) {
+      observer.observe(element);
+    }
+
+    return () => {
+      if (element) {
+        observer.unobserve(element);
+      }
+    };
+  }, []);
+
+  // Handler for AI-generated content
+  const handleAiGenerated = (data: any) => {
+    if (!prdData) return;
+    
+    // Create updates object for the database
+    const updates: Partial<PRDData> = {};
+    
+    // Update standard sections if present in the data
+    if (data.problem) {
+      updates.problem = data.problem;
+    }
+    
+    if (data.solution) {
+      updates.solution = data.solution;
+    }
+    
+    if (data.target_audience) {
+      updates.target_audience = data.target_audience;
+    }
+    
+    if (data.tech_stack) {
+      updates.tech_stack = data.tech_stack;
+    }
+    
+    if (data.success_metrics) {
+      updates.success_metrics = data.success_metrics;
+    }
+    
+    // Update the PRD data in the database
+    if (Object.keys(updates).length > 0) {
+      setPrdData(prev => prev ? { ...prev, ...updates } : null);
+      debouncedPrdUpdate(prdData.id, updates);
+    
+      // Update sections in state
+      setSections(prev => 
+        prev.map(section => {
+          if (section.id === 'problem' && data.problem) {
+            return { ...section, content: data.problem };
+          }
+          if (section.id === 'solution' && data.solution) {
+            return { ...section, content: data.solution };
+          }
+          if (section.id === 'target_audience' && data.target_audience) {
+            return { ...section, content: data.target_audience };
+          }
+          if (section.id === 'tech_stack' && data.tech_stack) {
+            return { ...section, content: data.tech_stack };
+          }
+          if (section.id === 'success_metrics' && data.success_metrics) {
+            return { ...section, content: data.success_metrics };
+          }
+          return section;
+        })
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-purple mx-auto mb-4" />
-          <p className="text-gray-600">Loading product data...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading product data...</p>
         </div>
       </div>
     );
@@ -858,114 +1007,189 @@ export function PrdEditor() {
   if (error) {
     return (
       <div className="max-w-lg mx-auto text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h2>
-        <p className="text-red-600 mb-6">{error}</p>
-        <Button
-          onClick={() => navigate('/')}
-          variant="secondary"
-          className="mx-auto"
-        >
-          Go to Dashboard
-        </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Page Not Found</CardTitle>
+            <CardDescription className="text-red-600">{error}</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button
+              onClick={() => navigate('/')}
+              variant="secondary"
+              className="mx-auto"
+            >
+              Go to Dashboard
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </button>
-        <div className="relative flex items-center gap-2">
-          {productDetails?.id && (
-            <UploadPrdDialog 
-              productId={productDetails.id} 
-              onPrdParsed={handlePrdParsed} 
+    <div className="page-container">
+      <PageHeader
+        title="PRD Editor"
+        description="Define your product's vision, features, and success metrics"
+      >
+        <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
+            <SaveIndicator status={saveStatus} error={saveError} />
+            {productDetails?.id && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowUploadDialog(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import PRD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Export PRD
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <AiDialog
+              productData={{
+                name: productDetails?.name || '',
+                description: productDetails?.description || '',
+                problem: prdData?.problem || '',
+                solution: prdData?.solution || '',
+                target_audience: prdData?.target_audience || '',
+              }}
+              sections={sections.slice(1)}
+              onAiGenerated={handleAiGenerated}
             />
-          )}
-          <AiDialog />
-          <PrdTooltip />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[250px,1fr] gap-6 h-full">
-        <div className="bg-white rounded-lg shadow-lg p-6 h-full overflow-auto">
-          <SaveIndicator status={saveStatus} error={saveError} />
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Sections</h2>
-          <nav className="space-y-2">
-            {sections.map(section => (
-              <div key={section.id}>
-                <button
-                  onClick={() => scrollToSection(section.id)}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg text-left transition-colors ${
-                    section.id === activeSectionId
-                      ? 'bg-brand-purple text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {section.icon}
-                  <span className="ml-3">{section.title}</span>
-                </button>
-                
-                {section.subsections && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {section.subsections.map(subsection => (
-                      <button
-                        key={subsection.id}
-                        onClick={() => scrollToSection(section.id, subsection.id)}
-                        className={`w-full flex items-center px-4 py-1.5 rounded-lg text-left transition-colors text-sm ${
-                          section.id === activeSectionId && subsection.id === activeSubsectionId
-                            ? 'bg-brand-purple/80 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {subsection.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            {/* Add Section Button */}
-            <div className="pt-2 mt-2 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setEditingSection(null); // Ensure we're not in edit mode
-                  setIsAddSectionOpen(true);
-                }}
-                className="w-full flex items-center px-4 py-2 rounded-lg text-left transition-colors text-brand-purple hover:bg-gray-100"
-              >
-                <Plus className="w-5 h-5" />
-                <span className="ml-3">Add Section</span>
-              </button>
-            </div>
-          </nav>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-lg h-full overflow-auto">
-          <div className="section-transition">
-            {sections.map((section) => (
-              <div key={section.id} className="mb-6">
-                <SectionBlock
-                  section={section}
-                  onContentChange={handleSectionContentChange}
-                  productDetails={productDetails}
-                  onRenameSection={handleStartRenameSection}
-                  onProductNameChange={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as React.ChangeEvent<HTMLInputElement>)}
-                />
-              </div>
-            ))}
+            <PrdTooltip />
           </div>
         </div>
+      </PageHeader>
+
+      <div className="grid grid-cols-[250px,1fr] gap-6 flex-1 overflow-hidden">
+        <Card className="p-0 overflow-hidden border-0 bg-background">
+          <ScrollArea className="h-[calc(100vh-12rem)]">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-4">Document Sections</h2>
+              <nav className="space-y-1">
+                {sections.map(section => (
+                  <div key={section.id}>
+                    <Button
+                      onClick={() => scrollToSection(section.id)}
+                      variant={section.id === activeSectionId ? "default" : "ghost"}
+                      className={`w-full justify-start gap-3 h-11 px-4 rounded-none ${
+                        section.id === activeSectionId
+                          ? 'bg-background text-primary border-l-2 border-l-primary font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                    >
+                      <span className="flex items-center">
+                        {section.icon}
+                      </span>
+                      <span className="flex-grow text-left">{section.title}</span>
+                      {section.isCustom && (
+                        <div className="flex gap-0.5 ml-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartRenameSection(section.id, section.title);
+                            }}
+                            className={`h-7 w-7 rounded-none ${
+                              section.id === activeSectionId
+                                ? 'text-primary hover:bg-muted'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSection(section.id);
+                            }}
+                            className={`h-7 w-7 rounded-none ${
+                              section.id === activeSectionId
+                                ? 'text-primary hover:bg-muted'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </Button>
+                    
+                    {section.subsections && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {section.subsections.map(subsection => (
+                          <Button
+                            key={subsection.id}
+                            onClick={() => scrollToSection(section.id, subsection.id)}
+                            variant={section.id === activeSectionId && subsection.id === activeSubsectionId ? "default" : "ghost"}
+                            size="sm"
+                            className={`w-full justify-start h-9 px-4 rounded-none ${
+                              section.id === activeSectionId && subsection.id === activeSubsectionId
+                                ? 'bg-background text-primary border-l-2 border-l-primary font-medium'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            {subsection.title}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                <Separator className="my-4" />
+                
+                <Button
+                  onClick={() => {
+                    setEditingSection(null);
+                    setIsAddSectionOpen(true);
+                  }}
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-11 px-4 rounded-none text-muted-foreground hover:text-primary hover:bg-muted"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Section</span>
+                </Button>
+              </nav>
+            </div>
+          </ScrollArea>
+        </Card>
+
+        <Card className="p-0 overflow-hidden border-0 bg-background">
+          <ScrollArea className="h-[calc(100vh-12rem)]">
+            <div className="p-6">
+              {sections.map((section) => (
+                <div key={section.id} className="mb-6">
+                  <SectionBlock
+                    section={section}
+                    onContentChange={handleSectionContentChange}
+                    productDetails={productDetails}
+                    onRenameSection={handleStartRenameSection}
+                    onProductNameChange={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as React.ChangeEvent<HTMLInputElement>)}
+                    onDeleteSection={handleDeleteSection}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </Card>
       </div>
       
-      {/* Add/Rename Section Dialog */}
+      {/* Dialogs */}
       <CustomSectionDialog
         isOpen={isAddSectionOpen}
         onClose={() => {
@@ -992,6 +1216,14 @@ export function PrdEditor() {
         itemType={deleteDialogState.itemType}
         isDeleting={deleteDialogState.isDeleting}
       />
+
+      {showUploadDialog && productDetails?.id && (
+        <UploadPrdDialog 
+          productId={productDetails.id} 
+          onPrdParsed={handlePrdParsed}
+          onClose={() => setShowUploadDialog(false)}
+        />
+      )}
     </div>
   );
 }
