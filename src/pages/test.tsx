@@ -47,41 +47,64 @@ import {
   Star,
   Trash,
   User,
-  X
+  X,
+  Rocket
 } from "lucide-react"
 import { useState } from "react"
 
 export default function TestPage() {
   return (
-    <div className="container mx-auto p-8 space-y-8">
-      <h1 className="text-4xl font-bold mb-8 text-foreground">
-        Theme Test Page
-      </h1>
+    <div className="page-container">
+      <h1 className="page-title">Theme Test Page</h1>
       
-      {/* Neon Effects Demo */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Neon Effects</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="hover:shadow-neon transition-all duration-200 dark:hover:border-primary/40 dark:bg-card">
+      {/* Ship It Demo */}
+      <section className="section-space">
+        <h2 className="section-heading">Ship It</h2>
+        <div className="ship-it-card">
+          <div className="flex-stack">
+            <div className="flex-between">
+              <h3 className="heading-xl">Track your progress across tools</h3>
+              <div className="icon-container">
+                <Rocket className="icon-lg" />
+              </div>
+            </div>
+            <p className="section-description">
+              Stay focused on your goals, and launch your product faster than ever.
+            </p>
+            <div className="tip-card">
+              <p className="tip-text">
+                <span className="tip-label">Pro Tip:</span> 
+                Launch faster with guided implementation
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Glow Effects Demo */}
+      <section className="section-space">
+        <h2 className="section-heading">Glow Effects</h2>
+        <div className="grid-cards">
+          <Card className="hover-blue">
             <CardHeader>
-              <CardTitle className="hover:text-primary transition-colors duration-200">Hover Glow Effect</CardTitle>
-              <CardDescription>Hover over this card to see the neon glow effect</CardDescription>
+              <CardTitle>Hover Glow Effect</CardTitle>
+              <CardDescription>Hover over this card to see the blue glow effect in both light and dark mode</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                The card border and shadow will transition to a neon glow on hover.
+              <p className="card-content-text">
+                The card border and shadow will transition to a glow on hover.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-neon border-primary/40 transition-all duration-200 dark:bg-card">
+          <Card className="bordered-card">
             <CardHeader>
-              <CardTitle className="text-primary transition-colors duration-200">Permanent Glow</CardTitle>
-              <CardDescription>This card always has the neon effect</CardDescription>
+              <CardTitle className="text-primary">Permanent Glow</CardTitle>
+              <CardDescription>This card always has the glow effect</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Using the shadow-neon class for constant glow effect.
+              <p className="card-content-text">
+                Using the shadow-blue-glow class for constant glow effect in both light and dark mode.
               </p>
             </CardContent>
           </Card>
@@ -89,25 +112,25 @@ export default function TestPage() {
       </section>
 
       {/* Button Variants */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Buttons</h2>
-        <div className="flex flex-wrap gap-4">
-          <Button variant="default" className="hover:shadow-neon/40 transition-all duration-200">Default Button</Button>
-          <Button variant="destructive" className="hover:shadow-neon/40 transition-all duration-200">Destructive Button</Button>
-          <Button variant="outline" className="hover:bg-primary/20 hover:text-primary transition-all duration-200">Outline Button</Button>
-          <Button variant="secondary" className="hover:bg-primary/20 hover:text-primary transition-all duration-200">Secondary Button</Button>
-          <Button variant="ghost" className="hover:text-primary/80 hover:bg-primary/10 transition-all duration-200">Ghost Button</Button>
-          <Button variant="outline" className="gap-2 hover:bg-primary/20 hover:text-primary transition-all duration-200">
-            <Mail className="h-4 w-4" />
+      <section className="section-space">
+        <h2 className="section-heading">Buttons</h2>
+        <div className="flex-wrap-gap">
+          <Button variant="default">Default Button</Button>
+          <Button variant="destructive">Destructive Button</Button>
+          <Button variant="outline">Outline Button</Button>
+          <Button variant="secondary">Secondary Button</Button>
+          <Button variant="ghost">Ghost Button</Button>
+          <Button variant="outline">
+            <Mail className="icon-button" />
             Outline with Icon
           </Button>
         </div>
       </section>
 
       {/* Card Example */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Card</h2>
-        <Card className="dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+      <section className="section-space">
+        <h2 className="section-heading">Card</h2>
+        <Card>
           <CardHeader>
             <CardTitle>Card Title</CardTitle>
             <CardDescription>This is a sample card to test our theme.</CardDescription>
@@ -122,13 +145,13 @@ export default function TestPage() {
       </section>
 
       {/* Alert Dialog */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Alert Dialog</h2>
+      <section className="section-space">
+        <h2 className="section-heading">Alert Dialog</h2>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="outline">Open Alert Dialog</Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="dark:bg-card">
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -144,91 +167,71 @@ export default function TestPage() {
       </section>
 
       {/* Tabs */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Tabs</h2>
-        <Tabs defaultValue="account" className="w-full">
-          <TabsList className="dark:bg-[#151515] dark:border dark:border-primary/20">
-            <TabsTrigger 
-              value="account" 
-              className="data-[state=active]:shadow-neon/50 dark:text-primary/60 dark:data-[state=active]:bg-primary/90 dark:data-[state=active]:text-[#151515] dark:hover:text-primary/80 dark:hover:shadow-neon/40 transition-all duration-200"
-            >
-              Account
-            </TabsTrigger>
-            <TabsTrigger 
-              value="password"
-              className="data-[state=active]:shadow-neon/50 dark:text-primary/60 dark:data-[state=active]:bg-primary/90 dark:data-[state=active]:text-[#151515] dark:hover:text-primary/80 dark:hover:shadow-neon/40 transition-all duration-200"
-            >
-              Password
-            </TabsTrigger>
-            <TabsTrigger 
-              value="settings"
-              className="data-[state=active]:shadow-neon/50 dark:text-primary/60 dark:data-[state=active]:bg-primary/90 dark:data-[state=active]:text-[#151515] dark:hover:text-primary/80 dark:hover:shadow-neon/40 transition-all duration-200"
-            >
-              Settings
-            </TabsTrigger>
+      <section className="section-space">
+        <h2 className="section-heading">Tabs</h2>
+        <Tabs defaultValue="account" className="full-width">
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="password">Password</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-          <TabsContent value="account" className="dark:text-primary/80 transition-all duration-200">Account tab content</TabsContent>
-          <TabsContent value="password" className="dark:text-primary/80 transition-all duration-200">Password tab content</TabsContent>
-          <TabsContent value="settings" className="dark:text-primary/80 transition-all duration-200">Settings tab content</TabsContent>
+          <TabsContent value="account">Account tab content</TabsContent>
+          <TabsContent value="password">Password tab content</TabsContent>
+          <TabsContent value="settings">Settings tab content</TabsContent>
         </Tabs>
       </section>
 
       {/* Badges */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Badges</h2>
-        <div className="flex flex-wrap gap-4">
-          <Badge variant="default" className="dark:bg-primary/90 dark:text-[#151515] dark:hover:shadow-neon/40 transition-all duration-200">Default Badge</Badge>
-          <Badge variant="secondary" className="dark:bg-primary/20 dark:text-primary/80 dark:hover:bg-primary/90 dark:hover:text-[#151515] dark:hover:shadow-neon/40 transition-all duration-200">Secondary Badge</Badge>
-          <Badge variant="destructive" className="dark:hover:shadow-neon/40 transition-all duration-200">Destructive Badge</Badge>
-          <Badge variant="outline" className="dark:text-primary/80 dark:border-primary/40 dark:hover:bg-primary/90 dark:hover:text-[#151515] dark:hover:shadow-neon/40 transition-all duration-200">Outline Badge</Badge>
+      <section className="section-space">
+        <h2 className="section-heading">Badges</h2>
+        <div className="flex-wrap-gap">
+          <Badge variant="default">Default Badge</Badge>
+          <Badge variant="secondary">Secondary Badge</Badge>
+          <Badge variant="destructive">Destructive Badge</Badge>
+          <Badge variant="outline">Outline Badge</Badge>
         </div>
       </section>
 
       {/* Form Controls */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Interactive Elements</h2>
-        <div className="grid gap-6 max-w-sm">
-          <div className="space-y-2">
-            <Label htmlFor="neon-input">Neon Input</Label>
+      <section className="section-space">
+        <h2 className="section-heading">Interactive Elements</h2>
+        <div className="form-container">
+          <div className="form-field">
+            <Label htmlFor="glow-input">Input with Glow</Label>
             <Input 
-              id="neon-input" 
+              id="glow-input" 
               type="text" 
               placeholder="Type something..."
-              className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="neon-select">Neon Select</Label>
+          <div className="form-field">
+            <Label htmlFor="glow-select">Select with Glow</Label>
             <Select>
-              <SelectTrigger 
-                id="neon-select" 
-                className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 dark:text-white focus:outline-none focus:ring-0 focus:ring-offset-0"
-              >
+              <SelectTrigger id="glow-select">
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-card dark:border-primary/40">
-                <SelectItem value="1" className="dark:text-white hover:dark:text-white hover:bg-primary/10 focus:bg-primary/10 focus:outline-none focus:ring-0 focus:ring-offset-0">Option 1</SelectItem>
-                <SelectItem value="2" className="dark:text-white hover:dark:text-white hover:bg-primary/10 focus:bg-primary/10 focus:outline-none focus:ring-0 focus:ring-offset-0">Option 2</SelectItem>
-                <SelectItem value="3" className="dark:text-white hover:dark:text-white hover:bg-primary/10 focus:bg-primary/10 focus:outline-none focus:ring-0 focus:ring-offset-0">Option 3</SelectItem>
+              <SelectContent>
+                <SelectItem value="1">Option 1</SelectItem>
+                <SelectItem value="2">Option 2</SelectItem>
+                <SelectItem value="3">Option 3</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="neon-terms" 
-              className="border-primary data-[state=checked]:bg-primary data-[state=checked]:shadow-neon dark:border-primary/20 dark:hover:border-primary dark:data-[state=checked]:shadow-neon-strong transition-all duration-200" 
-            />
-            <Label htmlFor="neon-terms" className="hover:text-primary transition-colors duration-200">Accept terms</Label>
+          <div className="form-field">
+            <div className="flex-items-gap">
+              <Checkbox id="glow-terms" />
+              <Label htmlFor="glow-terms">Accept terms</Label>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Toast Notifications */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Toast Notifications</h2>
-        <div className="flex flex-wrap gap-4">
+      <section className="section-space">
+        <h2 className="section-heading">Toast Notifications</h2>
+        <div className="flex-wrap-gap">
           <Button
             onClick={() => {
               toast.success("Operation completed successfully", {
@@ -252,13 +255,13 @@ export default function TestPage() {
       </section>
 
       {/* Sheet (Slide-out Panel) */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Sheet Component</h2>
+      <section className="section-space">
+        <h2 className="section-heading">Sheet Component</h2>
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline">Open Sheet</Button>
           </SheetTrigger>
-          <SheetContent className="dark:bg-card">
+          <SheetContent>
             <SheetHeader>
               <SheetTitle>Sheet Title</SheetTitle>
               <SheetDescription>
@@ -266,8 +269,8 @@ export default function TestPage() {
                 filters, or any secondary content.
               </SheetDescription>
             </SheetHeader>
-            <div className="py-6">
-              <p className="text-sm text-muted-foreground">
+            <div className="section-padding">
+              <p className="text-sm-muted">
                 Sheet content goes here. This component will be used for our collapsible side navigation.
               </p>
             </div>
@@ -276,37 +279,37 @@ export default function TestPage() {
       </section>
 
       {/* Typography Plugin Demo */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Typography Plugin</h2>
-        <div className="prose dark:prose-invert max-w-none [&>pre]:bg-[#1A1A1A] [&>pre]:border [&>pre]:border-primary/20">
-          <h1>Heading 1</h1>
-          <h2>Heading 2</h2>
-          <h3>Heading 3</h3>
-          <p>
+      <section className="section-space">
+        <h2 className="section-heading">Typography Plugin</h2>
+        <div className="prose-container">
+          <h1 className="prose-h1">Heading 1</h1>
+          <h2 className="prose-h2">Heading 2</h2>
+          <h3 className="prose-h3">Heading 3</h3>
+          <p className="prose-text">
             This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.
             It demonstrates the typography plugin's default styling.
           </p>
-          <blockquote>
+          <blockquote className="prose-blockquote">
             This is a blockquote that shows how quotes are styled using the typography plugin.
           </blockquote>
-          <ul>
+          <ul className="prose-list">
             <li>Unordered list item 1</li>
             <li>Unordered list item 2</li>
             <li>Unordered list item 3</li>
           </ul>
-          <pre><code>// This is a code block
+          <pre><code className="prose-code">// This is a code block
 const example = "Typography styling";</code></pre>
         </div>
       </section>
 
       {/* Accordion */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Accordion</h2>
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="item-1" className="border-primary/20">
-            <AccordionTrigger className="hover:text-primary transition-colors">
-              <span className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
+      <section className="section-space">
+        <h2 className="section-heading">Accordion</h2>
+        <Accordion type="single" collapsible className="accordion-default">
+          <AccordionItem value="item-1">
+            <AccordionTrigger>
+              <span className="accordion-item-header">
+                <Settings className="icon-button" />
                 Account Settings
               </span>
             </AccordionTrigger>
@@ -314,10 +317,10 @@ const example = "Typography styling";</code></pre>
               Manage your account settings and preferences.
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="item-2" className="border-primary/20">
-            <AccordionTrigger className="hover:text-primary transition-colors">
-              <span className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
+          <AccordionItem value="item-2">
+            <AccordionTrigger>
+              <span className="accordion-item-header">
+                <Bell className="icon-button" />
                 Notifications
               </span>
             </AccordionTrigger>
@@ -329,30 +332,30 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Avatar and HoverCard */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">User Profiles</h2>
-        <div className="flex items-center gap-8">
+      <section className="section-space">
+        <h2 className="section-heading">User Profiles</h2>
+        <div className="flex-gap-8">
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Avatar className="h-10 w-10 border-2 border-primary/20 hover:border-primary/60 transition-colors cursor-pointer">
+              <Avatar className="avatar-sm">
                 <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback className="bg-primary/10">CN</AvatarFallback>
+                <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 dark:bg-card">
-              <div className="flex justify-between space-x-4">
-                <Avatar className="h-12 w-12">
+            <HoverCardContent className="hover-card-default">
+              <div className="flex-between space-x">
+                <Avatar className="avatar-md">
                   <AvatarImage src="https://github.com/shadcn.png" />
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-semibold">@shadcn</h4>
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-sm">
+                  <h4 className="heading-sm">@shadcn</h4>
+                  <p className="text-sm-muted">
                     UI Designer and Developer
                   </p>
-                  <div className="flex items-center pt-2">
-                    <Github className="mr-2 h-4 w-4" />
-                    <span className="text-xs text-muted-foreground">github.com/shadcn</span>
+                  <div className="flex-center padding-t">
+                    <Github className="icon-button" />
+                    <span className="text-xs-muted">github.com/shadcn</span>
                   </div>
                 </div>
               </div>
@@ -362,12 +365,12 @@ const example = "Typography styling";</code></pre>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" className="gap-2 hover:bg-primary/20 hover:text-primary">
-                  <Mail className="h-4 w-4" />
+                <Button variant="outline">
+                  <Mail className="icon-button-with-space" />
                   Send Message
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="dark:bg-card dark:border-primary/40">
+              <TooltipContent>
                 <p>Send a direct message</p>
               </TooltipContent>
             </Tooltip>
@@ -376,48 +379,48 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Calendar and Date Picker */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Calendar</h2>
-        <div className="flex gap-4">
+      <section className="section-space">
+        <h2 className="section-heading">Calendar</h2>
+        <div className="flex-gap">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2 hover:bg-primary/20 hover:text-primary">
-                <CalendarIcon className="h-4 w-4" />
+              <Button variant="outline">
+                <CalendarIcon className="icon-button-with-space" />
                 Pick a date
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 dark:bg-card">
-              <Calendar className="dark:bg-transparent" />
+            <PopoverContent className="popover-calendar">
+              <Calendar />
             </PopoverContent>
           </Popover>
         </div>
       </section>
 
       {/* Dropdown Menu */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Dropdown Menu</h2>
+      <section className="section-space">
+        <h2 className="section-heading">Dropdown Menu</h2>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 hover:bg-primary/20 hover:text-primary">
-              <User className="h-4 w-4" />
+            <Button variant="outline">
+              <User className="icon-button" />
               Account
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="icon-button" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="dark:bg-card dark:border-primary/40">
+          <DropdownMenuContent>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator className="dark:bg-muted" />
-            <DropdownMenuItem className="gap-2 focus:bg-primary/10 focus:text-primary cursor-pointer">
-              <Settings className="h-4 w-4" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="dropdown-item">
+              <Settings className="icon-button" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 focus:bg-primary/10 focus:text-primary cursor-pointer">
-              <Bell className="h-4 w-4" />
+            <DropdownMenuItem className="dropdown-item">
+              <Bell className="icon-button" />
               Notifications
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="dark:bg-primary/20" />
-            <DropdownMenuItem className="gap-2 focus:bg-destructive/10 focus:text-destructive cursor-pointer">
-              <LogOut className="h-4 w-4" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="dropdown-item">
+              <LogOut className="icon-button" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -425,17 +428,17 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Progress and Loading */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Progress Indicators</h2>
-        <div className="space-y-4">
-          <Progress value={60} className="w-[60%] dark:bg-primary/10" />
-          <div className="flex gap-4">
-            <Button disabled className="gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+      <section className="section-space">
+        <h2 className="section-heading">Progress Indicators</h2>
+        <div className="section-space">
+          <Progress value={60} className="progress-default" />
+          <div className="flex-gap">
+            <Button disabled>
+              <Loader2 className="icon-button-with-spin" />
               Please wait
             </Button>
-            <Button variant="outline" disabled className="gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <Button variant="outline" disabled>
+              <Loader2 className="icon-button-with-spin" />
               Loading...
             </Button>
           </div>
@@ -443,76 +446,76 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Radio Group and Switch */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Selection Controls</h2>
-        <div className="flex gap-8">
-          <div className="space-y-4">
+      <section className="section-space">
+        <h2 className="section-heading">Selection Controls</h2>
+        <div className="form-section">
+          <div className="form-group">
             <Label>Notification Method</Label>
             <RadioGroup defaultValue="email">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="email" id="email" className="border-primary/40 text-primary" />
-                <Label htmlFor="email" className="cursor-pointer">Email</Label>
+              <div className="form-row">
+                <RadioGroupItem value="email" id="email" />
+                <Label htmlFor="email">Email</Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sms" id="sms" className="border-primary/40 text-primary" />
-                <Label htmlFor="sms" className="cursor-pointer">SMS</Label>
+              <div className="form-row">
+                <RadioGroupItem value="sms" id="sms" />
+                <Label htmlFor="sms">SMS</Label>
               </div>
             </RadioGroup>
           </div>
           
-          <div className="space-y-4">
+          <div className="form-group">
             <Label>Preferences</Label>
-            <div className="flex items-center space-x-2">
-              <Switch id="notifications" className="data-[state=checked]:bg-primary" />
-              <Label htmlFor="notifications" className="cursor-pointer">Enable Notifications</Label>
+            <div className="form-row">
+              <Switch id="notifications" />
+              <Label htmlFor="notifications">Enable Notifications</Label>
             </div>
           </div>
         </div>
       </section>
 
       {/* Table */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Data Table</h2>
-        <div className="rounded-md border dark:border-primary/20">
+      <section className="section-space">
+        <h2 className="section-heading">Data Table</h2>
+        <div className="table-container">
           <Table>
             <TableHeader>
-              <TableRow className="dark:border-primary/20 hover:bg-primary/5">
+              <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow className="dark:border-primary/20 hover:bg-primary/5">
+              <TableRow>
                 <TableCell>John Doe</TableCell>
                 <TableCell><Badge variant="default">Active</Badge></TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
-                      <Edit className="h-4 w-4" />
+                  <div className="flex-gap-2">
+                    <Button variant="ghost" className="icon-button-ghost">
+                      <Edit className="table-action-icon" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive">
-                      <Trash className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="table-action-button">
+                      <Trash className="table-action-icon" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
-                      <Archive className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="table-action-button">
+                      <Archive className="table-action-icon" />
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
-              <TableRow className="dark:border-primary/20 hover:bg-primary/5">
+              <TableRow>
                 <TableCell>Jane Smith</TableCell>
                 <TableCell><Badge variant="secondary">Inactive</Badge></TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
-                      <Edit className="h-4 w-4" />
+                  <div className="flex-gap-2">
+                    <Button variant="ghost" className="icon-button-ghost">
+                      <Edit className="table-action-icon" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive">
-                      <Trash className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="table-action-button">
+                      <Trash className="table-action-icon" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
-                      <Archive className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="table-action-button">
+                      <Archive className="table-action-icon" />
                     </Button>
                   </div>
                 </TableCell>
@@ -523,24 +526,16 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Textarea and Toggle */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Input Controls</h2>
-        <div className="grid gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea 
-              id="bio" 
-              placeholder="Write something about yourself..."
-              className="dark:bg-card dark:border-primary/40 hover:dark:border-primary/60 focus:dark:border-primary dark:focus:shadow-neon/20"
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <Toggle className="data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
-              <Star className="h-4 w-4 mr-2" />
+      <section className="section-space">
+        <h2 className="section-heading">Input Controls</h2>
+        <div className="grid-gap">
+          <div className="flex-gap">
+            <Toggle>
+              <Star className="toggle-icon" />
               Favorite
             </Toggle>
-            <Toggle className="data-[state=on]:bg-primary/20 data-[state=on]:text-primary">
-              <Heart className="h-4 w-4 mr-2" />
+            <Toggle>
+              <Heart className="toggle-icon" />
               Like
             </Toggle>
           </div>
@@ -548,32 +543,32 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Slider */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Range Slider</h2>
-        <div className="space-y-4">
-          <div className="space-y-2">
+      <section className="section-space">
+        <h2 className="section-heading">Range Slider</h2>
+        <div className="slider-container">
+          <div className="slider-group">
             <Label>Volume</Label>
             <Slider 
               defaultValue={[50]} 
               max={100} 
               step={1}
-              className="w-[60%] [&>[role=slider]]:bg-primary [&>[role=slider]]:border-primary/40 [&>[role=slider]]:shadow-neon/20"
+              className="slider-default"
             />
           </div>
         </div>
       </section>
 
       {/* Scroll Area */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Scroll Area</h2>
-        <ScrollArea className="h-[200px] w-[350px] rounded-md border dark:border-primary/20 p-4">
-          <div className="space-y-4">
+      <section className="section-space">
+        <h2 className="section-heading">Scroll Area</h2>
+        <ScrollArea className="scroll-area-default">
+          <div className="scroll-area-content">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-2 rounded-lg hover:bg-primary/5">
-                <FileText className="h-4 w-4 text-primary/60" />
+              <div key={i} className="scroll-area-item">
+                <FileText className="scroll-area-item-icon" />
                 <div>
-                  <div className="font-medium">Document {i + 1}</div>
-                  <div className="text-sm text-muted-foreground">PDF • 2.3MB</div>
+                  <div className="scroll-area-item-title">Document {i + 1}</div>
+                  <div className="text-sm-muted">PDF • 2.3MB</div>
                 </div>
               </div>
             ))}
@@ -582,47 +577,45 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Dialog */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Dialog</h2>
+      <section className="section-space">
+        <h2 className="section-heading">Dialog</h2>
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="gap-2 hover:bg-primary-dark">
-              <Image className="h-4 w-4" />
+            <Button>
+              <Image className="icon-button" />
               Create New Post
             </Button>
           </DialogTrigger>
-          <DialogContent className="dark:bg-card">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Post</DialogTitle>
               <DialogDescription>
                 Share your thoughts with the community.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
+            <div className="section-space section-padding">
+              <div className="form-field">
                 <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   placeholder="Enter post title"
-                  className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="form-field">
                 <Label htmlFor="content">Content</Label>
                 <Textarea
                   id="content"
                   placeholder="Write your post content..."
-                  className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" className="gap-2 hover:bg-primary/20 hover:text-primary">
-                <X className="h-4 w-4" />
+              <Button variant="outline">
+                <X className="icon-button" />
                 Cancel
               </Button>
-              <Button className="gap-2 hover:bg-primary-dark">
-                <Check className="h-4 w-4" />
+              <Button>
+                <Check className="icon-button" />
                 Publish
               </Button>
             </DialogFooter>
@@ -631,17 +624,16 @@ const example = "Typography styling";</code></pre>
       </section>
 
       {/* Search with Command */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">Search</h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <section className="section-space">
+        <h2 className="section-heading">Search</h2>
+        <div className="search-container">
+          <Search className="search-icon" />
           <Input
             placeholder="Search..."
-            className="pl-10 dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
+            className="search-input"
           />
         </div>
       </section>
-
     </div>
   )
 } 

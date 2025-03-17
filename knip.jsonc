@@ -1,0 +1,46 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    // Main application entry points
+    "src/main.tsx",
+    "src/App.tsx",
+    "index.html",
+    "vite.config.ts"
+  ],
+  "project": {
+    "**/*.{ts,tsx,js,jsx}": {
+      "entry": ["src/main.tsx"]
+    }
+  },
+  "ignore": [
+    // Build and config files
+    "vite.config.ts",
+    "tsconfig*.json",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "eslint.config.js",
+    "components.json",
+    // Environment and deployment files
+    ".env*",
+    "netlify.toml",
+    // Editor config
+    "*.code-workspace",
+    // Type definitions
+    "src/vite-env.d.ts"
+  ],
+  "ignoreDependencies": [
+    // Build tools
+    "vite",
+    "@vitejs/plugin-react",
+    // Deployment tools
+    "netlify-cli",
+    // CSS processing
+    "postcss",
+    "autoprefixer",
+    "@tailwindcss/*",
+    "tailwindcss",
+    "tailwindcss-animate",
+    // Type packages that might appear unused
+    "@types/*"
+  ]
+} 

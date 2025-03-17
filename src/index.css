@@ -1,4 +1,5 @@
 @import url('https://rsms.me/inter/inter.css');
+@import './styles/components.css';
 
 @tailwind base;
 @tailwind components;
@@ -16,47 +17,48 @@
     
     /* Background Colors */
     --background: 0 0% 100%;
-    --background-subtle: 220 14% 96%;
-    --background-muted: 220 14% 93%;
+    --background-subtle: 210 50% 98%;
+    --background-muted: 210 50% 95%;
+    --background-subtle-blue: 213 100% 97%; /* Added for icon backgrounds */
     
     /* Text Colors */
-    --text-primary: 222 47% 11%;
-    --text-secondary: 215 16% 47%;
-    --text-muted: 215 16% 57%;
-    --foreground: 222 47% 11%;
+    --text-primary: 220 25% 20%;
+    --text-secondary: 220 15% 40%;
+    --text-muted: 220 15% 50%;
+    --foreground: 0 0% 3.9%;
     
     /* UI Colors */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 168 84% 65%;
-    --primary-foreground: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 229.5 41.8% 45.1%;
+    --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 168 84% 65%;
-    --accent-foreground: 222 47% 11%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     
     /* Border Colors */
-    --border: 220 13% 91%;
-    --border-strong: 220 13% 85%;
-    --input: 220 13% 91%;
-    --ring: 168 84% 65%;
+    --border: 214.3 31.8% 91.4%;
+    --border-strong: 214 32% 85%;
+    --input: 214.3 31.8% 77.5%;
+    --ring: 228.8 53.1% 45.1%;
     
     /* Accent Colors */
     --success: 142 76% 36%;
     --warning: 37 92% 50%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     /* Chart Colors */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 210 100% 50%;
+    --chart-2: 210 90% 60%;
+    --chart-3: 210 80% 40%;
+    --chart-4: 210 70% 70%;
+    --chart-5: 210 60% 30%;
 
     /* Spacing */
     --spacing-px: 1px;
@@ -78,7 +80,7 @@
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
     --radius-full: 9999px;
-    --radius: var(--radius-lg);
+    --radius: 0.75rem;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -93,33 +95,34 @@
   }
 
   .dark {
-    --background: 0 0% 5%; /* #0E0E0E */
-    --background-subtle: 180 20% 14%; /* #1A2E2E */
-    --background-muted: 0 0% 8%; /* #141414 */
+    --background: 0 0% 5.9%;
+    --background-subtle: 220 10% 14%; /* Changed from teal to blue hue */
+    --background-muted: 0 0% 8%;
+    --background-subtle-blue: 220 10% 14%; /* Changed from teal to blue hue */
     
     --text-primary: 210 40% 98%;
     --text-secondary: 215 20% 65%;
     --text-muted: 215 16% 57%;
-    --foreground: 210 40% 98%;
+    --foreground: 0 0% 98%;
     
-    --card: linear-gradient(to bottom right, var(--background-subtle), var(--background-muted));
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 168 84% 65%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
+    --card: 0 0% 7.8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 7.8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 60%; /* Changed from teal to blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 168 84% 65%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     
-    --border: 215 16% 27%;
+    --border: 217.2 32.6% 17.5%;
     --border-strong: 215 16% 37%;
-    --input: 215 16% 27%;
+    --input: 215 16% 32%;
     
-    --destructive: 35 92% 43%; /* #D97706 */
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --chart-1: 220 70% 50%;
@@ -131,54 +134,480 @@
 }
 
 @layer components {
+  /* Button styles */
   .btn-primary {
-    @apply bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 
-    dark:bg-primary dark:text-[#0E0E0E] dark:font-bold dark:shadow-neon dark:hover:shadow-neon-hover dark:hover:bg-[#7FFFD4];
+    @apply bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-blue-glow
+    dark:bg-primary dark:text-white dark:font-bold dark:shadow-blue-glow dark:hover:shadow-blue-glow dark:hover:bg-primary/90;
   }
   
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-900 font-medium px-4 py-2 rounded-lg border border-primary/20 hover:border-primary transition-all duration-300
-    dark:bg-transparent dark:text-primary dark:border-transparent dark:hover:border-primary dark:hover:shadow-neon;
+    @apply bg-white hover:bg-primary/5 text-gray-900 font-medium px-4 py-2 rounded-lg border border-primary/20 hover:border-primary transition-all duration-300 hover:shadow-blue-glow
+    dark:bg-transparent dark:text-primary dark:border-transparent dark:hover:border-primary dark:hover:shadow-blue-glow;
   }
 
   .btn-ghost {
-    @apply text-primary hover:bg-primary/10 font-medium px-4 py-2 rounded-lg transition-all duration-300
-    dark:text-primary dark:hover:bg-primary/5 dark:hover:border-primary dark:hover:shadow-neon;
+    @apply text-primary hover:bg-primary/10 font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-blue-glow
+    dark:text-primary dark:hover:bg-primary/5 dark:hover:border-primary dark:hover:shadow-blue-glow;
   }
 
   .btn-destructive {
     @apply bg-destructive hover:bg-destructive/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300
-    dark:bg-destructive-dark dark:text-destructive-foreground dark:hover:bg-destructive dark:hover:text-white dark:hover:shadow-neon;
+    dark:bg-destructive-dark dark:text-destructive-foreground dark:hover:bg-destructive dark:hover:text-white dark:hover:shadow-blue-glow;
   }
 
   .btn-outline {
-    @apply border-2 border-primary bg-transparent text-primary hover:bg-primary/10 font-medium px-4 py-2 rounded-lg transition-all duration-300
-    dark:border-transparent dark:text-primary dark:hover:border-primary dark:hover:shadow-neon dark:hover:bg-primary/5;
+    @apply border-2 border-primary bg-transparent text-primary hover:bg-primary/10 font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-blue-glow
+    dark:border-transparent dark:text-primary dark:hover:border-primary dark:hover:shadow-blue-glow dark:hover:bg-primary/5;
   }
 
-  .card {
-    @apply bg-white dark:bg-gradient-to-br from-[#1A2E2E] to-[#141414] shadow-sm rounded-xl p-6 border border-transparent dark:border-primary/10 dark:shadow-neon dark:hover:border-primary dark:hover:shadow-neon-hover transition-all duration-300;
-  }
-
+  /* Navigation styles */
   .nav-link {
-    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-primary/10 font-medium transition-all duration-300 dark:shadow-neon hover:shadow-neon-hover;
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-primary/10 font-medium transition-all duration-300 hover:shadow-blue-glow dark:hover:shadow-blue-glow;
   }
 
   .nav-link-active {
-    @apply bg-primary text-white shadow-neon-strong;
+    @apply bg-primary text-white shadow-blue-glow dark:shadow-blue-glow;
   }
 
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 dark:border-primary/20 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 hover:border-primary dark:shadow-neon dark:hover:shadow-neon-hover;
+  /* Common layout patterns */
+  .flex-stack {
+    @apply flex flex-col gap-4;
   }
 
-  /* Neon effect utilities */
-  .hover-neon {
-    @apply transition-all duration-300 dark:shadow-neon hover:shadow-neon-hover hover:text-primary;
+  .flex-center {
+    @apply flex items-center;
   }
 
-  .active-neon {
-    @apply shadow-neon-strong text-primary;
+  .flex-between {
+    @apply flex justify-between items-center;
+  }
+
+  .flex-wrap-gap {
+    @apply flex flex-wrap gap-4;
+  }
+
+  .flex-items-gap {
+    @apply flex items-center space-x-2;
+  }
+
+  .flex-gap {
+    @apply flex gap-4;
+  }
+
+  .flex-gap-2 {
+    @apply flex gap-2;
+  }
+
+  .flex-gap-8 {
+    @apply flex-center gap-8;
+  }
+
+  .grid-gap {
+    @apply grid gap-4;
+  }
+
+  /* Common spacing patterns */
+  .space-x {
+    @apply space-x-4;
+  }
+
+  .space-y {
+    @apply space-y-4;
+  }
+
+  .space-y-sm {
+    @apply space-y-2;
+  }
+
+  .padding-y {
+    @apply py-4;
+  }
+
+  .padding-t {
+    @apply pt-2;
+  }
+
+  .section-space {
+    @apply space-y-4;
+  }
+
+  .section-padding {
+    @apply py-6;
+  }
+
+  /* Typography */
+  .page-title {
+    @apply text-4xl font-bold mb-8 text-foreground;
+  }
+
+  .section-heading {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .heading-xl {
+    @apply text-xl font-bold;
+  }
+
+  .heading-sm {
+    @apply text-sm font-semibold;
+  }
+
+  .text-xs-muted {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .text-sm-muted {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .section-description {
+    @apply text-muted-foreground;
+  }
+
+  /* Prose styles */
+  .prose-container {
+    @apply prose dark:prose-invert max-w-none;
+  }
+
+  .prose-h1 {
+    @apply text-4xl font-bold mb-6;
+  }
+
+  .prose-h2 {
+    @apply text-3xl font-bold mb-4;
+  }
+
+  .prose-h3 {
+    @apply text-2xl font-bold mb-3;
+  }
+
+  .prose-text {
+    @apply text-base text-foreground;
+  }
+
+  .prose-blockquote {
+    @apply pl-4 border-l-4 border-primary/20 italic;
+  }
+
+  .prose-code {
+    @apply bg-background text-primary px-2 py-1 rounded-md font-mono text-sm border border-border
+    dark:bg-background dark:text-primary dark:border-border-strong;
+  }
+
+  .prose-list {
+    @apply list-disc list-inside space-y-2;
+  }
+
+  /* Icon styles */
+  .icon-lg {
+    @apply h-6 w-6 text-primary;
+  }
+
+  .icon-button {
+    @apply h-4 w-4;
+  }
+
+  .icon-button-with-spin {
+    @apply h-4 w-4 mr-2 animate-spin;
+  }
+
+  .icon-button-with-space {
+    @apply h-4 w-4 mr-2;
+  }
+
+  .icon-button-ghost {
+    @apply h-8 w-8;
+  }
+
+  /* Utility classes */
+  .full-width {
+    @apply w-full;
+  }
+
+  .tip-text {
+    @apply text-primary font-medium flex-center;
+  }
+
+  .tip-label {
+    @apply mr-2;
+  }
+
+  /* Component-specific styles */
+  .popover-calendar {
+    @apply w-auto p-0;
+  }
+
+  .scroll-area-content {
+    @apply space-y-4;
+  }
+
+  .scroll-area-item-title {
+    @apply font-medium;
+  }
+
+  .slider-container {
+    @apply space-y-4;
+  }
+
+  .slider-group {
+    @apply space-y-2;
+  }
+
+  .search-container {
+    @apply relative;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white shadow-sm rounded-xl p-6 border border-gray-100 hover:border-primary/20 hover:shadow-blue-glow transition-all duration-300
+    dark:bg-gradient-to-br dark:from-[#141414] dark:to-[#111827] dark:border-primary/10 dark:shadow-blue-glow dark:hover:border-primary dark:hover:shadow-blue-glow;
+  }
+
+  /* Glow effect utilities */
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-blue-glow hover:text-primary dark:shadow-blue-glow dark:hover:shadow-blue-glow;
+  }
+
+  .active-glow {
+    @apply shadow-blue-glow text-primary dark:shadow-blue-glow;
+  }
+
+  /* Ship It card hover effect - light blue background */
+  .ship-it-card {
+    @apply bg-card p-6 rounded-xl border border-border hover:shadow-blue-glow transition-all duration-300;
+  }
+
+  /* Card with border */
+  .bordered-card {
+    @apply shadow-blue-glow border-primary-opacity-40 dark:shadow-blue-glow dark:border-primary/40;
+  }
+
+  /* Scroll area item styles */
+  .scroll-area-item {
+    @apply flex items-center gap-4 p-2 rounded-lg hover:bg-primary-opacity-5 transition-all duration-300;
+  }
+
+  .scroll-area-item-icon {
+    @apply h-4 w-4 text-primary-opacity-60;
+  }
+
+  /* Icon utilities */
+  .icon-button {
+    @apply h-4 w-4;
+  }
+
+  /* Scroll area default size */
+  .scroll-area-default {
+    @apply h-[200px] w-[350px] rounded-md border p-4;
+  }
+
+  /* Table action button */
+  .table-action-button {
+    @apply h-8 w-8;
+  }
+
+  /* Table action icon */
+  .table-action-icon {
+    @apply h-4 w-4;
+  }
+
+  /* Toggle icon */
+  .toggle-icon {
+    @apply h-4 w-4 mr-2;
+  }
+
+  /* Default slider width */
+  .slider-default {
+    @apply w-[60%];
+  }
+
+  /* Form layout utilities */
+  .form-section {
+    @apply flex gap-8;
+  }
+
+  .form-group {
+    @apply space-y-4;
+  }
+
+  .form-row {
+    @apply flex items-center space-x-2;
+  }
+
+  /* Table container */
+  .table-container {
+    @apply rounded-md border;
+  }
+
+  /* Page layout */
+  .page-container {
+    @apply container mx-auto p-8 space-y-8;
+  }
+
+  /* Search input container */
+  .search-container {
+    @apply relative;
+  }
+
+  .search-icon {
+    @apply absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground;
+  }
+
+  .search-input {
+    @apply pl-10;
+  }
+
+  /* Avatar sizes */
+  .avatar-sm {
+    @apply h-10 w-10 cursor-pointer;
+  }
+
+  .avatar-md {
+    @apply h-12 w-12;
+  }
+
+  /* Progress bar */
+  .progress-default {
+    @apply w-[60%];
+  }
+
+  /* Hover card */
+  .hover-card-default {
+    @apply w-80;
+  }
+
+  /* Common layout patterns */
+  .form-container {
+    @apply grid gap-6 max-w-sm;
+  }
+
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .grid-cards {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+
+  /* Section spacing */
+  .section-space {
+    @apply space-y-4;
+  }
+
+  .section-content {
+    @apply py-6;
+  }
+
+  /* Flex layouts */
+  .flex-center {
+    @apply flex items-center;
+  }
+
+  .flex-between {
+    @apply flex justify-between items-center;
+  }
+
+  /* Page title */
+  .page-title {
+    @apply text-4xl font-bold mb-8 text-foreground;
+  }
+
+  /* Prose container */
+  .prose-container {
+    @apply prose dark:prose-invert max-w-none;
+  }
+
+  /* Icon sizes */
+  .icon-lg {
+    @apply h-6 w-6 text-primary;
+  }
+
+  /* Common spacing patterns */
+  .space-x {
+    @apply space-x-4;
+  }
+
+  .space-y {
+    @apply space-y-4;
+  }
+
+  .space-y-sm {
+    @apply space-y-2;
+  }
+
+  .padding-y {
+    @apply py-4;
+  }
+
+  .padding-t {
+    @apply pt-2;
+  }
+
+  /* Accordion styles */
+  .accordion-item-header {
+    @apply flex items-center gap-2;
+  }
+
+  .accordion-default {
+    @apply w-full;
+  }
+
+  /* Dropdown styles */
+  .dropdown-item {
+    @apply cursor-pointer;
+  }
+
+  /* Text styles */
+  .heading-xl {
+    @apply text-xl font-bold;
+  }
+
+  .heading-sm {
+    @apply text-sm font-semibold;
+  }
+
+  .text-xs-muted {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* Code block styling */
+  pre {
+    @apply bg-background text-primary rounded-lg my-4 border border-border
+    dark:bg-background dark:border-border-strong;
+  }
+
+  pre code {
+    @apply block px-4 py-3 font-mono text-sm whitespace-pre-wrap;
+  }
+
+  .prose-code {
+    @apply bg-background text-primary px-2 py-1 rounded-md font-mono text-sm border border-border
+    dark:bg-background dark:text-primary dark:border-border-strong;
+  }
+
+  /* Toast notification styles */
+  :root {
+    --toaster-success: var(--success);
+    --toaster-error: var(--destructive);
+  }
+
+  [data-sonner-toaster][data-theme="dark"] [data-sonner-toast] {
+    @apply bg-background border border-border-strong;
+  }
+
+  [data-sonner-toaster][data-theme="dark"] [data-sonner-toast] [data-description] {
+    @apply text-muted-foreground;
+  }
+
+  [data-sonner-toaster][data-theme="dark"] [data-sonner-toast] [data-title] {
+    @apply text-foreground;
+  }
+
+  /* Input styles */
+  input:not([type="submit"]):not([type="button"]):not([type="reset"]),
+  textarea,
+  select {
+    @apply border-input hover:border-primary/50 focus:border-primary transition-colors duration-200;
   }
 }
 
@@ -269,7 +698,7 @@
 }
 
 .save-indicator-saved {
-  @apply bg-primary/10 text-primary shadow-neon;
+  @apply bg-primary/10 text-primary shadow-blue-glow dark:shadow-blue-glow;
 }
 
 .save-indicator-saving {
@@ -289,7 +718,7 @@
   }
 }
 
-/* Add neon scrollbar */
+/* Add blue scrollbar for light and dark mode */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -303,22 +732,229 @@
   @apply bg-primary/50 rounded-full hover:bg-primary transition-colors duration-300;
 }
 
-/* Add neon selection */
+/* Add selection styling */
 ::selection {
   @apply bg-primary/30 text-primary;
 }
 
 /* Update other interactive elements */
 select, textarea, input[type="checkbox"], input[type="radio"] {
-  @apply dark:shadow-neon dark:hover:shadow-neon-hover transition-all duration-300;
+  @apply hover:shadow-blue-glow dark:shadow-blue-glow dark:hover:shadow-blue-glow transition-all duration-300;
 }
 
-/* Add neon scrollbar in dark mode */
+/* Add scrollbar in dark mode */
 .dark ::-webkit-scrollbar-thumb {
-  @apply bg-primary/50 hover:bg-primary shadow-neon hover:shadow-neon-hover;
+  @apply bg-primary/50 hover:bg-primary shadow-blue-glow hover:shadow-blue-glow;
 }
 
-/* Enhance neon selection in dark mode */
+/* Enhance selection in dark mode */
 .dark ::selection {
-  @apply bg-primary/30 text-primary shadow-neon;
+  @apply bg-primary/30 text-primary shadow-blue-glow;
+}
+
+/* Grid layouts */
+.grid-cards {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+/* Form styles */
+.form-container {
+  @apply space-y-6;
+}
+
+.form-field {
+  @apply space-y-2;
+}
+
+/* Common flex patterns */
+.flex-wrap-gap {
+  @apply flex flex-wrap gap-4;
+}
+
+.flex-items-gap {
+  @apply flex items-center space-x-2;
+}
+
+.flex-gap {
+  @apply flex gap-4;
+}
+
+.grid-gap {
+  @apply grid gap-4;
+}
+
+/* Icon sizes */
+.icon-button {
+  @apply h-4 w-4;
+}
+
+.icon-button-with-spin {
+  @apply h-4 w-4 mr-2 animate-spin;
+}
+
+.icon-button-with-space {
+  @apply h-4 w-4 mr-2;
+}
+
+/* Common spacing and layout */
+.section-space {
+  @apply space-y-4;
+}
+
+.section-padding {
+  @apply py-6;
+}
+
+.flex-gap-2 {
+  @apply flex gap-2;
+}
+
+.flex-gap-8 {
+  @apply flex-center gap-8;
+}
+
+/* Text styles */
+.text-sm-muted {
+  @apply text-sm text-muted-foreground;
+}
+
+.full-width {
+  @apply w-full;
+}
+
+.tip-text {
+  @apply text-primary font-medium flex-center;
+}
+
+.tip-label {
+  @apply mr-2;
+}
+
+/* Component-specific styles */
+.popover-calendar {
+  @apply w-auto p-0;
+}
+
+.scroll-area-content {
+  @apply space-y-4;
+}
+
+.scroll-area-item-title {
+  @apply font-medium;
+}
+
+.slider-container {
+  @apply space-y-4;
+}
+
+.slider-group {
+  @apply space-y-2;
+}
+
+.search-container {
+  @apply relative;
+}
+
+/* Typography styles */
+.prose-h1 {
+  @apply text-4xl font-bold mb-6;
+}
+
+.prose-h2 {
+  @apply text-3xl font-bold mb-4;
+}
+
+.prose-h3 {
+  @apply text-2xl font-bold mb-3;
+}
+
+.prose-text {
+  @apply text-base text-foreground;
+}
+
+.prose-blockquote {
+  @apply pl-4 border-l-4 border-primary/20 italic;
+}
+
+.prose-code {
+  @apply bg-background text-primary px-2 py-1 rounded-md font-mono text-sm border border-border
+  dark:bg-background dark:text-primary dark:border-border-strong;
+}
+
+.prose-list {
+  @apply list-disc list-inside space-y-2;
+}
+
+/* Layout containers */
+.page-container {
+  @apply container mx-auto p-8;
+}
+
+/* Grid layouts */
+.grid-cards {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+/* Form layouts */
+.form-section {
+  @apply space-y-6;
+}
+
+.form-group {
+  @apply space-y-4;
+}
+
+.form-row {
+  @apply flex items-center space-x-2;
+}
+
+/* Slider styles */
+.slider-container {
+  @apply w-full max-w-sm;
+}
+
+.slider-group {
+  @apply space-y-4;
+}
+
+.slider-default {
+  @apply w-full;
+}
+
+/* Table styles */
+.table-action-button {
+  @apply h-8 w-8;
+}
+
+.table-action-icon {
+  @apply h-4 w-4;
+}
+
+/* Toggle styles */
+.toggle-icon {
+  @apply h-4 w-4 mr-2;
+}
+
+/* Full width container */
+.full-width {
+  @apply w-full;
+}
+
+/* Button variants */
+.icon-button-ghost {
+  @apply h-8 w-8;
+}
+
+/* Card content styles */
+.card-content-text {
+  @apply text-muted-foreground;
+}
+
+.card-description {
+  @apply text-muted-foreground text-sm;
+}
+
+/* Section content styles */
+.section-description {
+  @apply text-muted-foreground;
 }
