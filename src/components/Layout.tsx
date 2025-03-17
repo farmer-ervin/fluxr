@@ -8,7 +8,6 @@ import { EnvironmentBanner } from './EnvironmentBanner';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { AppSidebar } from './app-sidebar';
-import { HelpButton } from './HelpButton';
 import {
   SidebarInset,
   SidebarProvider,
@@ -227,45 +226,18 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background overflow-hidden">
+      <div className="flex min-h-screen h-screen w-full bg-background overflow-hidden">
         <EnvironmentBanner />
         <div className="flex-none">
-          <AppSidebar />
+          <AppSidebar 
+            quickNote={quickNote}
+            setQuickNote={setQuickNote}
+            handleAddNote={handleAddNote}
+            isSaving={isSaving}
+          />
         </div>
-        <div className="flex-1 overflow-hidden">
-          <SidebarInset className="w-full">
-            {/* Quick note input */}
-            {isProductContext && (
-              <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-6 bg-card">
-                <div className="flex w-full items-center gap-2">
-                  <input
-                    type="text"
-                    value={quickNote}
-                    onChange={(e) => setQuickNote(e.target.value)}
-                    placeholder="Enter a note"
-                    className="flex-1 border border-input rounded-lg p-2 h-10 transition-colors focus:border-brand-purple focus:ring-1 focus:ring-brand-purple"
-                  />
-                  <Button 
-                    onClick={handleAddNote}
-                    disabled={isSaving}
-                    className="bg-brand-purple hover:bg-brand-purple-dark"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving
-                      </>
-                    ) : (
-                      <>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Note
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-
+        <div className="flex-1 overflow-hidden flex flex-col h-full">
+          <SidebarInset className="w-full h-full flex flex-col">
             {/* Error and success messages */}
             {showError && error && (
               <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700 shadow-sm">
@@ -284,14 +256,13 @@ export function Layout({ children }: LayoutProps) {
             )}
 
             {/* Main content */}
-            <main className="flex-1 p-4 md:p-6 overflow-auto">
-              <div className="w-full mx-auto max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
+            <main className="flex-1 p-4 md:p-6 overflow-auto h-full">
+              <div className="w-full h-full">
                 {children}
               </div>
             </main>
           </SidebarInset>
         </div>
-        <HelpButton />
       </div>
     </SidebarProvider>
   );

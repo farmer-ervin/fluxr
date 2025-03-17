@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { PageTitle } from '@/components/PageTitle';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PromptCard } from '@/components/prompts/PromptCard';
@@ -8,6 +8,7 @@ import { PromptForm } from '@/components/prompts/PromptForm';
 import { supabase, handleSupabaseError } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Loader2, Plus, Filter, Globe, AlertTriangle } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface PromptTemplate {
   id: string;
@@ -687,20 +688,12 @@ export function PromptLibrary() {
   }
 
   return (
-    <div className="w-full space-y-6">
-      <PageTitle title="Prompt Library" />
-      
-      {isOffline && (
-        <div className="bg-yellow-50 p-4 mb-6 rounded-lg border border-yellow-200 flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-yellow-700 flex-shrink-0" />
-          <p className="text-yellow-700">You are currently offline. Some features may not be available.</p>
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Prompt Library</h1>
-        
-        <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+    <div className="flex flex-col h-full">
+      <PageHeader
+        title="Prompt Library"
+        description="Create and share AI prompts with your team"
+      >
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -778,54 +771,20 @@ export function PromptLibrary() {
             )}
           </div>
         </div>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 p-4 mb-6 rounded-lg border border-red-200 flex items-center gap-2">
-          <div className="h-5 w-5 text-red-700 flex items-center justify-center">⚠️</div>
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-      
-      {successMessage && (
-        <div className="bg-green-50 p-4 mb-6 rounded-lg border border-green-200 flex items-center gap-2">
-          <div className="h-5 w-5 text-green-700 flex items-center justify-center">✓</div>
-          <p className="text-green-700">{successMessage}</p>
-        </div>
-      )}
+      </PageHeader>
 
       <Tabs 
         value={activeTab} 
         onValueChange={setActiveTab}
-        className="flex flex-col space-y-8"
+        className="flex-1 flex flex-col"
       >
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger 
-            value="personal"
-            className="flex-1 sm:flex-initial"
-          >
-            Personal Library
-          </TabsTrigger>
-          
-          <TabsTrigger 
-            value="community"
-            className="flex-1 sm:flex-initial"
-          >
-            <Globe className="h-4 w-4 mr-2" />
-            Community Prompts
-          </TabsTrigger>
-          
-          {productSlug && (
-            <TabsTrigger 
-              value="product"
-              className="flex-1 sm:flex-initial"
-            >
-              Product Prompts
-            </TabsTrigger>
-          )}
+        <TabsList className="mb-6">
+          <TabsTrigger value="personal">Personal Library</TabsTrigger>
+          <TabsTrigger value="community">Community Library</TabsTrigger>
+          {productSlug && <TabsTrigger value="product">Product Library</TabsTrigger>}
         </TabsList>
-
-        <TabsContent value="personal" className="space-y-8">
+        
+        <TabsContent value="personal" className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />
@@ -866,7 +825,7 @@ export function PromptLibrary() {
           )}
         </TabsContent>
 
-        <TabsContent value="community" className="space-y-8">
+        <TabsContent value="community" className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />
@@ -905,7 +864,7 @@ export function PromptLibrary() {
         </TabsContent>
 
         {productSlug && (
-          <TabsContent value="product" className="space-y-8">
+          <TabsContent value="product" className="flex-1 overflow-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />

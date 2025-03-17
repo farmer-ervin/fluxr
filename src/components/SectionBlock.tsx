@@ -32,9 +32,10 @@ interface SectionBlockProps {
   productDetails: any;
   onRenameSection?: (sectionId: string, title: string) => void;
   onProductNameChange?: (name: string) => void;
+  onDeleteSection?: (sectionId: string) => void;
 }
 
-export function SectionBlock({ section, onContentChange, productDetails, onRenameSection, onProductNameChange }: SectionBlockProps) {
+export function SectionBlock({ section, onContentChange, productDetails, onRenameSection, onProductNameChange, onDeleteSection }: SectionBlockProps) {
   const [isEditingName, setIsEditingName] = useState(false);
 
   const handleContentChange = (content: string, subsectionId?: string) => {
@@ -115,15 +116,17 @@ export function SectionBlock({ section, onContentChange, productDetails, onRenam
             {section.icon}
             <span>{section.title}</span>
             {section.isCustom && onRenameSection && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRenameClick}
-                className="ml-2 p-1 h-auto"
-                title="Rename section"
-              >
-                <Pencil className="w-4 h-4 text-gray-500 hover:text-brand-purple" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRenameClick}
+                  className="ml-2 p-1 h-auto"
+                  title="Rename section"
+                >
+                  <Pencil className="w-4 h-4 text-gray-500 hover:text-brand-purple" />
+                </Button>
+              </div>
             )}
           </h2>
           <RichTextEditor

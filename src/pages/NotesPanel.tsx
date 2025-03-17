@@ -142,7 +142,7 @@ export function NotesPanel() {
   }
 
   return (
-    <div className="w-full space-y-6">
+    <div className="h-full flex flex-col">
       <PageTitle title={productSlug ? 'Product Notes' : 'Personal Notes'} />
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
@@ -157,12 +157,12 @@ export function NotesPanel() {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg flex items-center gap-2">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg flex items-center gap-2 mb-4">
           <AlertCircle className="w-4 h-4" />
           {error}
         </div>
       )}
-      <div className="w-full bg-white rounded-lg shadow-sm border border-border overflow-hidden">
+      <div className="flex-1 w-full bg-white rounded-lg shadow-sm border border-border overflow-hidden">
         <RichTextEditor
           content={content}
           onChange={handleContentChange}
