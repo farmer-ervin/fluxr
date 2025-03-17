@@ -54,4 +54,3 @@ alwaysApply: true
 3. **Consistency Principle**:
    - All components, regardless of source, should look like they belong to the same design system
    - Match the visual language (colors, shadows, animations) defined in our configuration files
-
