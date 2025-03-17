@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar } from "@/components/ui/calendar"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { DialogButtons } from "@/components/ui/dialog-buttons"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -48,11 +49,49 @@ import {
   Trash,
   User,
   X,
-  Rocket
+  Rocket,
+  AlertTriangle,
+  RefreshCw,
+  Users,
+  FileCheck
 } from "lucide-react"
 import { useState } from "react"
 
+interface ProfileFormData {
+  name: string;
+  email: string;
+}
+
 export default function TestPage() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [formData, setFormData] = useState<ProfileFormData>({
+    name: "John Doe",
+    email: "john@example.com"
+  })
+
+  const handleSave = async () => {
+    setIsLoading(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    setIsLoading(false)
+    toast.success("Profile updated successfully!")
+  }
+
+  const handleDelete = async () => {
+    setIsLoading(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    setIsLoading(false)
+    toast.success("Account deleted successfully!")
+  }
+
+  const handleError = () => {
+    setHasError(true)
+    // Simulate error state
+    setTimeout(() => setHasError(false), 2000)
+  }
+
   return (
     <div className="page-container">
       <h1 className="page-title">Theme Test Page</h1>
@@ -634,6 +673,193 @@ const example = "Typography styling";</code></pre>
           />
         </div>
       </section>
+
+      {/* AI PRD Generation Dialog */}
+      <Card>
+        <CardHeader>
+          <CardTitle>AI PRD Generation</CardTitle>
+          <CardDescription>Example of an AI-powered PRD generation dialog</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Rocket className="h-4 w-4" />
+                Generate PRD with AI
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">AI-Powered PRD Generation</DialogTitle>
+                <DialogDescription className="mt-4">
+                  Let AI help you research and write your PRD. We'll analyze your product details and generate comprehensive content for each section.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <FileText className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium">Enter your product details</h4>
+                      <p className="text-sm text-muted-foreground">Be as detailed as possible about your product's purpose and features</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <Users className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium">Select your customer persona</h4>
+                      <p className="text-sm text-muted-foreground">Fluxr will analyze your market and suggest who to target</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <FileCheck className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium">Generate your PRD</h4>
+                      <p className="text-sm text-muted-foreground">Our AI will create a comprehensive PRD based on your inputs</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <Edit className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium">Review and customize</h4>
+                      <p className="text-sm text-muted-foreground">Approve, edit, and refine the generated content</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="mt-8">
+                <Button variant="outline" className="gap-2">
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button className="gap-2">
+                  <Rocket className="h-4 w-4" />
+                  Start AI Generation
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
+
+      {/* New Dialog Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle>New Dialog Templates</CardTitle>
+          <CardDescription>Examples of the new standardized dialog templates</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {/* Form Dialog Example */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Edit Profile</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Profile</DialogTitle>
+                <DialogDescription>Make changes to your profile settings.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogButtons
+                onCancel={() => {}}
+                onConfirm={handleSave}
+                confirmText="Save changes"
+                isLoading={isLoading}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {/* Confirmation Dialog Example */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="destructive">Delete Account</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Account</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete your account? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogButtons
+                onCancel={() => {}}
+                onConfirm={handleDelete}
+                confirmText="Delete Account"
+                confirmIcon={<Trash className="h-4 w-4" />}
+                isDestructive
+                isLoading={isLoading}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {/* Loading Dialog Example */}
+          <Dialog open={isLoading}>
+            <DialogContent>
+              <div className="flex flex-col items-center justify-center gap-4 py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <DialogTitle>Processing...</DialogTitle>
+                <DialogDescription>Please wait while we process your request.</DialogDescription>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Error Dialog Example */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={handleError}>Show Error</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  <DialogTitle>Error</DialogTitle>
+                </div>
+                <DialogDescription>
+                  An error occurred while processing your request. Please try again.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogButtons
+                onCancel={() => {}}
+                onConfirm={() => {}}
+                confirmText="Try Again"
+                confirmIcon={<RefreshCw className="h-4 w-4" />}
+                isError={hasError}
+              />
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
     </div>
   )
 } 

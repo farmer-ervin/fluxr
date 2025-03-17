@@ -4,7 +4,19 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { PageTitle } from '@/components/PageTitle';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Loader2, 
+  AlertCircle, 
+  StickyNote, 
+  CheckSquare, 
+  ListTodo, 
+  Lightbulb,
+  PlusCircle
+} from 'lucide-react';
 import debounce from 'lodash.debounce';
 
 export function NotesPanel() {
@@ -18,6 +30,7 @@ export function NotesPanel() {
   const [productName, setProductName] = useState('');
   const [noteId, setNoteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('notes');
 
   const debouncedSave = useCallback(
     debounce(async (noteId: string | null, content: string, productId: string | null) => {
@@ -92,7 +105,6 @@ export function NotesPanel() {
 
           if (notesError) throw notesError;
           
-          // If note exists, use it; otherwise we'll create one on first save
           if (notes && notes.length > 0) {
             setNoteId(notes[0].id);
             setContent(notes[0].content);
@@ -101,7 +113,6 @@ export function NotesPanel() {
             setContent('');
           }
         } else {
-          // Handle personal notes case if needed or redirect to dashboard
           navigate('/');
           return;
         }
@@ -134,39 +145,141 @@ export function NotesPanel() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-purple mx-auto mb-4" />
-          <p className="text-gray-600">Loading notes...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading notes...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <PageTitle title={productSlug ? 'Product Notes' : 'Personal Notes'} />
-      
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{productName} Notes</h1>
-        
-        {isSaving && (
-          <div className="flex items-center gap-2 text-gray-500">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Saving...
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="flex flex-col space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{productName} Notes</h1>
+            <p className="text-muted-foreground mt-1">
+              Capture your thoughts, tasks, and ideas for {productName}
+            </p>
+          </div>
+          {isSaving && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving...
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-lg flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            {error}
           </div>
         )}
-      </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg flex items-center gap-2 mb-4">
-          <AlertCircle className="w-4 h-4" />
-          {error}
-        </div>
-      )}
-      <div className="flex-1 w-full bg-white rounded-lg shadow-sm border border-border overflow-hidden">
-        <RichTextEditor
-          content={content}
-          onChange={handleContentChange}
-        />
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="notes" className="flex items-center gap-2">
+              <StickyNote className="w-4 h-4" />
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value="todos" className="flex items-center gap-2">
+              <ListTodo className="w-4 h-4" />
+              To-Dos
+            </TabsTrigger>
+            <TabsTrigger value="ideas" className="flex items-center gap-2">
+              <Lightbulb className="w-4 h-4" />
+              Ideas
+            </TabsTrigger>
+            <TabsTrigger value="done" className="flex items-center gap-2">
+              <CheckSquare className="w-4 h-4" />
+              Done
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="notes" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Quick Notes</CardTitle>
+                <CardDescription>
+                  Capture your thoughts and important information about {productName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="min-h-[500px] rounded-lg border">
+                  <RichTextEditor
+                    content={content}
+                    onChange={handleContentChange}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="todos" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>To-Do List</CardTitle>
+                    <CardDescription>
+                      Track tasks and action items
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" className="gap-2">
+                    <PlusCircle className="w-4 h-4" />
+                    Add Task
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">
+                  Coming soon: Dedicated to-do list functionality
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ideas" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Ideas & Brainstorming</CardTitle>
+                    <CardDescription>
+                      Capture product ideas and inspiration
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" className="gap-2">
+                    <PlusCircle className="w-4 h-4" />
+                    Add Idea
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">
+                  Coming soon: Dedicated ideas and brainstorming section
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="done" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Completed Items</CardTitle>
+                <CardDescription>
+                  Track your progress and achievements
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground">
+                  Coming soon: Archive of completed tasks and milestones
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

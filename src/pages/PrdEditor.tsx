@@ -1073,7 +1073,7 @@ export function PrdEditor() {
       </PageHeader>
 
       <div className="grid grid-cols-[250px,1fr] gap-6 flex-1 overflow-hidden">
-        <Card className="p-0 overflow-hidden">
+        <Card className="p-0 overflow-hidden border-0 bg-background">
           <ScrollArea className="h-[calc(100vh-12rem)]">
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-4">Document Sections</h2>
@@ -1083,10 +1083,10 @@ export function PrdEditor() {
                     <Button
                       onClick={() => scrollToSection(section.id)}
                       variant={section.id === activeSectionId ? "default" : "ghost"}
-                      className={`w-full justify-start gap-3 h-11 px-4 ${
+                      className={`w-full justify-start gap-3 h-11 px-4 rounded-none ${
                         section.id === activeSectionId
-                          ? 'bg-primary hover:bg-primary text-primary-foreground'
-                          : 'text-foreground hover:bg-primary/5 hover:text-foreground'
+                          ? 'bg-background text-primary border-l-2 border-l-primary font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
                       <span className="flex items-center">
@@ -1102,10 +1102,10 @@ export function PrdEditor() {
                               e.stopPropagation();
                               handleStartRenameSection(section.id, section.title);
                             }}
-                            className={`h-7 w-7 ${
+                            className={`h-7 w-7 rounded-none ${
                               section.id === activeSectionId
-                                ? 'text-primary-foreground hover:bg-primary-foreground/20'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                                ? 'text-primary hover:bg-muted'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -1117,10 +1117,10 @@ export function PrdEditor() {
                               e.stopPropagation();
                               handleDeleteSection(section.id);
                             }}
-                            className={`h-7 w-7 ${
+                            className={`h-7 w-7 rounded-none ${
                               section.id === activeSectionId
-                                ? 'text-primary-foreground hover:bg-primary-foreground/20'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                                ? 'text-primary hover:bg-muted'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                           >
                             <XCircle className="h-3.5 w-3.5" />
@@ -1137,10 +1137,10 @@ export function PrdEditor() {
                             onClick={() => scrollToSection(section.id, subsection.id)}
                             variant={section.id === activeSectionId && subsection.id === activeSubsectionId ? "default" : "ghost"}
                             size="sm"
-                            className={`w-full justify-start h-9 px-4 ${
+                            className={`w-full justify-start h-9 px-4 rounded-none ${
                               section.id === activeSectionId && subsection.id === activeSubsectionId
-                                ? 'bg-primary/90 hover:bg-primary/90 text-primary-foreground'
-                                : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
+                                ? 'bg-background text-primary border-l-2 border-l-primary font-medium'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                           >
                             {subsection.title}
@@ -1159,7 +1159,7 @@ export function PrdEditor() {
                     setIsAddSectionOpen(true);
                   }}
                   variant="ghost"
-                  className="w-full justify-start gap-3 h-11 px-4 text-primary hover:bg-primary/5 hover:text-primary"
+                  className="w-full justify-start gap-3 h-11 px-4 rounded-none text-muted-foreground hover:text-primary hover:bg-muted"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Section</span>
@@ -1169,7 +1169,7 @@ export function PrdEditor() {
           </ScrollArea>
         </Card>
 
-        <Card className="p-0 overflow-hidden">
+        <Card className="p-0 overflow-hidden border-0 bg-background">
           <ScrollArea className="h-[calc(100vh-12rem)]">
             <div className="p-6">
               {sections.map((section) => (

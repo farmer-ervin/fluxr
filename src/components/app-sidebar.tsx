@@ -104,6 +104,12 @@ export function AppSidebar({
   // Define navigation items based on context
   const navItems = isProductContext ? [
     {
+      label: 'Home',
+      href: '/',
+      icon: Home,
+      isActive: location.pathname === '/'
+    },
+    {
       label: 'PRD',
       href: `/product/${activeProductSlug}/prd`,
       icon: FileText,
@@ -126,10 +132,16 @@ export function AppSidebar({
       href: `/product/${activeProductSlug}/prompts`,
       icon: MessageSquare,
       isActive: location.pathname.includes('/prompts')
+    },
+    {
+      label: 'Notes',
+      href: `/product/${activeProductSlug}/notes`,
+      icon: StickyNote,
+      isActive: location.pathname.includes('/notes')
     }
   ] : [
     {
-      label: 'Products',
+      label: 'Home',
       href: '/',
       icon: Home,
       isActive: location.pathname === '/'

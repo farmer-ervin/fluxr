@@ -110,9 +110,9 @@ export function AiTextActions({ editor }: AiTextActionsProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
+            variant="default"
             size="sm"
-            className="flex items-center gap-1 text-brand-purple hover:bg-brand-purple/10 h-[36px] px-3 border border-gray-200 shadow-lg bg-white"
+            className="flex items-center gap-2 bg-primary/5 text-primary hover:bg-primary/10 h-[36px] px-3 shadow-none"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -128,29 +128,29 @@ export function AiTextActions({ editor }: AiTextActionsProps) {
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48 p-2">
+        <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem
             onClick={() => handleAiAction('improve')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-primary/5 hover:text-primary focus:bg-primary/5 focus:text-primary"
             disabled={isLoading}
           >
-            <Wand2 className="w-4 h-4 text-brand-purple" />
+            <Wand2 className="w-4 h-4" />
             <span className="text-sm">Improve writing</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleAiAction('expand')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-primary/5 hover:text-primary focus:bg-primary/5 focus:text-primary"
             disabled={isLoading}
           >
-            <ArrowUpRight className="w-4 h-4 text-brand-purple" />
+            <ArrowUpRight className="w-4 h-4" />
             <span className="text-sm">Make longer</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleAiAction('shorten')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-primary/5 hover:text-primary focus:bg-primary/5 focus:text-primary"
             disabled={isLoading}
           >
-            <ArrowDownRight className="w-4 h-4 text-brand-purple" />
+            <ArrowDownRight className="w-4 h-4" />
             <span className="text-sm">Make shorter</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
