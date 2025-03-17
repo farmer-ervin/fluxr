@@ -18,7 +18,9 @@ import {
   Settings,
   Upload,
   AlertCircle,
-  Lightbulb
+  Lightbulb,
+  Search,
+  ChevronDown
 } from 'lucide-react';
 import { SaveIndicator, SaveStatus } from '../components/SaveIndicator';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -28,7 +30,6 @@ import { EditableField } from '../components/EditableField';
 import { EditableList } from '../components/EditableList';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
 import { ScoreBar } from '@/components/ScoreBar';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useProduct } from '@/components/context/ProductContext';
 import { supabase } from '@/lib/supabase';
@@ -38,6 +39,32 @@ import { CustomSectionDialog } from '@/components/CustomSectionDialog';
 import { UploadPrdDialog, ParsedPrdData } from '@/components/UploadPrdDialog';
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { PageHeader } from '@/components/PageHeader';
+
+// shadcn components
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface Section {
   id: string;
@@ -970,8 +997,8 @@ export function PrdEditor() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-purple mx-auto mb-4" />
-          <p className="text-gray-600">Loading product data...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading product data...</p>
         </div>
       </div>
     );
@@ -980,21 +1007,27 @@ export function PrdEditor() {
   if (error) {
     return (
       <div className="max-w-lg mx-auto text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h2>
-        <p className="text-red-600 mb-6">{error}</p>
-        <Button
-          onClick={() => navigate('/')}
-          variant="secondary"
-          className="mx-auto"
-        >
-          Go to Dashboard
-        </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Page Not Found</CardTitle>
+            <CardDescription className="text-red-600">{error}</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button
+              onClick={() => navigate('/')}
+              variant="secondary"
+              className="mx-auto"
+            >
+              Go to Dashboard
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="page-container">
       <PageHeader
         title="PRD Editor"
         description="Define your product's vision, features, and success metrics"
@@ -1003,10 +1036,25 @@ export function PrdEditor() {
           <div className="relative flex items-center gap-2">
             <SaveIndicator status={saveStatus} error={saveError} />
             {productDetails?.id && (
-              <UploadPrdDialog 
-                productId={productDetails.id} 
-                onPrdParsed={handlePrdParsed} 
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowUploadDialog(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import PRD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Export PRD
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <AiDialog
               productData={{
@@ -1025,100 +1073,123 @@ export function PrdEditor() {
       </PageHeader>
 
       <div className="grid grid-cols-[250px,1fr] gap-6 flex-1 overflow-hidden">
-        <div className="bg-white rounded-lg shadow-lg p-6 overflow-auto">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Sections</h2>
-          <nav className="space-y-2">
-            {sections.map(section => (
-              <div key={section.id}>
-                <button
-                  onClick={() => scrollToSection(section.id)}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg text-left transition-colors ${
-                    section.id === activeSectionId
-                      ? 'bg-brand-purple text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {section.icon}
-                  <span className="ml-3">{section.title}</span>
-                  {section.isCustom && (
-                    <div className="ml-auto flex gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartRenameSection(section.id, section.title);
-                        }}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSection(section.id);
-                        }}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <XCircle className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </button>
-                
-                {section.subsections && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {section.subsections.map(subsection => (
-                      <button
-                        key={subsection.id}
-                        onClick={() => scrollToSection(section.id, subsection.id)}
-                        className={`w-full flex items-center px-4 py-1.5 rounded-lg text-left transition-colors text-sm ${
-                          section.id === activeSectionId && subsection.id === activeSubsectionId
-                            ? 'bg-brand-purple/80 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {subsection.title}
-                      </button>
-                    ))}
+        <Card className="p-0 overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-12rem)]">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-4">Document Sections</h2>
+              <nav className="space-y-1">
+                {sections.map(section => (
+                  <div key={section.id}>
+                    <Button
+                      onClick={() => scrollToSection(section.id)}
+                      variant={section.id === activeSectionId ? "default" : "ghost"}
+                      className={`w-full justify-start gap-3 h-11 px-4 ${
+                        section.id === activeSectionId
+                          ? 'bg-primary hover:bg-primary text-primary-foreground'
+                          : 'text-foreground hover:bg-primary/5 hover:text-foreground'
+                      }`}
+                    >
+                      <span className="flex items-center">
+                        {section.icon}
+                      </span>
+                      <span className="flex-grow text-left">{section.title}</span>
+                      {section.isCustom && (
+                        <div className="flex gap-0.5 ml-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartRenameSection(section.id, section.title);
+                            }}
+                            className={`h-7 w-7 ${
+                              section.id === activeSectionId
+                                ? 'text-primary-foreground hover:bg-primary-foreground/20'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                            }`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSection(section.id);
+                            }}
+                            className={`h-7 w-7 ${
+                              section.id === activeSectionId
+                                ? 'text-primary-foreground hover:bg-primary-foreground/20'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                            }`}
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </Button>
+                    
+                    {section.subsections && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {section.subsections.map(subsection => (
+                          <Button
+                            key={subsection.id}
+                            onClick={() => scrollToSection(section.id, subsection.id)}
+                            variant={section.id === activeSectionId && subsection.id === activeSubsectionId ? "default" : "ghost"}
+                            size="sm"
+                            className={`w-full justify-start h-9 px-4 ${
+                              section.id === activeSectionId && subsection.id === activeSubsectionId
+                                ? 'bg-primary/90 hover:bg-primary/90 text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
+                            }`}
+                          >
+                            {subsection.title}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
-            
-            {/* Add Section Button */}
-            <div className="pt-2 mt-2 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setEditingSection(null); // Ensure we're not in edit mode
-                  setIsAddSectionOpen(true);
-                }}
-                className="w-full flex items-center px-4 py-2 rounded-lg text-left transition-colors text-brand-purple hover:bg-gray-100"
-              >
-                <Plus className="w-5 h-5" />
-                <span className="ml-3">Add Section</span>
-              </button>
+                ))}
+                
+                <Separator className="my-4" />
+                
+                <Button
+                  onClick={() => {
+                    setEditingSection(null);
+                    setIsAddSectionOpen(true);
+                  }}
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-11 px-4 text-primary hover:bg-primary/5 hover:text-primary"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Section</span>
+                </Button>
+              </nav>
             </div>
-          </nav>
-        </div>
+          </ScrollArea>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-auto">
-          <div className="p-6">
-            {sections.map((section) => (
-              <div key={section.id} className="mb-6">
-                <SectionBlock
-                  section={section}
-                  onContentChange={handleSectionContentChange}
-                  productDetails={productDetails}
-                  onRenameSection={handleStartRenameSection}
-                  onProductNameChange={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as React.ChangeEvent<HTMLInputElement>)}
-                  onDeleteSection={handleDeleteSection}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+        <Card className="p-0 overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-12rem)]">
+            <div className="p-6">
+              {sections.map((section) => (
+                <div key={section.id} className="mb-6">
+                  <SectionBlock
+                    section={section}
+                    onContentChange={handleSectionContentChange}
+                    productDetails={productDetails}
+                    onRenameSection={handleStartRenameSection}
+                    onProductNameChange={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as React.ChangeEvent<HTMLInputElement>)}
+                    onDeleteSection={handleDeleteSection}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </Card>
       </div>
       
-      {/* Add/Rename Section Dialog */}
+      {/* Dialogs */}
       <CustomSectionDialog
         isOpen={isAddSectionOpen}
         onClose={() => {
@@ -1145,6 +1216,14 @@ export function PrdEditor() {
         itemType={deleteDialogState.itemType}
         isDeleting={deleteDialogState.isDeleting}
       />
+
+      {showUploadDialog && productDetails?.id && (
+        <UploadPrdDialog 
+          productId={productDetails.id} 
+          onPrdParsed={handlePrdParsed}
+          onClose={() => setShowUploadDialog(false)}
+        />
+      )}
     </div>
   );
 }
