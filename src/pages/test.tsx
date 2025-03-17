@@ -62,9 +62,9 @@ export default function TestPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-bold text-foreground">Neon Effects</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="hover:shadow-neon/50 transition-all duration-200 dark:hover:border-primary/60 dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+          <Card className="hover:shadow-neon transition-all duration-200 dark:hover:border-primary/40 dark:bg-card">
             <CardHeader>
-              <CardTitle className="hover:text-primary/80 transition-colors duration-200">Hover Glow Effect</CardTitle>
+              <CardTitle className="hover:text-primary transition-colors duration-200">Hover Glow Effect</CardTitle>
               <CardDescription>Hover over this card to see the neon glow effect</CardDescription>
             </CardHeader>
             <CardContent>
@@ -74,9 +74,9 @@ export default function TestPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-neon/50 border-primary/60 dark:border-primary/60 transition-all duration-200 dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+          <Card className="shadow-neon border-primary/40 transition-all duration-200 dark:bg-card">
             <CardHeader>
-              <CardTitle className="text-primary/80 transition-colors duration-200">Permanent Glow</CardTitle>
+              <CardTitle className="text-primary transition-colors duration-200">Permanent Glow</CardTitle>
               <CardDescription>This card always has the neon effect</CardDescription>
             </CardHeader>
             <CardContent>
@@ -128,7 +128,7 @@ export default function TestPage() {
           <AlertDialogTrigger asChild>
             <Button variant="outline">Open Alert Dialog</Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+          <AlertDialogContent className="dark:bg-card">
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -194,7 +194,7 @@ export default function TestPage() {
               id="neon-input" 
               type="text" 
               placeholder="Type something..."
-              className="dark:bg-[#151515] dark:border-primary/20 focus:dark:border-primary/40 focus:outline-none focus:ring-0 focus:ring-offset-0"
+              className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
             />
           </div>
           
@@ -203,11 +203,11 @@ export default function TestPage() {
             <Select>
               <SelectTrigger 
                 id="neon-select" 
-                className="dark:bg-[#151515] dark:border-primary/20 focus:dark:border-primary/40 dark:text-white focus:outline-none focus:ring-0 focus:ring-offset-0"
+                className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 dark:text-white focus:outline-none focus:ring-0 focus:ring-offset-0"
               >
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-[#151515] dark:border-primary/20">
+              <SelectContent className="dark:bg-card dark:border-primary/40">
                 <SelectItem value="1" className="dark:text-white hover:dark:text-white hover:bg-primary/10 focus:bg-primary/10 focus:outline-none focus:ring-0 focus:ring-offset-0">Option 1</SelectItem>
                 <SelectItem value="2" className="dark:text-white hover:dark:text-white hover:bg-primary/10 focus:bg-primary/10 focus:outline-none focus:ring-0 focus:ring-offset-0">Option 2</SelectItem>
                 <SelectItem value="3" className="dark:text-white hover:dark:text-white hover:bg-primary/10 focus:bg-primary/10 focus:outline-none focus:ring-0 focus:ring-offset-0">Option 3</SelectItem>
@@ -258,7 +258,7 @@ export default function TestPage() {
           <SheetTrigger asChild>
             <Button variant="outline">Open Sheet</Button>
           </SheetTrigger>
-          <SheetContent className="dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+          <SheetContent className="dark:bg-card">
             <SheetHeader>
               <SheetTitle>Sheet Title</SheetTitle>
               <SheetDescription>
@@ -339,7 +339,7 @@ const example = "Typography styling";</code></pre>
                 <AvatarFallback className="bg-primary/10">CN</AvatarFallback>
               </Avatar>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+            <HoverCardContent className="w-80 dark:bg-card">
               <div className="flex justify-between space-x-4">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src="https://github.com/shadcn.png" />
@@ -367,7 +367,7 @@ const example = "Typography styling";</code></pre>
                   Send Message
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="dark:bg-[#151515] dark:border-primary/20">
+              <TooltipContent className="dark:bg-card dark:border-primary/40">
                 <p>Send a direct message</p>
               </TooltipContent>
             </Tooltip>
@@ -386,7 +386,7 @@ const example = "Typography styling";</code></pre>
                 Pick a date
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+            <PopoverContent className="w-auto p-0 dark:bg-card">
               <Calendar className="dark:bg-transparent" />
             </PopoverContent>
           </Popover>
@@ -404,7 +404,7 @@ const example = "Typography styling";</code></pre>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="dark:bg-[#151515] dark:border-primary/20">
+          <DropdownMenuContent className="dark:bg-card dark:border-primary/40">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator className="dark:bg-muted" />
             <DropdownMenuItem className="gap-2 focus:bg-primary/10 focus:text-primary cursor-pointer">
@@ -531,7 +531,7 @@ const example = "Typography styling";</code></pre>
             <Textarea 
               id="bio" 
               placeholder="Write something about yourself..."
-              className="dark:bg-[#151515] dark:border-primary/20 hover:dark:border-primary/40 focus:dark:border-primary dark:focus:shadow-neon/20"
+              className="dark:bg-card dark:border-primary/40 hover:dark:border-primary/60 focus:dark:border-primary dark:focus:shadow-neon/20"
             />
           </div>
           <div className="flex items-center gap-4">
@@ -591,7 +591,7 @@ const example = "Typography styling";</code></pre>
               Create New Post
             </Button>
           </DialogTrigger>
-          <DialogContent className="dark:bg-gradient-to-br dark:from-[#1A2E2E] dark:to-[#141414]">
+          <DialogContent className="dark:bg-card">
             <DialogHeader>
               <DialogTitle>Create Post</DialogTitle>
               <DialogDescription>
@@ -604,7 +604,7 @@ const example = "Typography styling";</code></pre>
                 <Input
                   id="title"
                   placeholder="Enter post title"
-                  className="dark:bg-[#151515] dark:border-primary/20 focus:dark:border-primary/40 focus:outline-none focus:ring-0 focus:ring-offset-0"
+                  className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
                 />
               </div>
               <div className="space-y-2">
@@ -612,7 +612,7 @@ const example = "Typography styling";</code></pre>
                 <Textarea
                   id="content"
                   placeholder="Write your post content..."
-                  className="dark:bg-[#151515] dark:border-primary/20 focus:dark:border-primary/40 focus:outline-none focus:ring-0 focus:ring-offset-0"
+                  className="dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
                 />
               </div>
             </div>
@@ -637,7 +637,7 @@ const example = "Typography styling";</code></pre>
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            className="pl-10 dark:bg-[#151515] dark:border-primary/20 focus:dark:border-primary/40 focus:outline-none focus:ring-0 focus:ring-offset-0"
+            className="pl-10 dark:bg-card dark:border-primary/40 focus:dark:border-primary/60 focus:outline-none focus:ring-0 focus:ring-offset-0"
           />
         </div>
       </section>
