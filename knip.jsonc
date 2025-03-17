@@ -4,14 +4,16 @@
     // Main application entry points
     "src/main.tsx",
     "src/App.tsx",
-    "index.html",
+    // Include all pages as they might be lazy-loaded
+    "src/pages/**/*.{ts,tsx}",
+    // Include all components as they might be dynamically imported
+    "src/components/**/*.{ts,tsx}",
+    // Build and config files
     "vite.config.ts"
   ],
-  "project": {
-    "**/*.{ts,tsx,js,jsx}": {
-      "entry": ["src/main.tsx"]
-    }
-  },
+  "project": [
+    "src/**/*.{ts,tsx,js,jsx}"
+  ],
   "ignore": [
     // Build and config files
     "vite.config.ts",
@@ -41,6 +43,39 @@
     "tailwindcss",
     "tailwindcss-animate",
     // Type packages that might appear unused
-    "@types/*"
+    "@types/*",
+    // React and core dependencies
+    "react",
+    "react-dom",
+    "react-router-dom",
+    // UI Libraries that might be used via string references
+    "@radix-ui/*",
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge",
+    // External services that might be initialized elsewhere
+    "@supabase/supabase-js",
+    "@stripe/stripe-js",
+    "@stripe/react-stripe-js",
+    "mixpanel-browser",
+    "openai",
+    // Drag and drop libraries
+    "@dnd-kit/core",
+    "@dnd-kit/sortable",
+    "@hello-pangea/dnd",
+    // UI and utility libraries
+    "cmdk",
+    "date-fns",
+    "lodash.debounce",
+    "lucide-react",
+    "next-themes",
+    "react-day-picker",
+    "react-dropzone",
+    "react-helmet-async",
+    "reactflow",
+    "sonner",
+    "uuid",
+    // Rich text editor
+    "@tiptap/*"
   ]
 } 
