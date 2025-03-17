@@ -142,6 +142,12 @@ export function AppSidebar({
             href: `/product/${activeProductSlug}/development`,
             icon: Kanban,
             isActive: isPathActive('/development')
+          },
+          {
+            label: 'Notes',
+            href: `/product/${activeProductSlug}/notes`,
+            icon: StickyNote,
+            isActive: isPathActive('/notes')
           }
         ]
       },
@@ -150,12 +156,6 @@ export function AppSidebar({
         href: `/product/${activeProductSlug}/prompts`,
         icon: MessageSquare,
         isActive: isPathActive('/prompts')
-      },
-      {
-        label: 'Notes',
-        href: `/product/${activeProductSlug}/notes`,
-        icon: StickyNote,
-        isActive: isPathActive('/notes')
       }
     ] : [
       {
