@@ -231,6 +231,12 @@ export function AppSidebar({
 
   // Helper function to preserve the product context when navigating
   const preserveContextNavigation = (path: string) => {
+    // For non-product routes like settings, just navigate directly
+    if (!path.includes('/product/')) {
+      navigate(path);
+      return;
+    }
+
     // If we're on the product development page and have a previous product context
     if (location.pathname === '/product-development' && previousProductSlug) {
       // If this is a product-specific route that needs a slug
@@ -486,19 +492,56 @@ export function AppSidebar({
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="hover:bg-primary/10 transition-colors"
+                  className="w-full justify-start hover:bg-primary/10 transition-colors"
                 >
-                  <Avatar className="h-10 w-10 rounded-md">
-                    <AvatarImage 
-                      src={user?.user_metadata?.avatar_url || `/avatars/default.png`}
-                      alt={user?.email || 'User avatar'}
-                    />
-                    <AvatarFallback>
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center gap-2 w-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage 
+                        src={user?.user_metadata?.avatar_url || `/avatars/default.png`}
+                        alt={user?.email || 'User avatar'}
+                      />
+                      <AvatarFallback>
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <span className="text-sm font-medium truncate">
+                        {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {user?.email}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 opacity-50 ml-auto" />
+                  </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                <DropdownMenuItem asChild>
+                  <Link 
+                    to="/settings" 
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/settings');
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <ThemeToggle>
+                    <Sun className="mr-2 h-4 w-4" />
+                    Theme
+                  </ThemeToggle>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>

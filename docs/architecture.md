@@ -5,9 +5,15 @@ This document outlines the high-level architecture of the system, its components
 
 ## Tech Stack
 - Database: Supabase (PostgreSQL)
-- Backend: Supabase Functions
-- Frontend: React with React Router
+- Backend: Supabase Edge Functions
+- Frontend: React 18 with React Router 6
 - Build Tool: Vite
+- Styling: TailwindCSS
+- Component Framework: Radix UI
+- Rich Text Editing: TipTap
+- Payments: Stripe
+- Authentication: Supabase Auth
+- AI Integration: OpenAI
 
 ## Integration Patterns
 The application follows several integration patterns for connecting different system components:
@@ -19,13 +25,20 @@ The application follows several integration patterns for connecting different sy
 
 ### Edge Functions Integration
 - OpenAI integration via Supabase Edge Functions
-- See [openai_edge_functions.md](openai_edge_functions.md) for detailed implementation
+- Multiple edge functions for different purposes (OpenAI, Stripe, etc.)
+- Shared types and utilities between functions
 - Multi-environment deployment strategy (beta/production)
 
 ### Real-time Data Integration
 - Subscription-based real-time updates
 - Channel-based subscription management
 - Optimistic UI updates with server reconciliation
+
+### Payment Integration
+- Stripe Checkout integration for payment processing
+- Edge functions for creating checkout sessions and verifying payments
+- Support for both embedded and hosted checkout experiences
+- Subscription management and verification
 
 ## Naming Conventions
 The project follows consistent naming conventions to maintain code readability and organization:
@@ -57,6 +70,7 @@ The project follows consistent naming conventions to maintain code readability a
 - PostgreSQL database hosted on Supabase
 - Real-time subscriptions for live updates
 - Row Level Security (RLS) for data access control
+- Extensive migration system for database schema management
 - For detailed database schema and RLS policies, see [database.md](database.md)
 
 ### API Layer
@@ -67,6 +81,8 @@ The project follows consistent naming conventions to maintain code readability a
 #### Serverless Functions
 - Edge Functions deployment
 - Shared types and utilities
+- OpenAI integration for AI features
+- Stripe integration for payment processing
 - Custom business logic handlers
 
 #### Database Management
@@ -85,7 +101,7 @@ The project follows consistent naming conventions to maintain code readability a
   - `HelmetProvider` for document head management
   - `AuthProvider` for authentication state
   - `ProductProvider` for product context
-  - `Elements` for Stripe integration
+  - Stripe Elements for payment integration
   
 - Routing System
   - React Router v6 implementation
@@ -110,6 +126,7 @@ The project follows consistent naming conventions to maintain code readability a
 - Local component state
 - Real-time subscription updates
 - Service-based data fetching
+- Custom hooks for shared functionality
 
 #### Error Handling Strategy
 - Error boundaries for component errors
@@ -123,6 +140,7 @@ The project follows consistent naming conventions to maintain code readability a
 - TailwindCSS with custom configuration and design tokens
 - Rich text editor styles (TipTap)
 - Custom component classes and utilities
+- Design system based on shadcn/ui principles
 
 ### Component Architecture
 - Authentication components (`auth/`)
@@ -131,34 +149,39 @@ The project follows consistent naming conventions to maintain code readability a
 - Kanban board system (`kanban/`)
 - Flow diagram components (`flow/`)
 - Prompt management system (`prompts/`)
-- Reusable UI components (`ui/`)
+- UI components (`ui/`)
+- Layout and navigation components
 
 ### Page Structure
 - Product Management
-  - Product listing and creation (`ProductList`)
-  - Detailed product view (`ProductDetails`)
-  - PRD editor with AI assistance (`PrdEditor`)
-  - Customer profile management (`CustomerProfiles`)
+  - Product listing and creation
+  - Detailed product view
+  - PRD editor with AI assistance
+  - Feature bucket management
+  - Customer profile management
   
 - Project Planning
-  - Kanban board for task management (`KanbanBoard`)
-  - User flow visualization (`UserFlows`)
-  - Notes and documentation (`NotesPanel`)
+  - Kanban board for task management
+  - User flow visualization
+  - Notes and documentation
   
 - User Experience
-  - Dashboard for overview (`Dashboard`)
-  - Welcome and onboarding (`Welcome`)
-  - Profile and settings management (`ProfileSettings`)
+  - Dashboard for overview
+  - Welcome and onboarding
+  - Profile and settings management
   
 - AI & Prompts
-  - Prompt library management (`PromptLibrary`)
-  - API endpoints (`api/`)
+  - AI-powered text actions (improve, expand, shorten)
+  - Prompt library management
+  - Context-aware AI processing
 
 ### Custom Hooks
 - Navigation tracking with analytics integration
 - Authentication helpers
 - Real-time subscription hooks
 - Form handling hooks
+- Mobile responsiveness detection
+- Kanban board state management
 
 ### Services & Libraries
 #### Core Services
@@ -171,6 +194,7 @@ The project follows consistent naming conventions to maintain code readability a
 #### Business Services
 - Bug tracking and management service
 - Task management service
+- Product management service
 
 #### AI Features
 - Text generation and processing (improve, expand, shorten)
@@ -179,11 +203,9 @@ The project follows consistent naming conventions to maintain code readability a
 - OpenAI integration types and error handling
 
 #### Subscription and Payment Flow
-> **Note:** This section describes features that are partially implemented in code but not fully activated or deployed.
-
 - Subscription tiers and plans
-- Stripe payment integration
-- Payment status tracking
+- Stripe payment integration (both hosted and embedded checkout)
+- Payment status tracking and verification
 - Free vs. paid feature access control
 
 ### Real-time Updates
@@ -205,7 +227,7 @@ The project maintains documentation at multiple levels to ensure maintainability
 - High-level documentation in /docs folder
 - Component-specific documentation in README files
 - Database schema documentation in database.md
-- Integration-specific documentation (e.g., openai_edge_functions.md)
+- Integration-specific documentation
 
 ### Documentation Standards
 - Keep documentation close to code when possible
@@ -220,6 +242,7 @@ The project maintains documentation at multiple levels to ensure maintainability
 4. Real-time updates are pushed to connected clients
 5. Analytics events are tracked and processed
 6. AI requests are processed through OpenAI integration
+7. Payment flows are handled through Stripe integration
 
 ## Project Structure
 ```
@@ -239,7 +262,18 @@ src/
 ├── pages/          # Page components
 │   └── api/        # API route handlers
 ├── services/       # Service layer for API interactions
+├── styles/         # Global styles and themes
 └── types/          # TypeScript type definitions
+
+supabase/
+├── functions/      # Edge Functions
+│   ├── main_openAI/      # OpenAI integration
+│   ├── beta_openAI/      # Beta OpenAI integration
+│   ├── create-checkout-session/  # Stripe checkout
+│   ├── verify-checkout-session/  # Payment verification
+│   ├── stripe-webhook/   # Stripe webhook handler
+│   └── _shared/     # Shared utilities and types
+└── migrations/     # Database migrations
 ```
 
 ## Environmental Configuration
@@ -252,8 +286,9 @@ src/
 ## Deployment
 - Frontend deployed on Netlify
 - Database and backend services on Supabase
-- Node.js 20 runtime
-- SPA routing support
+- Edge Functions for serverless execution
+- Node.js runtime
+- SPA routing support with Netlify configuration
 - Asset caching strategy
 - Security headers
 
@@ -268,6 +303,9 @@ src/
 - Stripe for payments
 - OpenAI for AI features
 - Mixpanel for analytics
+- React Router for routing
+- Hello-Pangea/DND for drag-and-drop
+- ReactFlow for flow diagrams
 
 ### Code Organization
 - Alias paths for imports (`@` root alias for src directory)

@@ -375,6 +375,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <ProfileSettings />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/payment" element={<PaymentWall />} />
       </Routes>
     </Layout>

@@ -475,17 +475,7 @@ export function ProductDevelopment() {
                   </div>
                 </CardContent>
                 
-                <CardFooter className="flex justify-between pt-0 pb-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToProduct(product, '/prd');
-                    }}
-                  >
-                    View Details
-                  </Button>
+                <CardFooter className="flex justify-end pt-0 pb-4">
                   <div className="text-xs text-gray-500">
                     Updated {new Date(product.updated_at || product.created_at).toLocaleDateString()}
                   </div>
