@@ -142,11 +142,11 @@ export function NotesPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <PageTitle title={productSlug ? 'Product Notes' : 'Personal Notes'} />
       
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">{productName} Notes</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{productName} Notes</h1>
         
         {isSaving && (
           <div className="flex items-center gap-2 text-gray-500">
@@ -162,10 +162,12 @@ export function NotesPanel() {
           {error}
         </div>
       )}
-      <RichTextEditor
-        content={content}
-        onChange={handleContentChange}
-      />
+      <div className="w-full bg-white rounded-lg shadow-sm border border-border overflow-hidden">
+        <RichTextEditor
+          content={content}
+          onChange={handleContentChange}
+        />
+      </div>
     </div>
   );
 }

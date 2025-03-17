@@ -1,34 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthProvider';
 import { useProduct } from './context/ProductContext';
-import { LogOut, FileText, GitBranch, Kanban, MessageSquare, StickyNote, AlertCircle, PlusCircle, X, User, ChevronDown } from 'lucide-react';
-import { HelpButton } from './HelpButton';
+import { AlertCircle, Loader2, PlusCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { EnvironmentBanner } from './EnvironmentBanner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
-import { ThemeToggle } from './ui/theme-toggle';
+import { AppSidebar } from './app-sidebar';
+import { HelpButton } from './HelpButton';
+import {
+  SidebarInset,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-}
-
 export function Layout({ children }: LayoutProps) {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { productSlug } = useParams();
@@ -69,14 +60,6 @@ export function Layout({ children }: LayoutProps) {
       }
     } catch (error) {
       console.error('Error loading product data:', error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
     }
   };
 
@@ -242,117 +225,74 @@ export function Layout({ children }: LayoutProps) {
   // Check if we're on the notes page
   const isNotesPage = location.pathname.includes('/notes');
 
-  const mainNavItems: NavItem[] = [
-    {
-      label: 'Products',
-      href: '/',
-      icon: <FileText className="w-4 h-4" />
-    }
-  ];
-
-  // Updated to remove Notes from the left navigation
-  const productNavItems: NavItem[] = [
-    {
-      label: 'PRD',
-      href: `/product/${activeProductSlug || currentProduct?.slug}/prd`,
-      icon: <FileText className="w-4 h-4" />
-    },
-    {
-      label: 'User Flows',
-      href: `/product/${activeProductSlug || currentProduct?.slug}/flows`,
-      icon: <GitBranch className="w-4 h-4" />
-    },
-    {
-      label: 'Development',
-      href: `/product/${activeProductSlug || currentProduct?.slug}/development`,
-      icon: <Kanban className="w-4 h-4" />
-    },
-    {
-      label: 'Prompts',
-      href: `/product/${activeProductSlug || currentProduct?.slug}/prompts`,
-      icon: <MessageSquare className="w-4 h-4" />
-    }
-  ];
-
-  const navItems = isProductContext ? productNavItems : mainNavItems;
-
   return (
-    <div className="min-h-screen bg-background">
-      <EnvironmentBanner />
-      <header className="bg-white shadow-sm dark:bg-gray-950 dark:shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-brand-purple dark:text-brand-purple">
-                <Link to="/">Fluxr</Link>
-              </h1>
-              
-              <nav className="flex items-center gap-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                      location.pathname === item.href
-                        ? "bg-brand-purple text-white"
-                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                    )}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              
-              {isProductContext && (
-                <div className="flex items-center gap-2">
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background overflow-hidden">
+        <EnvironmentBanner />
+        <div className="flex-none">
+          <AppSidebar />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <SidebarInset className="w-full">
+            {/* Quick note input */}
+            {isProductContext && (
+              <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-6 bg-card">
+                <div className="flex w-full items-center gap-2">
                   <input
                     type="text"
                     value={quickNote}
                     onChange={(e) => setQuickNote(e.target.value)}
                     placeholder="Enter a note"
-                    className="border border-gray-300 rounded-lg p-2"
+                    className="flex-1 border border-input rounded-lg p-2 h-10 transition-colors focus:border-brand-purple focus:ring-1 focus:ring-brand-purple"
                   />
-                  <Button onClick={handleAddNote}>Add Note</Button>
+                  <Button 
+                    onClick={handleAddNote}
+                    disabled={isSaving}
+                    className="bg-brand-purple hover:bg-brand-purple-dark"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Note
+                      </>
+                    )}
+                  </Button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {user && (
-                <div className="flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Profile
-                        <ChevronDown className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigate('/profile')}>
-                        <User className="w-4 h-4 mr-2" />
-                        Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleSignOut}>
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {/* Error and success messages */}
+            {showError && error && (
+              <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700 shadow-sm">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
+            
+            {successMessage && (
+              <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700 shadow-sm">
+                <div className="h-5 w-5 flex-shrink-0 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-green-700">✓</span>
                 </div>
-              )}
-            </div>
-          </div>
+                <p>{successMessage}</p>
+              </div>
+            )}
+
+            {/* Main content */}
+            <main className="flex-1 p-4 md:p-6 overflow-auto">
+              <div className="w-full mx-auto max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
+                {children}
+              </div>
+            </main>
+          </SidebarInset>
         </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
-      <HelpButton />
-    </div>
+        <HelpButton />
+      </div>
+    </SidebarProvider>
   );
 }

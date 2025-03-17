@@ -322,7 +322,7 @@ export function KanbanBoard() {
   }
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto px-4 pb-12">
+    <div className="w-full space-y-4 md:space-y-6 pb-6 md:pb-12">
       <PageTitle title="Development" />
       
       <KanbanHeader
@@ -363,7 +363,7 @@ export function KanbanBoard() {
       />
 
       {activeFilters > 0 && (
-        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between">
+        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="text-sm text-gray-600">
             <strong>Active filters:</strong> {' '}
             {filters.types.size > 0 && (
@@ -380,7 +380,7 @@ export function KanbanBoard() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 w-full sm:w-auto"
             onClick={() => setFilters({
               types: new Set<string>(),
               priorities: new Set<string>()
@@ -392,11 +392,11 @@ export function KanbanBoard() {
       )}
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-6 pb-6 overflow-x-auto min-h-[calc(100vh-200px)]">
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-6 overflow-x-auto min-h-[calc(100vh-200px)]">
           {COLUMNS.map((column) => (
             <div 
               key={column.id} 
-              className={`${column.color} rounded-lg shadow-md p-4 min-h-[500px] flex-1 flex flex-col w-80 flex-shrink-0`}
+              className={`${column.color} rounded-lg shadow-md p-4 mb-4 lg:mb-0 min-h-[200px] lg:min-h-[500px] flex-1 flex flex-col w-full lg:w-80 lg:flex-shrink-0`}
             >
               <KanbanColumn
                 title={column.title}

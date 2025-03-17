@@ -40,13 +40,13 @@ export default {
   					bg: '#3B82F6'
   				},
   				opacity: {
-  					5: 'rgba(59, 130, 246, 0.05)',
-  					10: 'rgba(59, 130, 246, 0.1)',
-  					20: 'rgba(59, 130, 246, 0.2)',
-  					40: 'rgba(59, 130, 246, 0.4)',
-  					60: 'rgba(59, 130, 246, 0.6)',
-  					80: 'rgba(59, 130, 246, 0.8)',
-  					90: 'rgba(59, 130, 246, 0.9)'
+  					'5': 'rgba(59, 130, 246, 0.05)',
+  					'10': 'rgba(59, 130, 246, 0.1)',
+  					'20': 'rgba(59, 130, 246, 0.2)',
+  					'40': 'rgba(59, 130, 246, 0.4)',
+  					'60': 'rgba(59, 130, 246, 0.6)',
+  					'80': 'rgba(59, 130, 246, 0.8)',
+  					'90': 'rgba(59, 130, 246, 0.9)'
   				}
   			},
   			secondary: {
@@ -92,6 +92,16 @@ export default {
   				'3': '#2563EB',
   				'4': '#93C5FD',
   				'5': '#1D4ED8'
+  			},
+  			sidebar: {
+  				DEFAULT: 'hsl(var(--sidebar-background))',
+  				foreground: 'hsl(var(--sidebar-foreground))',
+  				primary: 'hsl(var(--sidebar-primary))',
+  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+  				accent: 'hsl(var(--sidebar-accent))',
+  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+  				border: 'hsl(var(--sidebar-border))',
+  				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
   		spacing: {
@@ -183,7 +193,7 @@ export default {
   			default: 'var(--ease-default)'
   		},
   		transitionProperty: {
-  			'all': 'all'
+  			all: 'all'
   		},
   		keyframes: {
   			'accordion-down': {

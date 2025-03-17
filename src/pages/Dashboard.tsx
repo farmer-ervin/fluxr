@@ -90,24 +90,23 @@ export function Dashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full">
       <PageTitle title="Your Products" />
       
       {/* Welcome Message */}
-      <div className="bg-white rounded-xl shadow-lg p-4 mb-8">
-        <div className="flex items-center gap-4 border-b border-gray-100 pb-4 mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Welcome to Fluxr</h2>
-          <span className="text-sm bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full font-medium">BETA</span>
+      <div className="bg-card rounded-xl shadow-sm border border-border p-4 sm:p-6 mb-6 md:mb-8">
+        <div className="flex items-center gap-4 border-b border-border pb-4 mb-4">
+          <h2 className="text-lg sm:text-xl font-bold">Welcome to Fluxr</h2>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-brand-purple/10 rounded-lg flex items-center justify-center flex-shrink-0">
               <FileUp className="w-4 h-4 text-brand-purple" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Create/Upload PRD</h3>
-              <p className="text-xs text-gray-600">Define your product requirements</p>
+              <h3 className="text-sm font-semibold">Create/Upload PRD</h3>
+              <p className="text-xs text-muted-foreground">Define your product requirements</p>
             </div>
           </div>
 
@@ -116,8 +115,8 @@ export function Dashboard() {
               <GitBranch className="w-4 h-4 text-brand-purple" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Define User Flows</h3>
-              <p className="text-xs text-gray-600">Map out user journeys</p>
+              <h3 className="text-sm font-semibold">Define User Flows</h3>
+              <p className="text-xs text-muted-foreground">Map out user journeys</p>
             </div>
           </div>
 
@@ -126,18 +125,18 @@ export function Dashboard() {
               <Kanban className="w-4 h-4 text-brand-purple" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Track Development</h3>
-              <p className="text-xs text-gray-600">Manage features & tasks</p>
+              <h3 className="text-sm font-semibold">Track Development</h3>
+              <p className="text-xs text-muted-foreground">Manage features & tasks</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Your Products</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold">Your Products</h2>
         <Button
           onClick={() => navigate('/product/new')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-brand-purple hover:bg-brand-purple-dark w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" />
           New Product
@@ -151,30 +150,30 @@ export function Dashboard() {
       )}
 
       {products.length === 0 ? (
-        <div className="text-center py-12">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="text-center py-8 md:py-12 bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
+          <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium mb-2">No products yet</h3>
+          <p className="text-muted-foreground mb-6">
             Create your first product to get started with PRD generation.
           </p>
           <Button
             onClick={() => navigate('/product/new')}
-            className="flex items-center gap-2 mx-auto"
+            className="flex items-center gap-2 mx-auto bg-brand-purple hover:bg-brand-purple-dark"
           >
             <Plus className="w-4 h-4" />
             Create First Product
           </Button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
+              className="bg-card rounded-xl shadow-sm border border-border p-4 sm:p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 
-                  className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-brand-purple"
+                  className="text-lg font-semibold cursor-pointer hover:text-brand-purple"
                   onClick={() => handleProductSelect(product)}
                 >
                   {product.name}
@@ -186,15 +185,15 @@ export function Dashboard() {
                     e.stopPropagation();
                     setProductToDelete(product);
                   }}
-                  className="ml-2 hover:bg-gray-100"
+                  className="ml-2 hover:bg-muted"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </div>
               <div className="mb-4 cursor-pointer" onClick={() => handleProductSelect(product)}>
-                <ProductDescription description={product.description} className="text-sm text-gray-600" />
+                <ProductDescription description={product.description} className="text-sm text-muted-foreground" />
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-muted-foreground">
                 Created {new Date(product.created_at).toLocaleDateString()}
               </div>
             </div>

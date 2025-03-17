@@ -56,6 +56,8 @@ export function PromptLibrary() {
   const [activeTab, setActiveTab] = useState(productSlug ? 'product' : 'personal');
   const [isOffline, setIsOffline] = useState(false);
   const [isAddingToProduct, setIsAddingToProduct] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filtersApplied, setFiltersApplied] = useState(false);
 
   // Check for network status changes
   useEffect(() => {
@@ -663,6 +665,16 @@ export function PromptLibrary() {
     }
   };
 
+  const filterPromptsByCategory = (prompt: PromptTemplate): boolean => {
+    if (categoryFilter === 'all') return true;
+    return prompt.category === categoryFilter;
+  };
+
+  const filterProductPromptsByCategory = (prompt: ProductPrompt): boolean => {
+    if (categoryFilter === 'all') return true;
+    return prompt.template.includes(categoryFilter);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -675,221 +687,259 @@ export function PromptLibrary() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <PageTitle title="Prompt Library" />
       
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Prompt Library</h1>
-        <Button
-          onClick={() => {
-            // Set isAddingToProduct based on the active tab
-            const isProductTab = activeTab === 'product';
-            setEditingPrompt({
-              type: isProductTab ? 'product' : 'personal',
-              data: null // null means creating a new prompt
-            });
-          }}
-          variant="secondary"
-          className="flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Create New Prompt
-        </Button>
+      {isOffline && (
+        <div className="bg-yellow-50 p-4 mb-6 rounded-lg border border-yellow-200 flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-yellow-700 flex-shrink-0" />
+          <p className="text-yellow-700">You are currently offline. Some features may not be available.</p>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Prompt Library</h1>
+        
+        <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setShowPromptForm(true);
+              setSelectedPrompt(null);
+              setEditingPrompt(null);
+            }}
+            className="w-full xs:w-auto"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Prompt
+          </Button>
+          
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center w-full xs:w-auto"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              {filtersApplied ? <span className="bg-brand-purple text-white rounded-full h-4 w-4 flex items-center justify-center text-xs absolute -top-1 -right-1">!</span> : null}
+              Filter
+            </Button>
+            
+            {showFilters && (
+              <div className="absolute top-full right-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-64">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Category</h3>
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value as CategoryType)}
+                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5"
+                    >
+                      <option value="all">All Categories</option>
+                      <option value="system">System Prompts</option>
+                      <option value="page">Page Design</option>
+                      <option value="feature">Feature Design</option>
+                      <option value="debugging">Debugging</option>
+                      <option value="database">Database</option>
+                      <option value="authentication">Authentication</option>
+                      <option value="first">First-party</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Tool</h3>
+                    <select
+                      value={toolFilter}
+                      onChange={(e) => setToolFilter(e.target.value as ToolType)}
+                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5"
+                    >
+                      <option value="all">All Tools</option>
+                      <option value="replit">Replit</option>
+                      <option value="v0">V0</option>
+                      <option value="bolt">Bolt</option>
+                    </select>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full" 
+                    onClick={() => {
+                      setCategoryFilter('all');
+                      setToolFilter('all');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
+        <div className="bg-red-50 p-4 mb-6 rounded-lg border border-red-200 flex items-center gap-2">
+          <div className="h-5 w-5 text-red-700 flex items-center justify-center">⚠️</div>
+          <p className="text-red-700">{error}</p>
         </div>
       )}
-
+      
       {successMessage && (
-        <div className="bg-green-50 text-green-700 p-4 rounded-lg flex items-center gap-2">
-          <span className="w-5 h-5 flex-shrink-0">✓</span>
-          <span>{successMessage}</span>
-        </div>
-      )}
-
-      {isOffline && activeTab === 'community' && (
-        <div className="bg-yellow-50 text-yellow-700 p-4 rounded-lg flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          <span>You're offline. Community prompts are not available.</span>
+        <div className="bg-green-50 p-4 mb-6 rounded-lg border border-green-200 flex items-center gap-2">
+          <div className="h-5 w-5 text-green-700 flex items-center justify-center">✓</div>
+          <p className="text-green-700">{successMessage}</p>
         </div>
       )}
 
       <Tabs 
-        defaultValue={productSlug ? 'product' : 'personal'} 
-        value={activeTab}
-        className="w-full"
-        onValueChange={(value) => {
-          setActiveTab(value);
-          // Update isAddingToProduct when tab changes
-          if (value === 'product') {
-            setIsAddingToProduct(true);
-          } else {
-            setIsAddingToProduct(false);
-          }
-        }}
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="flex flex-col space-y-8"
       >
-        <TabsList className="mb-4">
-          <TabsTrigger value="personal">Personal Prompts</TabsTrigger>
-          <TabsTrigger value="community">Community Prompts</TabsTrigger>
-          {productId && (
-            <TabsTrigger value="product">Product Prompts</TabsTrigger>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger 
+            value="personal"
+            className="flex-1 sm:flex-initial"
+          >
+            Personal Library
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="community"
+            className="flex-1 sm:flex-initial"
+          >
+            <Globe className="h-4 w-4 mr-2" />
+            Community Prompts
+          </TabsTrigger>
+          
+          {productSlug && (
+            <TabsTrigger 
+              value="product"
+              className="flex-1 sm:flex-initial"
+            >
+              Product Prompts
+            </TabsTrigger>
           )}
         </TabsList>
 
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-700">Filter by:</span>
-          </div>
-          
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value as CategoryType)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
-          >
-            <option value="all">All Categories</option>
-            <option value="first">First Prompts</option>
-            <option value="system">System Prompts</option>
-            <option value="page">Page Prompts</option>
-            <option value="feature">Feature Prompts</option>
-            <option value="debugging">Debugging Prompts</option>
-            <option value="database">Database Prompts</option>
-            <option value="authentication">Authentication Prompts</option>
-          </select>
-          
-          <select
-            value={toolFilter}
-            onChange={(e) => setToolFilter(e.target.value as ToolType)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent"
-          >
-            <option value="all">All Tools</option>
-            <option value="replit">Replit</option>
-            <option value="v0">v0</option>
-            <option value="bolt">Bolt.new</option>
-          </select>
-        </div>
-
-        <TabsContent value="personal" className="space-y-4">
-          {filteredPersonalPrompts.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-600 mb-4">You haven't created any prompts yet.</p>
+        <TabsContent value="personal" className="space-y-8">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />
+            </div>
+          ) : personalPrompts.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-medium mb-2">No personal prompts yet</h3>
+              <p className="text-gray-600 mb-4">Create your first prompt to get started</p>
               <Button
                 onClick={() => {
-                  setEditingPrompt({
-                    type: 'personal',
-                    data: null
-                  });
+                  setShowPromptForm(true);
+                  setSelectedPrompt(null);
+                  setEditingPrompt(null);
                 }}
-                variant="secondary"
               >
-                Create Your First Prompt
+                <Plus className="h-4 w-4 mr-2" />
+                Create Prompt
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPersonalPrompts.map(prompt => (
-                <PromptCard
-                  key={prompt.id}
-                  prompt={prompt}
-                  onEdit={() => {
-                    console.log('Edit button clicked for prompt:', prompt.id);
-                    setEditingPrompt({ type: 'personal', data: prompt });
-                  }}
-                  onDelete={() => handleDeletePrompt(prompt.id)}
-                  onTogglePublic={() => handleTogglePublic(prompt)}
-                  onDuplicate={() => handleDuplicatePrompt(prompt)}
-                  showProductSave={!!productId && !isPromptInProductLibrary(prompt.id)}
-                  onSaveToProduct={!!productId && !isPromptInProductLibrary(prompt.id) ? () => handleSaveToProduct(prompt) : undefined}
-                  isPersonal
-                />
-              ))}
+              {personalPrompts
+                .filter(filterPromptsByCategory)
+                .map(prompt => (
+                  <PromptCard
+                    key={prompt.id}
+                    prompt={prompt}
+                    type="personal"
+                    onEdit={() => handleEditPrompt('personal', prompt)}
+                    onDelete={() => handleDeletePrompt(prompt.id)}
+                    onTogglePublic={() => handleTogglePublic(prompt)}
+                    onSaveToProduct={productId ? () => handleSaveToProduct(prompt) : undefined}
+                    isInProductLibrary={productId ? isPromptInProductLibrary(prompt.id) : false}
+                    onDuplicate={() => handleDuplicatePrompt(prompt)}
+                  />
+                ))}
             </div>
           )}
         </TabsContent>
-        
-        <TabsContent value="community" className="space-y-4">
-          {isOffline ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-600">You're offline. Community prompts will be available when you reconnect.</p>
+
+        <TabsContent value="community" className="space-y-8">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />
             </div>
-          ) : filteredCommunityPrompts.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-600">No community prompts available with the selected filters.</p>
+          ) : communityPrompts.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-medium mb-2">No community prompts available</h3>
+              <p className="text-gray-600 mb-4">Be the first to share your prompts with the community!</p>
+              <Button
+                onClick={() => {
+                  setShowPromptForm(true);
+                  setSelectedPrompt(null);
+                  setEditingPrompt(null);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Prompt
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCommunityPrompts.map(prompt => (
-                <PromptCard
-                  key={prompt.id}
-                  prompt={prompt}
-                  showProductSave={!!productId && !isPromptInProductLibrary(prompt.id)}
-                  onSaveToProduct={!!productId && !isPromptInProductLibrary(prompt.id) ? () => handleSaveToProduct(prompt) : undefined}
-                  onSaveToPersonal={prompt.user_id !== user?.id ? () => handleSaveToPersonal(prompt) : undefined}
-                  onDuplicate={() => handleDuplicatePrompt(prompt)}
-                  isPersonal={prompt.user_id === user?.id}
-                  onEdit={prompt.user_id === user?.id ? () => {
-                    console.log('Edit button clicked for community prompt:', prompt.id);
-                    setEditingPrompt({ type: 'personal', data: prompt });
-                  } : undefined}
-                  onDelete={prompt.user_id === user?.id ? () => handleDeletePrompt(prompt.id) : undefined}
-                  onTogglePublic={prompt.user_id === user?.id ? () => handleTogglePublic(prompt) : undefined}
-                />
-              ))}
+              {communityPrompts
+                .filter(filterPromptsByCategory)
+                .map(prompt => (
+                  <PromptCard
+                    key={prompt.id}
+                    prompt={prompt}
+                    type="community"
+                    onDuplicate={() => handleDuplicatePrompt(prompt)}
+                    onSaveToProduct={productId ? () => handleSaveToProduct(prompt) : undefined}
+                    isInProductLibrary={productId ? isPromptInProductLibrary(prompt.id) : false}
+                  />
+                ))}
             </div>
           )}
         </TabsContent>
-        
-        {productId && (
-          <TabsContent value="product" className="space-y-4">
-            {productPrompts.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-600 mb-4">No prompts added to this product yet.</p>
+
+        {productSlug && (
+          <TabsContent value="product" className="space-y-8">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-brand-purple" />
+              </div>
+            ) : productPrompts.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-medium mb-2">No product prompts yet</h3>
+                <p className="text-gray-600 mb-4">Add prompts specific to this product</p>
                 <Button
                   onClick={() => {
-                    setEditingPrompt({
-                      type: 'product',
-                      data: null
-                    });
+                    setShowPromptForm(true);
+                    setSelectedPrompt(null);
+                    setEditingPrompt(null);
                   }}
-                  variant="secondary"
                 >
-                  Create New Prompt
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Product Prompt
                 </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {productPrompts.map(productPrompt => {
-                  // Convert ProductPrompt to PromptTemplate format for PromptCard
-                  const promptForCard: PromptTemplate = {
-                    id: productPrompt.id,
-                    user_id: user?.id || '',
-                    name: productPrompt.name,
-                    description: productPrompt.description,
-                    template: productPrompt.prompt,
-                    category: 'system', // Default category
-                    created_at: productPrompt.created_at,
-                    is_public: false
-                  };
-                  
-                  return (
+                {productPrompts
+                  .filter(filterProductPromptsByCategory)
+                  .map(productPrompt => (
                     <PromptCard
                       key={productPrompt.id}
-                      prompt={promptForCard}
-                      isPersonal={false}
-                      isProductPrompt={true}
+                      prompt={productPrompt}
+                      type="product"
+                      onEdit={() => handleEditProductPrompt(productPrompt)}
                       onDelete={() => handleDeleteProductPrompt(productPrompt.id)}
-                      onEdit={() => {
-                        console.log('Edit button clicked for product prompt:', productPrompt.id);
-                        setEditingPrompt({ type: 'product', data: productPrompt });
-                      }}
+                      onSaveToPersonal={() => handleSaveToPersonal(productPrompt as unknown as PromptTemplate)}
                       onDuplicate={() => handleDuplicateProductPrompt(productPrompt)}
                     />
-                  );
-                })}
+                  ))}
               </div>
             )}
           </TabsContent>

@@ -715,6 +715,15 @@ function UserFlowsContent() {
     }
   };
 
+  const handleDeleteFeature = async (featureId: string) => {
+    try {
+      setDeleteFeatureId(featureId);
+      setShowDeleteDialog(true);
+    } catch (error) {
+      console.error('Error showing delete dialog:', error);
+    }
+  };
+
   if (loading || isGeneratingLayout) {
     return (
       <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
@@ -732,7 +741,7 @@ function UserFlowsContent() {
   }
 
   return (
-    <div className="h-[calc(100vh-16rem)]">
+    <div className="w-full h-[calc(100vh-16rem)]">
       <PageTitle title="User Flows" />
       
       {error && (
@@ -742,15 +751,16 @@ function UserFlowsContent() {
         </div>
       )}
       
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">User Flows</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Flows</h1>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={handleUndo}
             disabled={undoStack.length === 0}
+            className="shrink-0"
           >
             <Undo className="w-4 h-4" />
           </Button>
@@ -760,6 +770,7 @@ function UserFlowsContent() {
             size="sm"
             onClick={handleRedo}
             disabled={redoStack.length === 0}
+            className="shrink-0"
           >
             <Redo className="w-4 h-4" />
           </Button>
@@ -768,6 +779,7 @@ function UserFlowsContent() {
             variant="outline"
             size="sm"
             onClick={() => setShowAddPageDialog(true)}
+            className="shrink-0"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Page
@@ -777,6 +789,7 @@ function UserFlowsContent() {
             variant="secondary"
             onClick={handleCreateFlow}
             disabled={isGenerating}
+            className="w-full sm:w-auto"
           >
             {isGenerating ? (
               <span className="flex items-center gap-2">
@@ -793,7 +806,7 @@ function UserFlowsContent() {
         </div>
       </div>
       
-      <div className="w-full h-full border rounded-lg overflow-hidden">
+      <div className="w-full h-full border rounded-lg overflow-hidden bg-white">
         <ReactFlow
           nodes={nodes}
           edges={edges.map(edge => ({

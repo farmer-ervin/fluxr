@@ -1,0 +1,57 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for component selection and styling in our design system
+globs: ["src/components/**/*.tsx", "src/app/**/*.tsx", "src/pages/**/*.tsx"]
+alwaysApply: true
+---
+
+# Component Selection & Styling Guidelines
+
+## Component Hierarchy
+1. **shadcn/ui Components**: Always use shadcn/ui components as the first choice.
+   - Install via `npx shadcn-ui@latest add [component-name]`
+   - Use the built-in variants and customize with props before adding custom styles
+
+2. **Radix UI Components**: If no shadcn/ui equivalent exists, use Radix UI.
+   - Style using the global styling rules to maintain consistency
+
+3. **Third-Party Components**: When needed and specifically requested.
+   - When installing third-party components, style them using our global styling rules
+   - Make them visually consistent with our shadcn/ui components
+   - Compose from existing primitive components when possible
+   - Follow the same naming conventions and file structure as shadcn/ui
+
+## Styling Resources
+1. **Global Styles**: Reference both configuration files:
+   - `index.css`: Contains CSS variables, utility classes, and component-specific styles
+   - `tailwind.config.js`: Contains theme extensions, custom colors, animations, and plugins
+   
+2. **Using Tailwind Config**:
+   - Use extended theme values from `tailwind.config.js` for consistent styling
+   - Reference custom colors like `bg-primary.opacity-5` or `shadow-blue-glow`
+   - Utilize the custom transitions, animations, and font settings
+
+3. **Component Styling Strategy**:
+   - First: Use Tailwind classes directly
+   - Second: Use utility classes from `index.css`
+   - Third: Add minimal custom CSS when absolutely necessary
+
+## Implementation Rules
+1. **Component Composition**:
+   - Compose new components from existing primitives when possible
+   - Follow the same directory structure and naming conventions as shadcn/ui
+   - Create variants using the same pattern as shadcn/ui components
+
+2. **Third-Party Integration**: 
+   - When instructed to use a specific third-party component, install as directed
+   - Apply our global styling rules to make it visually consistent
+   - Use theme values from both `tailwind.config.js` and `index.css`
+
+3. **Consistency Principle**:
+   - All components, regardless of source, should look like they belong to the same design system
+   - Match the visual language (colors, shadows, animations) defined in our configuration files
+

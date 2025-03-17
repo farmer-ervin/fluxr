@@ -872,94 +872,211 @@ export function PrdEditor() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </button>
-        <div className="relative flex items-center gap-2">
-          {productDetails?.id && (
-            <UploadPrdDialog 
-              productId={productDetails.id} 
-              onPrdParsed={handlePrdParsed} 
-            />
-          )}
-          <AiDialog />
-          <PrdTooltip />
+    <div className="w-full min-h-screen pb-12">
+      <div 
+        className="sticky top-0 z-10 bg-white border-b border-gray-200"
+        style={{ top: isTopStuck ? '4rem' : '0' }}
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 gap-4">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h1 className="font-semibold text-lg sm:text-xl truncate max-w-[200px] sm:max-w-sm">
+              {productDetails?.name || 'Product Requirements Document'}
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <SaveIndicator status={saveStatus} error={saveError} />
+            
+            <div className="ml-auto flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowUploadDialog(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import PRD
+              </Button>
+              
+              <AiDialog
+                productData={{
+                  name: productDetails?.name || '',
+                  description: productDetails?.description || '',
+                  problem: prdData?.problem || '',
+                  solution: prdData?.solution || '',
+                  target_audience: prdData?.target_audience || '',
+                }}
+                sections={sections.slice(1)}
+                onAiGenerated={handleAiGenerated}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-[250px,1fr] gap-6 h-full">
-        <div className="bg-white rounded-lg shadow-lg p-6 h-full overflow-auto">
-          <SaveIndicator status={saveStatus} error={saveError} />
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Sections</h2>
-          <nav className="space-y-2">
-            {sections.map(section => (
-              <div key={section.id}>
-                <button
-                  onClick={() => scrollToSection(section.id)}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg text-left transition-colors ${
-                    section.id === activeSectionId
-                      ? 'bg-brand-purple text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {section.icon}
-                  <span className="ml-3">{section.title}</span>
-                </button>
-                
-                {section.subsections && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {section.subsections.map(subsection => (
-                      <button
-                        key={subsection.id}
-                        onClick={() => scrollToSection(section.id, subsection.id)}
-                        className={`w-full flex items-center px-4 py-1.5 rounded-lg text-left transition-colors text-sm ${
-                          section.id === activeSectionId && subsection.id === activeSubsectionId
-                            ? 'bg-brand-purple/80 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {subsection.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
+      {error && (
+        <div className="mx-4 md:mx-6 mt-4 bg-red-50 text-red-700 p-4 rounded-lg flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row gap-6 px-4 sm:px-6 py-6">
+        {/* Left side navigation */}
+        <div className="w-full md:w-64 flex-shrink-0 mb-6 md:mb-0">
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="font-semibold text-gray-900">Product Details</h2>
               </div>
-            ))}
-            
-            {/* Add Section Button */}
-            <div className="pt-2 mt-2 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setEditingSection(null); // Ensure we're not in edit mode
-                  setIsAddSectionOpen(true);
-                }}
-                className="w-full flex items-center px-4 py-2 rounded-lg text-left transition-colors text-brand-purple hover:bg-gray-100"
-              >
-                <Plus className="w-5 h-5" />
-                <span className="ml-3">Add Section</span>
-              </button>
+              <div className="p-4 space-y-4">
+                <div>
+                  <EditableField
+                    label="Product Name"
+                    value={productDetails?.name || ''}
+                    onSave={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as any)}
+                    placeholder="Enter product name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <AutoTextarea
+                    name="description"
+                    value={productDetails?.description || ''}
+                    onChange={handleProductDetailsChange}
+                    placeholder="Describe your product"
+                    className="w-full min-h-[80px]"
+                    minRows={2}
+                  />
+                </div>
+              </div>
             </div>
-          </nav>
+            
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="font-semibold text-gray-900">Sections</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAddSectionOpen(true)}
+                  className="h-8 w-8 p-0 flex items-center justify-center"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+                <ul className="divide-y divide-gray-100">
+                  {sections.map((section) => (
+                    <li key={section.id}>
+                      <button
+                        className={`flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                          activeSectionId === section.id ? 'bg-gray-50 font-medium' : ''
+                        }`}
+                        onClick={() => scrollToSection(section.id)}
+                      >
+                        <span className="text-gray-500 flex-shrink-0">
+                          {section.icon || <FileText className="h-4 w-4" />}
+                        </span>
+                        <span className="flex-1 truncate">{section.title}</span>
+                        {section.isCustom && (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartRenameSection(section.id, section.title);
+                              }}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSection(section.id);
+                              }}
+                              className="text-gray-400 hover:text-red-600"
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </button>
+                      {section.subsections && section.subsections.length > 0 && (
+                        <ul className="bg-gray-50 pl-10 pb-2">
+                          {section.subsections.map((subsection) => (
+                            <li key={subsection.id}>
+                              <button
+                                className={`flex items-center w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
+                                  activeSubsectionId === subsection.id ? 'font-medium text-brand-purple' : 'text-gray-700'
+                                }`}
+                                onClick={() => scrollToSection(section.id, subsection.id)}
+                              >
+                                <span className="truncate">{subsection.title}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg h-full overflow-auto">
-          <div className="section-transition">
+        {/* Main content area */}
+        <div className="flex-1">
+          <div className="space-y-8">
+            {/* Overview Section */}
             {sections.map((section) => (
-              <div key={section.id} className="mb-6">
-                <SectionBlock
-                  section={section}
-                  onContentChange={handleSectionContentChange}
-                  productDetails={productDetails}
-                  onRenameSection={handleStartRenameSection}
-                  onProductNameChange={(name) => handleProductDetailsChange({ target: { name: 'name', value: name } } as React.ChangeEvent<HTMLInputElement>)}
-                />
-              </div>
+              <SectionBlock
+                key={section.id}
+                title={section.title}
+                id={section.id}
+                isActive={section.id === activeSectionId}
+              >
+                {section.id === 'features' ? (
+                  <FeatureBuckets
+                    buckets={featureBuckets}
+                    productId={productDetails?.id || ''}
+                    onFeatureUpdate={handleFeatureUpdate}
+                    onFeatureDelete={handleDeleteFeature}
+                    onError={handleError}
+                  />
+                ) : section.subsections ? (
+                  <div className="space-y-8">
+                    {section.subsections.map((subsection) => (
+                      <div 
+                        key={subsection.id} 
+                        id={subsection.id}
+                        className="space-y-2"
+                      >
+                        <h3 className="text-lg font-medium text-gray-900">{subsection.title}</h3>
+                        <RichTextEditor
+                          content={subsection.content}
+                          onChange={(content) => handleSectionContentChange(section.id, subsection.id, content)}
+                          placeholder={subsection.placeholder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <RichTextEditor
+                    content={section.content}
+                    onChange={(content) => handleSectionContentChange(section.id, null, content)}
+                    placeholder={section.placeholder}
+                  />
+                )}
+              </SectionBlock>
             ))}
           </div>
         </div>
