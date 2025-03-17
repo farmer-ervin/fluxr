@@ -29,6 +29,7 @@ import { useNavigationTracking } from '@/hooks/useNavigationTracking';
 import TestPage from './pages/test';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/context/ThemeProvider';
+import { ProductDevelopment } from './pages/ProductDevelopment';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -304,6 +305,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <ProductDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product-development"
+          element={
+            <ProtectedRoute>
+              <ProductDevelopment />
             </ProtectedRoute>
           }
         />
