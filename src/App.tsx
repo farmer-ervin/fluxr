@@ -26,6 +26,8 @@ import { clearSubscriptionCache } from '@/lib/subscription';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useNavigationTracking } from '@/hooks/useNavigationTracking';
+import TestPage from './pages/test';
+import { Toaster } from '@/components/ui/sonner';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -283,6 +285,7 @@ function AppRoutes() {
   return (
     <Layout>
       <Routes>
+        <Route path="/test" element={<TestPage />} />
         <Route
           path="/"
           element={
@@ -372,13 +375,14 @@ function App() {
   return (
     <HelmetProvider>
       <Router>
-        <Elements stripe={stripePromise}>
-          <AuthProvider>
-            <ProductProvider>
+        <AuthProvider>
+          <ProductProvider>
+            <Elements stripe={stripePromise}>
               <AppRoutes />
-            </ProductProvider>
-          </AuthProvider>
-        </Elements>
+              <Toaster />
+            </Elements>
+          </ProductProvider>
+        </AuthProvider>
       </Router>
     </HelmetProvider>
   );

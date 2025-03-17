@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
+import { ThemeToggle } from './ui/theme-toggle';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -278,11 +279,11 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <EnvironmentBanner />
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm dark:bg-gray-950 dark:shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-brand-purple">
+              <h1 className="text-2xl font-bold text-brand-purple dark:text-brand-purple">
                 <Link to="/">Fluxr</Link>
               </h1>
               
@@ -295,7 +296,7 @@ export function Layout({ children }: LayoutProps) {
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       location.pathname === item.href
                         ? "bg-brand-purple text-white"
-                        : "text-gray-600 hover:bg-gray-100"
+                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                     )}
                   >
                     {item.icon}
@@ -306,88 +307,18 @@ export function Layout({ children }: LayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
+              
               {isProductContext && (
-                <div className="flex-1 relative">
-                  <div className="flex items-center gap-2 pr-2">
-                    <input
-                      type="text"
-                      value={quickNote}
-                      onChange={(e) => {
-                        setQuickNote(e.target.value);
-                        // Clear errors when user starts typing again
-                        if (error) {
-                          setError(null);
-                          setShowError(false);
-                        }
-                      }}
-                      placeholder="Add a quick note..."
-                      className={cn(
-                        "px-3 py-1 border rounded-md focus:outline-none focus:ring-1 text-sm w-60",
-                        error && showError
-                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                          : "border-gray-300 focus:ring-brand-purple focus:border-brand-purple"
-                      )}
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleAddNote}
-                      disabled={isSaving || !quickNote.trim()}
-                      className="flex items-center gap-1 h-8"
-                    >
-                      {isSaving ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <PlusCircle className="w-3 h-3" />
-                      )}
-                      <span>Add</span>
-                    </Button>
-                    <Button
-                      variant={isNotesPage ? "secondary" : "ghost"}
-                      size="sm"
-                      onClick={handleViewNotes}
-                      className={cn(
-                        "flex items-center gap-1 h-8",
-                        isNotesPage ? "bg-brand-purple text-white" : ""
-                      )}
-                    >
-                      <StickyNote className="w-3 h-3" />
-                      <span>Notes</span>
-                    </Button>
-                  </div>
-                  
-                  {/* Error message popup */}
-                  {error && showError && (
-                    <div className="absolute top-full mt-2 right-0 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-md shadow-sm z-50 w-64 animate-in fade-in">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                          <span className="text-xs">{error}</span>
-                        </div>
-                        <button 
-                          onClick={() => setShowError(false)} 
-                          className="text-red-500 hover:text-red-700 ml-2 flex-shrink-0"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Success message popup */}
-                  {successMessage && (
-                    <div className="absolute top-full mt-2 right-0 bg-green-50 border border-green-300 text-green-700 px-4 py-2 rounded-md shadow-sm z-50 w-64 animate-in fade-in">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs">{successMessage}</span>
-                        <button 
-                          onClick={() => setSuccessMessage(null)} 
-                          className="text-green-500 hover:text-green-700 ml-2"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={quickNote}
+                    onChange={(e) => setQuickNote(e.target.value)}
+                    placeholder="Enter a note"
+                    className="border border-gray-300 rounded-lg p-2"
+                  />
+                  <Button onClick={handleAddNote}>Add Note</Button>
                 </div>
               )}
 
