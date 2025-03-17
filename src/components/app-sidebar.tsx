@@ -81,9 +81,9 @@ export function AppSidebar({
 
   // Function to check if a path should be considered active
   const isPathActive = (path: string) => {
-    // Current route is the product development page but we want to keep product context active
+    // Special case for product development page
     if (location.pathname === '/product-development') {
-      return isProductContext;
+      return false; // Don't highlight sub-items on product development page
     }
     // Regular matching for other pages
     return location.pathname.includes(path);
@@ -123,7 +123,7 @@ export function AppSidebar({
       {
         label: 'Product Development',
         icon: Kanban,
-        isActive: ['/prd', '/flows', '/development'].some(path => isPathActive(path)) || location.pathname === '/product-development',
+        isActive: location.pathname === '/product-development',
         subItems: [
           {
             label: 'PRD',
