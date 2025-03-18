@@ -30,6 +30,7 @@ import TestPage from './pages/test';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/context/ThemeProvider';
 import { ProductDevelopment } from './pages/ProductDevelopment';
+import { CreateProduct } from './pages/CreateProduct';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -298,6 +299,14 @@ function AppRoutes() {
             ) : (
               <AuthPage />
             )
+          }
+        />
+        <Route
+          path="/product/create"
+          element={
+            <ProtectedRoute>
+              <CreateProduct />
+            </ProtectedRoute>
           }
         />
         <Route

@@ -238,7 +238,7 @@ export function ProductDevelopment() {
             <p className="text-muted-foreground mt-1">Manage and track the development of all your products</p>
           </div>
           <Button 
-            onClick={() => navigate('/product/new')} 
+            onClick={() => navigate('/product/create')} 
             className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
           >
             <Plus className="h-4 w-4" />
@@ -361,7 +361,7 @@ export function ProductDevelopment() {
             </p>
             {products.length === 0 && (
               <Button
-                onClick={() => navigate('/product/new')}
+                onClick={() => navigate('/product/create')}
                 className="flex items-center gap-2 mx-auto"
               >
                 <Plus className="h-4 w-4" />
