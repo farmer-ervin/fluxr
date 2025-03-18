@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, Sparkles, ArrowRight, FileText, Users, ListChecks, Star, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -241,6 +241,7 @@ export function CreateProduct() {
   const { user } = useAuth();
   const [selectedOption, setSelectedOption] = useState<'upload' | 'generate' | null>(null);
   const [prdContent, setPrdContent] = useState('');
+  const [productName, setProductName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -257,11 +258,11 @@ export function CreateProduct() {
   const [showForm, setShowForm] = useState(false);
 
   // Refs for scrolling
-  const optionsRef = React.useRef<HTMLDivElement>(null);
-  const uploadRef = React.useRef<HTMLDivElement>(null);
-  const generateRef = React.useRef<HTMLDivElement>(null);
-  const detailsRef = React.useRef<HTMLDivElement>(null);
-  const personasRef = React.useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
+  const uploadRef = useRef<HTMLDivElement>(null);
+  const generateRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const personasRef = useRef<HTMLDivElement>(null);
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
     if (ref.current) {
@@ -338,6 +339,11 @@ export function CreateProduct() {
       return;
     }
 
+    if (!productName.trim()) {
+      setError('Please enter a product name');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -358,12 +364,11 @@ export function CreateProduct() {
             role: 'system',
             content: `You are a PRD parser that extracts structured content from PRD documents. 
             Parse the provided PRD text and extract content for the following standard sections:
-            1. Product Name
-            2. Product Description (high-level overview)
-            3. Problem
-            4. Solution
-            5. Target Audience
-            6. Features (with name, description, priority, and implementation_status)
+            1. Product Description (high-level overview)
+            2. Problem
+            3. Solution
+            4. Target Audience
+            5. Features (with name, description, priority, and implementation_status)
 
             You must include all the details from the PRD. Do not summarize or truncate the PRD.
 
@@ -371,7 +376,6 @@ export function CreateProduct() {
             
             Return the parsed content as a JSON object with the following structure:
             {
-              "product_name": "...",
               "product_description": "...",
               "problem": "...",
               "solution": "...",
@@ -443,11 +447,11 @@ export function CreateProduct() {
         parsedData.features = parsedData.features.map(normalizeFeature);
       }
 
-      // First create a new product with the parsed name and description
+      // First create a new product with the user-provided name and parsed description
       const productResponse = await supabase
         .from('products')
         .insert({
-          name: parsedData.product_name || 'New Product',
+          name: productName.trim(),
           description: parsedData.product_description || '',
           user_id: user.id,
         } as Product)
@@ -466,8 +470,9 @@ export function CreateProduct() {
           problem: parsedData.problem || '',
           solution: parsedData.solution || '',
           target_audience: parsedData.target_audience || '',
-          tech_stack: null,
-          success_metrics: null,
+          tech_stack: '',
+          success_metrics: '',
+          custom_sections: parsedData.custom_sections || {}
         } as PRD)
         .select()
         .single();
@@ -492,7 +497,7 @@ export function CreateProduct() {
       }
 
       // Navigate to the PRD editor
-      navigate(`/product/${productResponse.data.id}`);
+      navigate(`/product/${productResponse.data.slug}/prd`);
 
     } catch (error) {
       console.error('Error creating product:', error);
@@ -694,20 +699,36 @@ Format the response as a JSON array with 3 objects, each containing:
                   <Upload className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Paste Your PRD</CardTitle>
+                  <CardTitle>Upload Your PRD</CardTitle>
                   <CardDescription>
-                    Paste your existing PRD content below. We'll automatically parse and format it.
+                    Enter your product name and paste your existing PRD content below.
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Textarea
-                value={prdContent}
-                onChange={(e) => setPrdContent(e.target.value)}
-                placeholder="Paste your PRD content here..."
-                className="min-h-[300px] transition-shadow focus-visible:shadow-blue-glow resize-none"
-              />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="productName">Product Name</Label>
+                  <Input
+                    id="productName"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Enter your product name"
+                    className="transition-shadow focus-visible:shadow-blue-glow"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="prdContent">PRD Content</Label>
+                  <Textarea
+                    id="prdContent"
+                    value={prdContent}
+                    onChange={(e) => setPrdContent(e.target.value)}
+                    placeholder="Paste your PRD content here..."
+                    className="min-h-[300px] transition-shadow focus-visible:shadow-blue-glow resize-none"
+                  />
+                </div>
+              </div>
               {error && (
                 <div className="flex items-center gap-2 text-destructive text-sm">
                   <AlertTriangle className="h-4 w-4" />
@@ -728,7 +749,7 @@ Format the response as a JSON array with 3 objects, each containing:
                 </Button>
                 <Button
                   onClick={handleUploadPrd}
-                  disabled={isLoading || !prdContent.trim()}
+                  disabled={isLoading || !prdContent.trim() || !productName.trim()}
                   className="gap-2 shadow-sm hover:shadow-md transition-all"
                 >
                   {isLoading ? (
