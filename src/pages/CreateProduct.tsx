@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Sparkles, ArrowRight, FileText, Users, ListChecks, Star, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Upload, Sparkles, ArrowRight, FileText, Users, ListChecks, Star, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -558,36 +558,52 @@ export function CreateProduct() {
 
   const handleGeneratePersonas = async () => {
     const user = await supabase.auth.getUser();
-    if (!user.data.user) return;
+    if (!user.data.user) {
+      toast.error('You must be logged in to generate personas');
+      return;
+    }
 
     try {
+      const requestPayload = {
+        productName: formData.productName,
+        problemStatement: formData.problemStatement,
+        solution: formData.solution,
+        targetAudience: formData.targetAudience
+      };
+
       // Log the OpenAI request
-      const openaiLogResponse = await supabase.from('openai_logs').insert({
+      const logData = {
         user_id: user.data.user.id,
         request_type: 'generate_personas',
         model: 'gpt-4o',
-        request_payload: {
-          productName: formData.productName,
-          problemStatement: formData.problemStatement,
-          solution: formData.solution,
-          targetAudience: formData.targetAudience
-        }
-      }).select('id').single();
+        request_payload: requestPayload as unknown as Json,
+        response_payload: null,
+        error: null,
+        input_tokens: null,
+        output_tokens: null
+      } satisfies Database['public']['Tables']['openai_logs']['Insert'];
+
+      const { data: logEntry, error: logError } = await supabase
+        .from('openai_logs')
+        .insert(logData)
+        .select()
+        .single();
+
+      if (logError || !logEntry) {
+        throw new Error('Failed to create OpenAI log entry');
+      }
 
       // Make the OpenAI call
-      const response = await fetch('/api/openai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert in customer persona development and market research. Your task is to generate 3 distinct customer personas based on the provided product information. Each persona should be realistic, detailed, and aligned with the product's target market.`
-            },
-            {
-              role: 'user',
-              content: `Generate 3 detailed customer personas for the following product:
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert in customer persona development and market research. Your task is to generate 3 distinct customer personas based on the provided product information. Each persona should be realistic, detailed, and aligned with the product's target market.`
+          },
+          {
+            role: 'user',
+            content: `Generate 3 detailed customer personas for the following product:
 
 Product Name: ${formData.productName}
 Problem Statement: ${formData.problemStatement}
@@ -607,48 +623,75 @@ For each persona, provide:
    - Urgency to Solve
    - Ability to Pay
 
-The personas should be different enough to represent distinct segments of the target market, but all should be realistic potential users of the product.
-
-Format the response as a JSON array with 3 objects, each containing:
+Return the response as a JSON object with exactly this structure:
 {
-  "name": string,
-  "overview": string,
-  "topPainPoint": string,
-  "biggestFrustration": string,
-  "currentSolution": string,
-  "keyPoints": string[],
-  "scores": {
-    "problemMatch": number,
-    "urgencyToSolve": number,
-    "abilityToPay": number
-  }
+  "personas": [{
+    "name": string,
+    "overview": string,
+    "topPainPoint": string,
+    "biggestFrustration": string,
+    "currentSolution": string,
+    "keyPoints": string[],
+    "scores": {
+      "problemMatch": number,
+      "urgencyToSolve": number,
+      "abilityToPay": number
+    }
+  }]
 }`
-            }
-          ]
-        })
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
       });
-
-      const data = await response.json();
       
       // Update the OpenAI log with the response
-      if (openaiLogResponse.data?.id) {
-        await supabase.from('openai_logs').update({
-          response_payload: data,
-          completed_at: new Date().toISOString()
-        }).eq('id', openaiLogResponse.data.id);
+      const updateData = {
+        response_payload: response.choices[0].message.content as unknown as Json,
+        error: null,
+        input_tokens: response.usage?.prompt_tokens ?? null,
+        output_tokens: response.usage?.completion_tokens ?? null
+      } satisfies Database['public']['Tables']['openai_logs']['Update'];
+
+      const { error: updateError } = await supabase
+        .from('openai_logs')
+        .update(updateData)
+        .eq('id', logEntry.id);
+
+      if (updateError) {
+        console.error('Failed to update OpenAI log:', updateError);
       }
 
-      // Parse the response and update state
-      const personas: CustomerPersona[] = JSON.parse(data.choices[0].message.content);
+      // Parse and validate the response
+      let result;
+      try {
+        result = JSON.parse(response.choices[0].message.content || '{}');
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', parseError);
+        throw new Error('Failed to parse the AI response. Please try again.');
+      }
+
+      // Validate the response structure
+      if (!result?.personas || !Array.isArray(result.personas) || result.personas.length === 0) {
+        console.error('Invalid response structure:', result);
+        throw new Error('The AI response was not in the expected format. Please try again.');
+      }
+
+      // Update state with the personas
       setFormData(prev => ({
         ...prev,
         step: 'personas',
-        personas
+        personas: result.personas
       }));
+
+      // Scroll to personas section
+      setTimeout(() => {
+        scrollToSection(personasRef);
+      }, 100);
 
     } catch (error) {
       console.error('Error generating personas:', error);
-      toast.error('Failed to generate customer personas. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to generate customer personas. Please try again.');
     }
   };
 
@@ -902,7 +945,9 @@ Format the response as a JSON array with 3 objects, each containing:
                     </div>
                     <CardTitle>Product Details</CardTitle>
                   </div>
-                  <CardDescription className="text-base text-muted-foreground mt-1.5">Start by telling Fluxr about your product idea. Please include the most important details, but Fluxr's AI will help fill in the gaps.</CardDescription>
+                  <CardDescription className="text-base text-muted-foreground mt-1.5">
+                    Start by telling Fluxr about your product idea. Please include the most important details, but Fluxr's AI will help fill in the gaps.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-5">
@@ -971,7 +1016,7 @@ Format the response as a JSON array with 3 objects, each containing:
                     >
                       {isLoading ? (
                         <>
-                          <Upload className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           Generating...
                         </>
                       ) : (
@@ -1025,7 +1070,13 @@ Format the response as a JSON array with 3 objects, each containing:
               
               <div className="flex justify-end pt-4">
                 <Button
-                  onClick={() => {/* Handle next step */}}
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      step: 'vision'
+                    }));
+                    // We'll implement the vision step next
+                  }}
                   disabled={formData.selectedPersonaIndex === null}
                   className="gap-2 shadow-sm hover:shadow-md transition-all"
                 >
