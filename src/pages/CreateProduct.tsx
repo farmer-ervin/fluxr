@@ -371,47 +371,85 @@ export function CreateProduct() {
             5. Features (with name, description, priority, and implementation_status)
 
             You must include all the details from the PRD. Do not summarize or truncate the PRD.
-
-            Additionally, identify any other sections in the PRD that don't fit into these standard categories and extract them as custom sections.
             
+            IMPORTANT FORMATTING REQUIREMENTS:
+            For main sections (product_description, problem, solution, target_audience, custom_sections):
+            - Convert formatting to proper HTML tags:
+              * Bold text: <strong> or <b>
+              * Italic text: <em> or <i>
+              * Bullet points: <ul> and <li>
+              * Numbered lists: <ol> and <li>
+              * Paragraphs: <p>
+              * Line breaks: <br>
+            - DO NOT include section headers (e.g., no "Product Overview", "Problem Statement", etc.)
+            - Start directly with the content wrapped in appropriate HTML tags
+            - Maintain the hierarchy and structure of lists and sections
+            - Keep any existing HTML formatting if present in the input
+            - Ensure all HTML tags are properly closed
+            - Preserve all emojis and special characters in the content
+            - For emojis followed by text, keep them together in the same HTML element
+
+            For features:
+            - Use plain text only, NO HTML formatting
+            - Preserve emojis if present
+            - Remove any HTML tags from feature names and descriptions
+            - Keep the text content simple and clean
+
             Return the parsed content as a JSON object with the following structure:
             {
-              "product_description": "...",
-              "problem": "...",
-              "solution": "...",
-              "target_audience": "...",
+              "product_description": "...", // HTML formatted content without headers
+              "problem": "...", // HTML formatted content without headers
+              "solution": "...", // HTML formatted content without headers
+              "target_audience": "...", // HTML formatted content without headers
               "features": [
                 {
-                  "name": "Feature name",
-                  "description": "Feature description",
+                  "name": "Feature name in plain text (with emoji if present)",
+                  "description": "Feature description in plain text (with emoji if present)",
                   "priority": "must-have" | "nice-to-have" | "not-prioritized",
                   "implementation_status": "not_started"
                 }
               ],
               "custom_sections": {
-                "custom_section_name_1": "section content 1",
-                "custom_section_name_2": "section content 2"
+                "custom_section_name_1": "section content in HTML format without headers",
+                "custom_section_name_2": "section content in HTML format without headers"
               }
             }
             
             CRITICAL FEATURE REQUIREMENTS:
-            1. Each feature MUST have a name and description
+            1. Each feature MUST have a name and description in plain text (no HTML)
             2. Priority MUST be one of: "must-have", "nice-to-have", "not-prioritized"
             3. Implementation status MUST be "not_started" unless explicitly stated
             4. Features without a priority should be marked as "not-prioritized"
             5. Features without a status should be marked as "not_started"
+            6. Strip any HTML tags from feature names and descriptions
             
             For custom section names:
             1. Prefix with "custom_"
             2. Convert to lowercase with underscores
-            3. Remove special characters`
+            3. Remove special characters (but keep emojis in the content)
+            4. DO NOT include the section name in the content
+
+            Example of formatted output:
+            {
+              "product_description": "<p>Our innovative solution helps users accomplish their goals through an intuitive interface...</p><ul><li>✨ <strong>Key Point 1:</strong> Important detail</li></ul>",
+              "problem": "<p>Users face several challenges:</p><ul><li>🔥 Challenge 1</li><li>⚠️ Challenge 2</li></ul>",
+              "features": [{
+                "name": "⚡️ Quick Search",
+                "description": "🔍 Instantly find what you need with our powerful search feature",
+                "priority": "must-have",
+                "implementation_status": "not_started"
+              }],
+              "custom_sections": {
+                "custom_tech_stack": "<ul><li>Frontend: React Native</li><li>Backend: Node.js</li></ul>"
+              }
+            }`
           },
           {
             role: 'user',
             content: prdContent
           }
         ],
-        temperature: 0.3,
+        temperature: 0.1,
         response_format: { type: 'json_object' }
       });
 
