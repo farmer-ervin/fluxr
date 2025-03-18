@@ -383,12 +383,29 @@ export function CustomerProfiles() {
         Back to PRD Editor
       </button>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Customer Profiles</h2>
-        <p className="text-gray-600 mt-2">
-          Based on your product description, we've identified these key customer personas.
-          Select one profile to generate an MVP PRD.
-        </p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Customer Profiles</h2>
+          <p className="text-gray-600 mt-2">
+            Based on your product description, we've identified these key customer personas.
+            Select one profile to generate an MVP PRD.
+          </p>
+        </div>
+        <Button
+          variant={selectedProfileIndex !== null ? "default" : "secondary"}
+          size="lg"
+          disabled={selectedProfileIndex === null || isGenerating}
+          onClick={handleGenerateMvp}
+        >
+          {isGenerating ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating PRD...
+            </span>
+          ) : (
+            'Generate PRD'
+          )}
+        </Button>
       </div>
 
       {error && (
@@ -430,24 +447,6 @@ export function CustomerProfiles() {
           </div>
         </>
       )}
-
-      <div className="flex justify-center">
-        <Button
-          variant="secondary"
-          size="lg"
-          disabled={selectedProfileIndex === null || isGenerating}
-          onClick={handleGenerateMvp}
-        >
-          {isGenerating ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Generating MVP PRD...
-            </span>
-          ) : (
-            'Generate MVP PRD for Selected Profile'
-          )}
-        </Button>
-      </div>
     </div>
   );
 }
