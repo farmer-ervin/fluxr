@@ -178,16 +178,23 @@ function PersonaCard({
   return (
     <Card 
       className={cn(
-        "cursor-pointer transition-all hover:border-primary/50 hover:shadow-md",
-        isSelected && "border-primary shadow-blue-glow"
+        "relative overflow-hidden transition-all hover:shadow-md",
+        isSelected ? "ring-2 ring-primary shadow-blue-glow" : "hover:border-primary/50",
+        "cursor-pointer group"
       )}
       onClick={onClick}
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div>
-            <CardTitle>{persona.name}</CardTitle>
-            <CardDescription className="mt-1.5">{persona.overview}</CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>{persona.name}</CardTitle>
+              <CardDescription className="mt-1.5">{persona.overview}</CardDescription>
+            </div>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1">
             <Star className="h-3.5 w-3.5 text-primary" />
@@ -669,12 +676,13 @@ Format the response as a JSON array with 3 objects, each containing:
         {/* Options */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Upload PRD Option */}
-          <Card className={cn(
-            "relative overflow-hidden transition-all hover:shadow-md",
-            selectedOption === 'upload' ? 'ring-2 ring-primary shadow-blue-glow' : 'hover:border-primary/50',
-            "cursor-pointer group"
-          )}
-          onClick={() => handleOptionSelect('upload')}
+          <Card 
+            className={cn(
+              "relative overflow-hidden transition-all hover:shadow-md",
+              selectedOption === 'upload' ? 'ring-2 ring-primary shadow-blue-glow' : 'hover:border-primary/50',
+              "cursor-pointer group"
+            )}
+            onClick={() => handleOptionSelect('upload')}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardHeader className="space-y-4">
@@ -691,12 +699,13 @@ Format the response as a JSON array with 3 objects, each containing:
           </Card>
 
           {/* Generate with AI Option */}
-          <Card className={cn(
-            "relative overflow-hidden transition-all hover:shadow-md",
-            selectedOption === 'generate' ? 'ring-2 ring-primary shadow-blue-glow' : 'hover:border-primary/50',
-            "cursor-pointer group"
-          )}
-          onClick={() => handleOptionSelect('generate')}
+          <Card 
+            className={cn(
+              "relative overflow-hidden transition-all hover:shadow-md",
+              selectedOption === 'generate' ? 'ring-2 ring-primary shadow-blue-glow' : 'hover:border-primary/50',
+              "cursor-pointer group"
+            )}
+            onClick={() => handleOptionSelect('generate')}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardHeader className="space-y-4">
@@ -731,18 +740,14 @@ Format the response as a JSON array with 3 objects, each containing:
             </Button>
           </div>
           <Card className="shadow-sm border-muted/80">
-            <CardHeader className="pb-4">
+            <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                   <Upload className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <CardTitle>Upload Your PRD</CardTitle>
-                  <CardDescription>
-                    Enter your product name and paste your existing PRD content below.
-                  </CardDescription>
-                </div>
+                <CardTitle>Upload Your PRD</CardTitle>
               </div>
+              <CardDescription className="text-base text-muted-foreground mt-1.5">Enter your product name and paste your existing PRD content below.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -811,66 +816,78 @@ Format the response as a JSON array with 3 objects, each containing:
       {/* Generate with AI Section */}
       {selectedOption === 'generate' && (
         <div ref={generateRef} className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setSelectedOption(null);
-                scrollToSection(optionsRef);
-              }}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Options
-            </Button>
-          </div>
-
-          <ProgressSteps currentStep={formData.step} />
-
-          {/* Generate with AI Card */}
-          <Card className={cn(
-            "transition-all duration-500",
-            showForm && "opacity-80"
-          )}>
+          <Card>
             <CardHeader>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                   <Sparkles className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <CardTitle>Generate with AI</CardTitle>
-                  <CardDescription>Let's create your PRD step by step with AI assistance.</CardDescription>
-                </div>
+                <CardTitle>Generate with AI</CardTitle>
               </div>
+              <CardDescription className="text-base text-muted-foreground mt-1.5">
+                Fluxr will walk you through step by step to create a PRD.
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-8">
               <div className="rounded-lg border bg-muted/50 p-6 space-y-6">
-                <h3 className="text-base font-medium">How AI Will Help You</h3>
+                <h3 className="text-base font-medium">4 Simple Steps to a Great PRD:</h3>
                 <div className="space-y-5">
-                  {steps.map((step, index) => {
-                    const Icon = step.icon;
-                    return (
-                      <div key={index} className="flex gap-4">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                          <span className="text-sm font-medium">{index + 1}</span>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">{step.title}</p>
-                          <p className="text-sm text-muted-foreground">{step.description}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="text-sm font-medium">1</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Start with the fundamentals of your product idea.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="text-sm font-medium">2</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Hone in on your target audience.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="text-sm font-medium">3</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Identify the core problem and core solution.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="text-sm font-medium">4</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium">Generate and prioritize features.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              {!showForm && (
-                <div className="mt-6 flex justify-end">
-                  <Button onClick={handleStartGenerating} className="gap-2 shadow-sm hover:shadow-md transition-all">
-                    Get Started
-                    <ArrowRight className="h-4 w-4" />
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Takes less than 5 minutes, but you can save your progress as you go.</p>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSelectedOption(null);
+                      scrollToSection(optionsRef);
+                    }}
+                    className="gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
                   </Button>
+                  {!showForm && (
+                    <Button onClick={handleStartGenerating} className="gap-2 shadow-sm hover:shadow-md transition-all">
+                      Get Started
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
@@ -878,16 +895,14 @@ Format the response as a JSON array with 3 objects, each containing:
           {showForm && (
             <div ref={detailsRef} className="flex flex-col gap-6">
               <Card className="shadow-sm border-muted/80">
-                <CardHeader className="pb-4">
+                <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                       <FileText className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <CardTitle>Product Details</CardTitle>
-                      <CardDescription>Tell us about your product idea</CardDescription>
-                    </div>
+                    <CardTitle>Product Details</CardTitle>
                   </div>
+                  <CardDescription className="text-base text-muted-foreground mt-1.5">Start by telling Fluxr about your product idea. Please include the most important details, but Fluxr's AI will help fill in the gaps.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-5">
@@ -911,7 +926,7 @@ Format the response as a JSON array with 3 objects, each containing:
                         id="problemStatement"
                         value={formData.problemStatement}
                         onChange={(e) => setFormData(prev => ({ ...prev, problemStatement: e.target.value }))}
-                        placeholder="What problem does your product solve?"
+                        placeholder="What is the core problem you are solving?"
                         className="min-h-[100px] transition-shadow focus-visible:shadow-blue-glow"
                       />
                     </div>
@@ -935,7 +950,7 @@ Format the response as a JSON array with 3 objects, each containing:
                         id="targetAudience"
                         value={formData.targetAudience}
                         onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
-                        placeholder="Who is your target audience?"
+                        placeholder="Who are you solving this problem for?"
                         className="min-h-[100px] transition-shadow focus-visible:shadow-blue-glow"
                       />
                     </div>
@@ -981,11 +996,11 @@ Format the response as a JSON array with 3 objects, each containing:
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                       <Users className="h-5 w-5 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold tracking-tight">Customer Personas</h2>
+                    <div>
+                      <h2 className="text-2xl font-bold tracking-tight">Customer Personas</h2>
+                      <p className="text-muted-foreground">Select the persona that best represents your target customer</p>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground pl-11">
-                    Select the persona that best represents your target customer
-                  </p>
                 </div>
                 <Button
                   variant="outline"

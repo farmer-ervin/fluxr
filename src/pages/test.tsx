@@ -53,7 +53,10 @@ import {
   AlertTriangle,
   RefreshCw,
   Users,
-  FileCheck
+  FileCheck,
+  Sparkles,
+  ArrowLeft,
+  ArrowRight
 } from "lucide-react"
 import { useState } from "react"
 
@@ -180,6 +183,79 @@ export default function TestPage() {
           <CardFooter>
             <Button>Card Action</Button>
           </CardFooter>
+        </Card>
+      </section>
+
+      {/* Standard Card Pattern */}
+      <section className="section-space">
+        <h2 className="section-heading">Standard Card Pattern</h2>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle>Card Title</CardTitle>
+            </div>
+            <CardDescription className="text-base text-muted-foreground mt-1.5">
+              This is the standard card description pattern with proper spacing and text size.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <div className="rounded-lg border bg-muted/50 p-6 space-y-6">
+              <h3 className="text-base font-medium">4 Simple Steps to a Great PRD:</h3>
+              <div className="space-y-5">
+                <div className="flex gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <span className="text-sm font-medium">1</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium">Start with the fundamentals of your product idea.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <span className="text-sm font-medium">2</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium">Hone in on your target audience.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <span className="text-sm font-medium">3</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium">Identify the core problem and core solution.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <span className="text-sm font-medium">4</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium">Generate and prioritize features.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Takes less than 5 minutes, but you can save your progress as you go.</p>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </Button>
+                <Button className="gap-2 shadow-sm hover:shadow-md transition-all">
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </section>
 
