@@ -410,6 +410,8 @@ Current Solution: ${selectedPersona.currentSolution}
 Key Points:
 ${selectedPersona.keyPoints.map(point => `- ${point}`).join('\n')}
 
+Don't use the name of the persona (e.g. Steve, John, etc.) in the enhanced problem and solution statements.
+
 Return the response as a JSON object with this structure:
 {
   "enhancedProblem": "Enhanced problem statement...",
