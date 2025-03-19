@@ -1,9 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 
 interface VisionRefinementViewProps {
   originalProblem: string;
@@ -18,7 +16,7 @@ interface VisionRefinementViewProps {
   onSolutionVersionChange: (version: 'original' | 'enhanced') => void;
   onBack: () => void;
   onNext: () => void;
-  isLoading?: boolean;
+  isLoading: boolean;
 }
 
 export function VisionRefinementView({
@@ -34,118 +32,154 @@ export function VisionRefinementView({
   onSolutionVersionChange,
   onBack,
   onNext,
-  isLoading = false
+  isLoading
 }: VisionRefinementViewProps) {
   return (
-    <div className="flex flex-col gap-6">
-      <Card className="shadow-sm border-muted/80">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle>Vision Refinement</CardTitle>
-              <CardDescription className="text-base text-muted-foreground mt-1.5">
-                Review and select the enhanced problem and solution statements
-              </CardDescription>
-            </div>
+    <Card className="shadow-sm border-muted/80">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            <Sparkles className="h-5 w-5 text-primary" />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {/* Problem Statement Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Problem Statement</h3>
-            <RadioGroup
-              value={selectedProblemVersion}
-              onValueChange={(value) => onProblemVersionChange(value as 'original' | 'enhanced')}
-              className="grid gap-4"
-            >
-              <div className="flex items-center space-x-4 rounded-lg border p-4">
-                <RadioGroupItem value="original" id="problem-original" />
-                <Label htmlFor="problem-original" className="flex-grow">
-                  <div className="font-medium mb-1">Original</div>
-                  <div className="text-muted-foreground">{originalProblem}</div>
-                </Label>
+          <CardTitle>Problem Refinement</CardTitle>
+        </div>
+        <CardDescription className="text-base text-muted-foreground mt-1.5">
+          Let's improve your problem statement and solution based on the selected persona.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-6">
+          {/* Problem Statement Comparison */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Problem Statement</h3>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="originalProblem"
+                    name="problemVersion"
+                    checked={selectedProblemVersion === 'original'}
+                    onChange={() => onProblemVersionChange('original')}
+                    className="h-4 w-4 text-primary"
+                  />
+                  <label htmlFor="originalProblem" className="font-medium">Original Version</label>
+                </div>
+                <div className="p-4 rounded-md border bg-muted/30">
+                  {originalProblem}
+                </div>
               </div>
-              <div className="flex items-center space-x-4 rounded-lg border p-4 bg-muted/5">
-                <RadioGroupItem value="enhanced" id="problem-enhanced" />
-                <Label htmlFor="problem-enhanced" className="flex-grow">
-                  <div className="font-medium mb-1 flex items-center gap-2">
-                    Enhanced
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-muted-foreground">{enhancedProblem}</div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="enhancedProblem"
+                    name="problemVersion"
+                    checked={selectedProblemVersion === 'enhanced'}
+                    onChange={() => onProblemVersionChange('enhanced')}
+                    className="h-4 w-4 text-primary"
+                  />
+                  <label htmlFor="enhancedProblem" className="font-medium">Enhanced Version</label>
+                </div>
+                <div className="p-4 rounded-md border bg-primary/5">
+                  {enhancedProblem}
+                </div>
+                
+                {problemImprovements && problemImprovements.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <div className="text-sm font-medium">Improvements Made:</div>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {problemImprovements.map((improvement, index) => (
-                        <li key={index}>{improvement}</li>
+                    <h4 className="text-sm font-medium text-muted-foreground">Improvements Made:</h4>
+                    <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
+                      {problemImprovements.map((improvement, i) => (
+                        <li key={i}>{improvement}</li>
                       ))}
                     </ul>
                   </div>
-                </Label>
+                )}
               </div>
-            </RadioGroup>
+            </div>
           </div>
-
-          {/* Solution Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Solution</h3>
-            <RadioGroup
-              value={selectedSolutionVersion}
-              onValueChange={(value) => onSolutionVersionChange(value as 'original' | 'enhanced')}
-              className="grid gap-4"
-            >
-              <div className="flex items-center space-x-4 rounded-lg border p-4">
-                <RadioGroupItem value="original" id="solution-original" />
-                <Label htmlFor="solution-original" className="flex-grow">
-                  <div className="font-medium mb-1">Original</div>
-                  <div className="text-muted-foreground">{originalSolution}</div>
-                </Label>
+          
+          {/* Solution Comparison */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Solution</h3>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="originalSolution"
+                    name="solutionVersion"
+                    checked={selectedSolutionVersion === 'original'}
+                    onChange={() => onSolutionVersionChange('original')}
+                    className="h-4 w-4 text-primary"
+                  />
+                  <label htmlFor="originalSolution" className="font-medium">Original Version</label>
+                </div>
+                <div className="p-4 rounded-md border bg-muted/30">
+                  {originalSolution}
+                </div>
               </div>
-              <div className="flex items-center space-x-4 rounded-lg border p-4 bg-muted/5">
-                <RadioGroupItem value="enhanced" id="solution-enhanced" />
-                <Label htmlFor="solution-enhanced" className="flex-grow">
-                  <div className="font-medium mb-1 flex items-center gap-2">
-                    Enhanced
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-muted-foreground">{enhancedSolution}</div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="enhancedSolution"
+                    name="solutionVersion"
+                    checked={selectedSolutionVersion === 'enhanced'}
+                    onChange={() => onSolutionVersionChange('enhanced')}
+                    className="h-4 w-4 text-primary"
+                  />
+                  <label htmlFor="enhancedSolution" className="font-medium">Enhanced Version</label>
+                </div>
+                <div className="p-4 rounded-md border bg-primary/5">
+                  {enhancedSolution}
+                </div>
+                
+                {solutionImprovements && solutionImprovements.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <div className="text-sm font-medium">Improvements Made:</div>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {solutionImprovements.map((improvement, index) => (
-                        <li key={index}>{improvement}</li>
+                    <h4 className="text-sm font-medium text-muted-foreground">Improvements Made:</h4>
+                    <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
+                      {solutionImprovements.map((improvement, i) => (
+                        <li key={i}>{improvement}</li>
                       ))}
                     </ul>
                   </div>
-                </Label>
+                )}
               </div>
-            </RadioGroup>
+            </div>
           </div>
-
-          {/* Navigation Controls */}
-          <div className="flex justify-between items-center pt-4">
-            <Button
-              variant="outline"
-              onClick={onBack}
-              className="gap-2 hover:bg-background"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <Button
-              onClick={onNext}
-              disabled={isLoading}
-              className="gap-2 shadow-sm hover:shadow-md transition-all"
-            >
-              Continue
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+        
+        <div className="flex justify-between items-center gap-3 pt-4">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="gap-2 hover:bg-background"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <Button
+            onClick={onNext}
+            disabled={isLoading}
+            className="gap-2 shadow-sm hover:shadow-md transition-all"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 } 

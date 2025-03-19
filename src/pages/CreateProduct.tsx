@@ -15,7 +15,6 @@ import { Database, Json } from '@/lib/database.types';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { VisionRefinementView } from '@/components/VisionRefinementView';
 
 type Tables = Database['public']['Tables'];
 type OpenAILogInsert = Tables['openai_logs']['Insert'];
@@ -44,19 +43,13 @@ interface CustomerPersona {
 }
 
 interface AiFormData {
-  step: 'details' | 'personas' | 'vision' | 'features';
+  step: 'details' | 'personas' | 'features';
   productName: string;
   problemStatement: string;
   solution: string;
   targetAudience: string;
   personas: CustomerPersona[] | null;
   selectedPersonaIndex: number | null;
-  enhancedProblem: string | null;
-  enhancedSolution: string | null;
-  problemImprovements: string[] | null;
-  solutionImprovements: string[] | null;
-  selectedProblemVersion: 'original' | 'enhanced' | null;
-  selectedSolutionVersion: 'original' | 'enhanced' | null;
 }
 
 const steps = [
@@ -108,8 +101,7 @@ function ProgressSteps({ currentStep }: { currentStep: AiFormData['step'] }) {
   const stepIndex = {
     'details': 0,
     'personas': 1,
-    'vision': 2,
-    'features': 3
+    'features': 2
   }[currentStep];
 
   return (
@@ -264,13 +256,7 @@ export function CreateProduct() {
     solution: '',
     targetAudience: '',
     personas: null,
-    selectedPersonaIndex: null,
-    enhancedProblem: null,
-    enhancedSolution: null,
-    problemImprovements: null,
-    solutionImprovements: null,
-    selectedProblemVersion: null,
-    selectedSolutionVersion: null
+    selectedPersonaIndex: null
   });
 
   const [showForm, setShowForm] = useState(false);
@@ -321,18 +307,6 @@ export function CreateProduct() {
         selectedPersonaIndex: null
       }));
       scrollToSection(detailsRef);
-    } else if (formData.step === 'vision') {
-      setFormData(prev => ({
-        ...prev,
-        step: 'personas',
-        enhancedProblem: null,
-        enhancedSolution: null,
-        problemImprovements: null,
-        solutionImprovements: null,
-        selectedProblemVersion: null,
-        selectedSolutionVersion: null
-      }));
-      scrollToSection(personasRef);
     } else {
       setShowForm(false);
       scrollToSection(generateRef);
@@ -357,15 +331,9 @@ export function CreateProduct() {
       } finally {
         setIsLoading(false);
       }
-    } else if (formData.step === 'vision') {
-      // Save the final selections and move to features step
-      setFormData(prev => ({
-        ...prev,
-        step: 'features',
-        // Use the selected versions for the next steps
-        problemStatement: prev.selectedProblemVersion === 'enhanced' ? prev.enhancedProblem! : prev.problemStatement,
-        solution: prev.selectedSolutionVersion === 'enhanced' ? prev.enhancedSolution! : prev.solution
-      }));
+    } else if (formData.step === 'personas') {
+      // Navigate to the Generate PRD page
+      navigate('/product/generate-prd');
     }
   };
 
@@ -735,153 +703,6 @@ Return the response as a JSON object with exactly this structure:
     }
   };
 
-  const handleEnhanceVision = async () => {
-    if (!user) {
-      toast.error('You must be logged in to enhance vision');
-      return;
-    }
-
-    if (formData.selectedPersonaIndex === null || !formData.personas) {
-      toast.error('Please select a persona first');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const selectedPersona = formData.personas[formData.selectedPersonaIndex];
-      
-      const requestPayload = {
-        productName: formData.productName,
-        problemStatement: formData.problemStatement,
-        solution: formData.solution,
-        targetAudience: formData.targetAudience,
-        selectedPersona
-      };
-
-      // Log the OpenAI request
-      const logEntry: OpenAILogInsert = {
-        user_id: user.id,
-        request_type: 'enhance_vision',
-        model: 'gpt-4o',
-        request_payload: requestPayload as Json,
-        response_payload: null,
-        error: null,
-        input_tokens: null,
-        output_tokens: null
-      };
-
-      const { data: logData, error: logError } = await supabase
-        .from('openai_logs')
-        .insert(logEntry)
-        .select()
-        .single();
-
-      if (logError) {
-        throw new Error('Failed to create OpenAI log entry');
-      }
-
-      // Make the OpenAI call
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert product strategist specializing in refining product vision and problem-solution statements. Your task is to enhance the existing problem and solution statements by incorporating insights from the selected customer persona.
-
-Your goal is to make the statements more:
-- Precise and targeted
-- Emotionally resonant with the specific persona
-- Actionable and clear
-- Aligned with the persona's context and needs
-
-For each enhancement, provide a list of specific improvements made and explain how they better address the persona's needs.`
-          },
-          {
-            role: 'user',
-            content: `Please enhance the following problem and solution statements based on the selected customer persona:
-
-Product Name: ${formData.productName}
-Current Problem Statement: ${formData.problemStatement}
-Current Solution: ${formData.solution}
-
-Selected Persona:
-Name: ${selectedPersona.name}
-Overview: ${selectedPersona.overview}
-Top Pain Point: ${selectedPersona.topPainPoint}
-Biggest Frustration: ${selectedPersona.biggestFrustration}
-Current Solution: ${selectedPersona.currentSolution}
-Key Points:
-${selectedPersona.keyPoints.map(point => `- ${point}`).join('\n')}
-
-Return the response as a JSON object with this structure:
-{
-  "enhancedProblem": "Enhanced problem statement...",
-  "enhancedSolution": "Enhanced solution statement...",
-  "problemImprovements": [
-    "Specific improvement 1...",
-    "Specific improvement 2..."
-  ],
-  "solutionImprovements": [
-    "Specific improvement 1...",
-    "Specific improvement 2..."
-  ]
-}`
-          }
-        ],
-        temperature: 0.7,
-        response_format: { type: 'json_object' }
-      });
-
-      // Parse and validate the response
-      let result;
-      try {
-        result = JSON.parse(response.choices[0].message.content || '{}');
-      } catch (parseError) {
-        console.error('Failed to parse OpenAI response:', parseError);
-        throw new Error('Failed to parse the AI response. Please try again.');
-      }
-
-      // Validate the response structure
-      if (!result?.enhancedProblem || !result?.enhancedSolution) {
-        console.error('Invalid response structure:', result);
-        throw new Error('The AI response was not in the expected format. Please try again.');
-      }
-
-      // Update the OpenAI log with the response
-      const updatedLogEntry: Partial<OpenAILogInsert> = {
-        response_payload: response.choices[0].message.content as Json,
-        input_tokens: response.usage?.prompt_tokens ?? null,
-        output_tokens: response.usage?.completion_tokens ?? null
-      };
-
-      if (logData) {
-        await supabase
-          .from('openai_logs')
-          .update(updatedLogEntry)
-          .eq('id', logData.id);
-      }
-
-      // Update state with enhanced versions and set default selections
-      setFormData(prev => ({
-        ...prev,
-        step: 'vision',
-        enhancedProblem: result.enhancedProblem,
-        enhancedSolution: result.enhancedSolution,
-        problemImprovements: result.problemImprovements,
-        solutionImprovements: result.solutionImprovements,
-        selectedProblemVersion: 'enhanced',
-        selectedSolutionVersion: 'enhanced'
-      }));
-
-      toast.success('Successfully enhanced vision statements');
-    } catch (error) {
-      console.error('Error enhancing vision:', error);
-      toast.error('Failed to enhance vision statements. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="container py-8 space-y-16">
       {/* Header and Options Section */}
@@ -1208,7 +1029,7 @@ Return the response as a JSON object with this structure:
                         </>
                       ) : (
                         <>
-                          Generate Personas
+                          Continue to Generate PRD
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}
@@ -1276,18 +1097,18 @@ Return the response as a JSON object with this structure:
                       )}
                     </Button>
                     <Button
-                      onClick={handleEnhanceVision}
+                      onClick={handleNext}
                       disabled={formData.selectedPersonaIndex === null || isLoading}
                       className="gap-2 shadow-sm hover:shadow-md transition-all"
                     >
                       {isLoading ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Enhancing...
+                          Generating...
                         </>
                       ) : (
                         <>
-                          Continue
+                          Continue to Generate PRD
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}
@@ -1296,31 +1117,6 @@ Return the response as a JSON object with this structure:
                 </CardContent>
               </Card>
             </div>
-          )}
-
-          {/* Vision Refinement Section */}
-          {formData.step === 'vision' && (
-            <VisionRefinementView
-              originalProblem={formData.problemStatement}
-              enhancedProblem={formData.enhancedProblem!}
-              originalSolution={formData.solution}
-              enhancedSolution={formData.enhancedSolution!}
-              problemImprovements={formData.problemImprovements || []}
-              solutionImprovements={formData.solutionImprovements || []}
-              selectedProblemVersion={formData.selectedProblemVersion || 'enhanced'}
-              selectedSolutionVersion={formData.selectedSolutionVersion || 'enhanced'}
-              onProblemVersionChange={(version) => setFormData(prev => ({
-                ...prev,
-                selectedProblemVersion: version
-              }))}
-              onSolutionVersionChange={(version) => setFormData(prev => ({
-                ...prev,
-                selectedSolutionVersion: version
-              }))}
-              onBack={handleBack}
-              onNext={handleNext}
-              isLoading={isLoading}
-            />
           )}
         </div>
       )}

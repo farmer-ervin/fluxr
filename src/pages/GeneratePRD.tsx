@@ -13,6 +13,11 @@ import { cn } from "@/lib/utils";
 import { openai } from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
 import { Database, Json } from '@/lib/database.types';
+import { VisionRefinementView } from '@/components/VisionRefinementView';
+
+// Define database types
+type Tables = Database['public']['Tables'];
+type OpenAILogInsert = Tables['openai_logs']['Insert'];
 
 interface CustomerPersona {
   name: string;
@@ -28,6 +33,7 @@ interface CustomerPersona {
   };
 }
 
+// Update FormData interface to include vision enhancement fields
 interface FormData {
   step: 'details' | 'personas' | 'refine' | 'features';
   productName: string;
@@ -36,6 +42,12 @@ interface FormData {
   targetAudience: string;
   personas: CustomerPersona[] | null;
   selectedPersonaIndex: number | null;
+  enhancedProblem: string | null;
+  enhancedSolution: string | null;
+  problemImprovements: string[] | null;
+  solutionImprovements: string[] | null;
+  selectedProblemVersion: 'original' | 'enhanced' | null;
+  selectedSolutionVersion: 'original' | 'enhanced' | null;
   id?: string; // For saving/resuming drafts
 }
 
@@ -244,6 +256,12 @@ export function GeneratePRD() {
     targetAudience: '',
     personas: null,
     selectedPersonaIndex: null,
+    enhancedProblem: null,
+    enhancedSolution: null,
+    problemImprovements: null,
+    solutionImprovements: null,
+    selectedProblemVersion: null,
+    selectedSolutionVersion: null,
     id: crypto.randomUUID() // Generate a unique ID for this draft
   });
 
@@ -311,51 +329,165 @@ export function GeneratePRD() {
     }
   };
 
-  // Handle progression to next step
-  const handleNext = async () => {
-    if (formData.step === 'details') {
-      // Move from details to personas
-      setIsLoading(true);
+  // Add handleEnhanceVision function
+  const handleEnhanceVision = async () => {
+    if (!user) {
+      toast.error('You must be logged in to enhance vision');
+      return;
+    }
+
+    if (formData.selectedPersonaIndex === null || !formData.personas) {
+      toast.error('Please select a persona first');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const selectedPersona = formData.personas[formData.selectedPersonaIndex];
+      
+      const requestPayload = {
+        productName: formData.productName,
+        problemStatement: formData.problemStatement,
+        solution: formData.solution,
+        targetAudience: formData.targetAudience,
+        selectedPersona
+      };
+
+      // Log the OpenAI request
+      const logData: OpenAILogInsert = {
+        user_id: user.id,
+        request_type: 'enhance_vision',
+        model: 'gpt-4o',
+        request_payload: requestPayload as unknown as Json,
+        response_payload: null,
+        error: null,
+        input_tokens: null,
+        output_tokens: null
+      };
+
+      // Create log entry
+      const { data: logEntry, error: logError } = await supabase
+        .from('openai_logs')
+        .insert(logData)
+        .select()
+        .single();
+
+      if (logError) {
+        console.error('Failed to create OpenAI log entry:', logError);
+        // Continue anyway
+      }
+
+      // Make the OpenAI call
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert product strategist specializing in refining product vision and problem-solution statements. Your task is to enhance the existing problem and solution statements by incorporating insights from the selected customer persona.
+
+Your goal is to make the statements more:
+- Precise and targeted
+- Emotionally resonant with the specific persona
+- Actionable and clear
+- Aligned with the persona's context and needs
+
+For each enhancement, provide a list of specific improvements made and explain how they better address the persona's needs.`
+          },
+          {
+            role: 'user',
+            content: `Please enhance the following problem and solution statements based on the selected customer persona:
+
+Product Name: ${formData.productName}
+Current Problem Statement: ${formData.problemStatement}
+Current Solution: ${formData.solution}
+
+Selected Persona:
+Name: ${selectedPersona.name}
+Overview: ${selectedPersona.overview}
+Top Pain Point: ${selectedPersona.topPainPoint}
+Biggest Frustration: ${selectedPersona.biggestFrustration}
+Current Solution: ${selectedPersona.currentSolution}
+Key Points:
+${selectedPersona.keyPoints.map(point => `- ${point}`).join('\n')}
+
+Return the response as a JSON object with this structure:
+{
+  "enhancedProblem": "Enhanced problem statement...",
+  "enhancedSolution": "Enhanced solution statement...",
+  "problemImprovements": [
+    "Specific improvement 1...",
+    "Specific improvement 2..."
+  ],
+  "solutionImprovements": [
+    "Specific improvement 1...",
+    "Specific improvement 2..."
+  ]
+}`
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: 'json_object' }
+      });
+
+      // Parse and validate the response
+      let result;
       try {
-        // Generate personas using OpenAI
-        await generatePersonas();
-      } catch (error) {
-        toast.error("Failed to generate personas. Please try again.");
-        console.error("Error generating personas:", error);
-      } finally {
-        setIsLoading(false);
+        result = JSON.parse(response.choices[0].message.content || '{}');
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', parseError);
+        throw new Error('Failed to parse the AI response. Please try again.');
       }
-    } else if (formData.step === 'personas') {
-      // Move from personas to refinement
-      if (formData.selectedPersonaIndex === null) {
-        toast.error("Please select a persona to continue");
-        return;
+
+      // Validate the response structure
+      if (!result?.enhancedProblem || !result?.enhancedSolution) {
+        console.error('Invalid response structure:', result);
+        throw new Error('The AI response was not in the expected format. Please try again.');
       }
+
+      // Update the OpenAI log with the response if we have a log entry
+      if (logEntry?.id) {
+        const updateData = {
+          response_payload: response.choices[0].message.content as unknown as Json,
+          input_tokens: response.usage?.prompt_tokens ?? null,
+          output_tokens: response.usage?.completion_tokens ?? null
+        };
+
+        await supabase
+          .from('openai_logs')
+          .update(updateData)
+          .eq('id', logEntry.id);
+      }
+
+      // Update state with enhanced versions and set default selections
       setFormData(prev => ({
         ...prev,
-        step: 'refine'
+        step: 'refine',
+        enhancedProblem: result.enhancedProblem,
+        enhancedSolution: result.enhancedSolution,
+        problemImprovements: result.problemImprovements,
+        solutionImprovements: result.solutionImprovements,
+        selectedProblemVersion: 'enhanced',
+        selectedSolutionVersion: 'enhanced'
       }));
-    } else if (formData.step === 'refine') {
-      // Move from refinement to features
-      setFormData(prev => ({
-        ...prev,
-        step: 'features'
-      }));
-    } else if (formData.step === 'features') {
-      // Complete the PRD generation process
-      toast.success("PRD generation completed!");
-      // Here you would normally save the final PRD or navigate to a summary/completion page
+
+      toast.success('Successfully enhanced vision statements');
+    } catch (error) {
+      console.error('Error enhancing vision:', error);
+      toast.error('Failed to enhance vision statements. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Function to generate personas using OpenAI
   const generatePersonas = async () => {
     try {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) {
+      if (!user) {
         toast.error('You must be logged in to generate personas');
         return;
       }
+
+      setIsLoading(true);
       
       const requestPayload = {
         productName: formData.productName,
@@ -365,8 +497,8 @@ export function GeneratePRD() {
       };
 
       // Log the OpenAI request
-      const logData = {
-        user_id: user.data.user.id,
+      const logData: OpenAILogInsert = {
+        user_id: user.id,
         request_type: 'generate_personas',
         model: 'gpt-4o',
         request_payload: requestPayload as unknown as Json,
@@ -489,6 +621,50 @@ Return the response as a JSON object with exactly this structure:
     } catch (error) {
       console.error('Error generating personas:', error);
       throw error; // Re-throw for the caller to handle
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle progression to next step
+  const handleNext = async () => {
+    if (formData.step === 'details') {
+      // Move from details to personas
+      setIsLoading(true);
+      try {
+        // Generate personas using OpenAI
+        await generatePersonas();
+      } catch (error) {
+        toast.error("Failed to generate personas. Please try again.");
+        console.error("Error generating personas:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (formData.step === 'personas') {
+      // Instead of just moving to the next step, call handleEnhanceVision
+      if (formData.selectedPersonaIndex === null) {
+        toast.error("Please select a persona to continue");
+        return;
+      }
+      // Call handleEnhanceVision which will set the step to 'refine' when complete
+      await handleEnhanceVision();
+    } else if (formData.step === 'refine') {
+      // Save final selections and move to features
+      setFormData(prev => ({
+        ...prev,
+        step: 'features',
+        // Use the selected versions for the next steps
+        problemStatement: prev.selectedProblemVersion === 'enhanced' && prev.enhancedProblem 
+          ? prev.enhancedProblem 
+          : prev.problemStatement,
+        solution: prev.selectedSolutionVersion === 'enhanced' && prev.enhancedSolution 
+          ? prev.enhancedSolution 
+          : prev.solution
+      }));
+    } else if (formData.step === 'features') {
+      // Complete the PRD generation process
+      toast.success("PRD generation completed!");
+      // Here you would normally save the final PRD or navigate to a summary/completion page
     }
   };
 
@@ -711,17 +887,21 @@ Return the response as a JSON object with exactly this structure:
                         )}
                       </Button>
                       <Button
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            step: 'refine'
-                          }));
-                        }}
+                        onClick={handleNext}
                         disabled={formData.selectedPersonaIndex === null || isLoading}
                         className="gap-2 shadow-sm hover:shadow-md transition-all"
                       >
-                        Continue
-                        <ArrowRight className="h-4 w-4" />
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Enhancing...</span>
+                          </>
+                        ) : (
+                          <>
+                            Continue
+                            <ArrowRight className="h-4 w-4" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -730,40 +910,51 @@ Return the response as a JSON object with exactly this structure:
             </div>
           )}
 
-          {/* Placeholder for Problem Refinement */}
+          {/* Problem Refinement with VisionRefinementView */}
           {formData.step === 'refine' && (
-            <Card className="shadow-sm border-muted/80">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="h-5 w-5 text-primary" />
+            formData.enhancedProblem && formData.enhancedSolution ? (
+              <VisionRefinementView
+                originalProblem={formData.problemStatement}
+                enhancedProblem={formData.enhancedProblem}
+                originalSolution={formData.solution}
+                enhancedSolution={formData.enhancedSolution}
+                problemImprovements={formData.problemImprovements || []}
+                solutionImprovements={formData.solutionImprovements || []}
+                selectedProblemVersion={formData.selectedProblemVersion || 'enhanced'}
+                selectedSolutionVersion={formData.selectedSolutionVersion || 'enhanced'}
+                onProblemVersionChange={(version) => setFormData(prev => ({
+                  ...prev,
+                  selectedProblemVersion: version
+                }))}
+                onSolutionVersionChange={(version) => setFormData(prev => ({
+                  ...prev,
+                  selectedSolutionVersion: version
+                }))}
+                onBack={handleBack}
+                onNext={handleNext}
+                isLoading={isLoading}
+              />
+            ) : (
+              <Card className="shadow-sm border-muted/80">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                    </div>
+                    <CardTitle>Problem Refinement</CardTitle>
                   </div>
-                  <CardTitle>Problem Refinement</CardTitle>
-                </div>
-                <CardDescription className="text-base text-muted-foreground mt-1.5">
-                  Let's improve your problem statement and solution based on the selected persona.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setFormData(prev => ({ ...prev, step: 'personas' }))}
-                    className="gap-2 hover:bg-background"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </Button>
-                  <Button
-                    onClick={() => setFormData(prev => ({ ...prev, step: 'features' }))}
-                    className="gap-2 shadow-sm hover:shadow-md transition-all"
-                  >
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="text-base text-muted-foreground mt-1.5">
+                    Let's improve your problem statement and solution based on the selected persona.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-3 text-muted-foreground">Enhancing your vision...</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )
           )}
 
           {/* Placeholder for Feature Generation */}
