@@ -875,7 +875,7 @@ Return the response as a JSON array with this structure:
               name: formData.productName,
               description: formData.problemStatement,
               slug: formData.productName.toLowerCase().replace(/\s+/g, '-'),
-              created_by: user.id
+              user_id: user.id
             })
             .select()
             .single();
@@ -883,15 +883,6 @@ Return the response as a JSON array with this structure:
           if (productError) throw productError;
           
           if (productData) {
-            // Add the user as a member of the product
-            await supabase
-              .from('product_members')
-              .insert({
-                product_id: productData.id,
-                user_id: user.id,
-                role: 'owner'
-              });
-            
             // Create the PRD
             const { data: prdData, error: prdError } = await supabase
               .from('prds')
@@ -908,10 +899,16 @@ Return the response as a JSON array with this structure:
             
             // Save the features to the database
             if (prdData) {
-              const featuresWithProductId = formData.generatedFeatures.map(feature => ({
-                ...feature,
-                product_id: productData.id
-              }));
+              const featuresWithProductId = formData.generatedFeatures.map((feature, index) => {
+                // Remove the id since it's auto-generated
+                const { id, ...featureWithoutId } = feature;
+                return {
+                  ...featureWithoutId,
+                  product_id: productData.id,
+                  position: index,
+                  type: 'feature'
+                };
+              });
               
               await supabase
                 .from('features')
@@ -927,14 +924,16 @@ Return the response as a JSON array with this structure:
                     product_id: productData.id,
                     name: selectedPersona.name,
                     overview: selectedPersona.overview,
-                    is_selected: true,
-                    metadata: {
+                    background: {},
+                    problems: {
                       topPainPoint: selectedPersona.topPainPoint,
                       biggestFrustration: selectedPersona.biggestFrustration,
-                      currentSolution: selectedPersona.currentSolution,
-                      keyPoints: selectedPersona.keyPoints,
+                      currentSolution: selectedPersona.currentSolution
+                    },
+                    scoring: {
                       scores: selectedPersona.scores
-                    }
+                    },
+                    is_selected: true
                   });
               }
               
