@@ -29,6 +29,9 @@ import { useNavigationTracking } from '@/hooks/useNavigationTracking';
 import TestPage from './pages/test';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/context/ThemeProvider';
+import { ProductDevelopment } from './pages/ProductDevelopment';
+import { CreateProduct } from './pages/CreateProduct';
+import { GeneratePRD } from './pages/GeneratePRD';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -300,10 +303,34 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/product/create"
+          element={
+            <ProtectedRoute>
+              <CreateProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product/generate-prd"
+          element={
+            <ProtectedRoute>
+              <GeneratePRD />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/product/new"
           element={
             <ProtectedRoute>
               <ProductDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product-development"
+          element={
+            <ProtectedRoute>
+              <ProductDevelopment />
             </ProtectedRoute>
           }
         />
@@ -360,6 +387,14 @@ function AppRoutes() {
         <Route path="/payment/return" element={<PaymentReturn />} />
         <Route
           path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfileSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
           element={
             <ProtectedRoute>
               <ProfileSettings />

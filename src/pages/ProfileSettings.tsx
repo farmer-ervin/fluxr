@@ -101,6 +101,16 @@ export function ProfileSettings() {
 
       if (updateError) throw updateError;
 
+      // Update auth metadata to reflect the new full name
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { full_name: profile.full_name }
+      });
+
+      if (metadataError) throw metadataError;
+
+      // Force a session refresh to update the user object in the auth context
+      const { data: sessionData } = await supabase.auth.getSession();
+
       setSuccess('Profile updated successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -163,6 +173,16 @@ export function ProfileSettings() {
 
       if (updateError) throw updateError;
 
+      // Update auth metadata to reflect the new avatar
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      if (metadataError) throw metadataError;
+
+      // Force a session refresh to update the user object in the auth context
+      const { data: sessionData } = await supabase.auth.getSession();
+      
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
       setSuccess('Avatar updated successfully');
       setTimeout(() => setSuccess(null), 3000);
