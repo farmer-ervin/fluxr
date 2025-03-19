@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Pencil } from 'lucide-react';
 
 interface VisionRefinementViewProps {
   originalProblem: string;
@@ -14,6 +16,8 @@ interface VisionRefinementViewProps {
   selectedSolutionVersion: 'original' | 'enhanced';
   onProblemVersionChange: (version: 'original' | 'enhanced') => void;
   onSolutionVersionChange: (version: 'original' | 'enhanced') => void;
+  onProblemChange: (version: 'original' | 'enhanced', value: string) => void;
+  onSolutionChange: (version: 'original' | 'enhanced', value: string) => void;
   onBack: () => void;
   onNext: () => void;
   isLoading: boolean;
@@ -30,6 +34,8 @@ export function VisionRefinementView({
   selectedSolutionVersion,
   onProblemVersionChange,
   onSolutionVersionChange,
+  onProblemChange,
+  onSolutionChange,
   onBack,
   onNext,
   isLoading
@@ -64,9 +70,22 @@ export function VisionRefinementView({
                     className="h-4 w-4 text-primary"
                   />
                   <label htmlFor="originalProblem" className="font-medium">Original Version</label>
+                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
+                    <Pencil className="h-3 w-3" />
+                    <span>Editable</span>
+                  </div>
                 </div>
-                <div className="p-4 rounded-md border bg-muted/30">
-                  {originalProblem}
+                <div className="form-field">
+                  <Label htmlFor="originalProblemText" className="sr-only">Original Problem Statement</Label>
+                  <div className="p-4 rounded-md border bg-muted/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                    <Textarea
+                      id="originalProblemText"
+                      value={originalProblem}
+                      onChange={(e) => onProblemChange('original', e.target.value)}
+                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
+                      placeholder="Enter your original problem statement..."
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -81,9 +100,22 @@ export function VisionRefinementView({
                     className="h-4 w-4 text-primary"
                   />
                   <label htmlFor="enhancedProblem" className="font-medium">Enhanced Version</label>
+                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
+                    <Pencil className="h-3 w-3" />
+                    <span>Editable</span>
+                  </div>
                 </div>
-                <div className="p-4 rounded-md border bg-primary/5">
-                  {enhancedProblem}
+                <div className="form-field">
+                  <Label htmlFor="enhancedProblemText" className="sr-only">Enhanced Problem Statement</Label>
+                  <div className="p-4 rounded-md border bg-primary/5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                    <Textarea
+                      id="enhancedProblemText"
+                      value={enhancedProblem}
+                      onChange={(e) => onProblemChange('enhanced', e.target.value)}
+                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
+                      placeholder="Enter your enhanced problem statement..."
+                    />
+                  </div>
                 </div>
                 
                 {problemImprovements && problemImprovements.length > 0 && (
@@ -115,9 +147,22 @@ export function VisionRefinementView({
                     className="h-4 w-4 text-primary"
                   />
                   <label htmlFor="originalSolution" className="font-medium">Original Version</label>
+                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
+                    <Pencil className="h-3 w-3" />
+                    <span>Editable</span>
+                  </div>
                 </div>
-                <div className="p-4 rounded-md border bg-muted/30">
-                  {originalSolution}
+                <div className="form-field">
+                  <Label htmlFor="originalSolutionText" className="sr-only">Original Solution</Label>
+                  <div className="p-4 rounded-md border bg-muted/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                    <Textarea
+                      id="originalSolutionText"
+                      value={originalSolution}
+                      onChange={(e) => onSolutionChange('original', e.target.value)}
+                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
+                      placeholder="Enter your original solution..."
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -132,9 +177,22 @@ export function VisionRefinementView({
                     className="h-4 w-4 text-primary"
                   />
                   <label htmlFor="enhancedSolution" className="font-medium">Enhanced Version</label>
+                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
+                    <Pencil className="h-3 w-3" />
+                    <span>Editable</span>
+                  </div>
                 </div>
-                <div className="p-4 rounded-md border bg-primary/5">
-                  {enhancedSolution}
+                <div className="form-field">
+                  <Label htmlFor="enhancedSolutionText" className="sr-only">Enhanced Solution</Label>
+                  <div className="p-4 rounded-md border bg-primary/5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                    <Textarea
+                      id="enhancedSolutionText"
+                      value={enhancedSolution}
+                      onChange={(e) => onSolutionChange('enhanced', e.target.value)}
+                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
+                      placeholder="Enter your enhanced solution..."
+                    />
+                  </div>
                 </div>
                 
                 {solutionImprovements && solutionImprovements.length > 0 && (

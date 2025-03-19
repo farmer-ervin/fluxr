@@ -932,6 +932,16 @@ Return the response as a JSON object with exactly this structure:
                   ...prev,
                   selectedSolutionVersion: version
                 }))}
+                onProblemChange={(version, value) => setFormData(prev => ({
+                  ...prev,
+                  problemStatement: version === 'original' ? value : prev.problemStatement,
+                  enhancedProblem: version === 'enhanced' ? value : prev.enhancedProblem
+                }))}
+                onSolutionChange={(version, value) => setFormData(prev => ({
+                  ...prev,
+                  solution: version === 'original' ? value : prev.solution,
+                  enhancedSolution: version === 'enhanced' ? value : prev.enhancedSolution
+                }))}
                 onBack={handleBack}
                 onNext={handleNext}
                 isLoading={isLoading}
