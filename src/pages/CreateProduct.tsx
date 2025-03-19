@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Sparkles, ArrowRight, FileText, Users, ListChecks, Star, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, Sparkles, ArrowRight, FileText, Users, ListChecks, Star, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -15,16 +15,19 @@ import { Database, Json } from '@/lib/database.types';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { VisionRefinementView } from '@/components/VisionRefinementView';
 
 type Tables = Database['public']['Tables'];
-type OpenAILog = Tables['openai_logs']['Insert'];
-type Product = Tables['products']['Insert'];
-type PRD = Tables['prds']['Insert'];
-type Feature = Tables['features']['Insert'];
+type OpenAILogInsert = Tables['openai_logs']['Insert'];
+type OpenAILogUpdate = Tables['openai_logs']['Update'];
+type ProductInsert = Tables['products']['Insert'];
+type PRDInsert = Tables['prds']['Insert'];
+type FeatureInsert = Tables['features']['Insert'];
 
 type OpenAILogRow = Tables['openai_logs']['Row'];
 type ProductRow = Tables['products']['Row'];
 type PRDRow = Tables['prds']['Row'];
+type FeatureRow = Tables['features']['Row'];
 
 interface CustomerPersona {
   name: string;
@@ -48,6 +51,12 @@ interface AiFormData {
   targetAudience: string;
   personas: CustomerPersona[] | null;
   selectedPersonaIndex: number | null;
+  enhancedProblem: string | null;
+  enhancedSolution: string | null;
+  problemImprovements: string[] | null;
+  solutionImprovements: string[] | null;
+  selectedProblemVersion: 'original' | 'enhanced' | null;
+  selectedSolutionVersion: 'original' | 'enhanced' | null;
 }
 
 const steps = [
@@ -78,7 +87,7 @@ function ScoreDisplay({ score, label }: { score: number; label: string }) {
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{label}:</span>
-        <span className="text-sm font-medium">{score}/10</span>
+        <span className="text-sm font-medium">{score.toFixed(1)}/10</span>
       </div>
       <div className="flex gap-0.5">
         {Array.from({ length: 10 }).map((_, i) => (
@@ -172,8 +181,8 @@ function PersonaCard({
   const averageScore = Math.round(
     (persona.scores.problemMatch + 
      persona.scores.urgencyToSolve + 
-     persona.scores.abilityToPay) / 3
-  );
+     persona.scores.abilityToPay) / 3 * 10
+  ) / 10;
 
   return (
     <Card 
@@ -187,18 +196,13 @@ function PersonaCard({
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle>{persona.name}</CardTitle>
-              <CardDescription className="mt-1.5">{persona.overview}</CardDescription>
-            </div>
+          <div>
+            <CardTitle>{persona.name}</CardTitle>
+            <CardDescription className="mt-1.5">{persona.overview}</CardDescription>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1">
             <Star className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-medium text-primary">{averageScore}/10</span>
+            <span className="text-sm font-medium text-primary">{averageScore.toFixed(1)}/10</span>
           </div>
         </div>
       </CardHeader>
@@ -234,6 +238,7 @@ function PersonaCard({
           </div>
         </div>
         <div className="space-y-2">
+          <h4 className="mb-2 text-sm font-medium">Persona Fit</h4>
           <ScoreDisplay score={persona.scores.problemMatch} label="Problem Match" />
           <ScoreDisplay score={persona.scores.urgencyToSolve} label="Urgency to Solve" />
           <ScoreDisplay score={persona.scores.abilityToPay} label="Ability to Pay" />
@@ -259,7 +264,13 @@ export function CreateProduct() {
     solution: '',
     targetAudience: '',
     personas: null,
-    selectedPersonaIndex: null
+    selectedPersonaIndex: null,
+    enhancedProblem: null,
+    enhancedSolution: null,
+    problemImprovements: null,
+    solutionImprovements: null,
+    selectedProblemVersion: null,
+    selectedSolutionVersion: null
   });
 
   const [showForm, setShowForm] = useState(false);
@@ -291,10 +302,7 @@ export function CreateProduct() {
   };
 
   const handleStartGenerating = () => {
-    setShowForm(true);
-    setTimeout(() => {
-      scrollToSection(detailsRef);
-    }, 100);
+    navigate('/product/generate-prd');
   };
 
   const handlePersonaSelect = (index: number) => {
@@ -313,6 +321,18 @@ export function CreateProduct() {
         selectedPersonaIndex: null
       }));
       scrollToSection(detailsRef);
+    } else if (formData.step === 'vision') {
+      setFormData(prev => ({
+        ...prev,
+        step: 'personas',
+        enhancedProblem: null,
+        enhancedSolution: null,
+        problemImprovements: null,
+        solutionImprovements: null,
+        selectedProblemVersion: null,
+        selectedSolutionVersion: null
+      }));
+      scrollToSection(personasRef);
     } else {
       setShowForm(false);
       scrollToSection(generateRef);
@@ -337,6 +357,15 @@ export function CreateProduct() {
       } finally {
         setIsLoading(false);
       }
+    } else if (formData.step === 'vision') {
+      // Save the final selections and move to features step
+      setFormData(prev => ({
+        ...prev,
+        step: 'features',
+        // Use the selected versions for the next steps
+        problemStatement: prev.selectedProblemVersion === 'enhanced' ? prev.enhancedProblem! : prev.problemStatement,
+        solution: prev.selectedSolutionVersion === 'enhanced' ? prev.enhancedSolution! : prev.solution
+      }));
     }
   };
 
@@ -356,14 +385,6 @@ export function CreateProduct() {
       setError(null);
 
       // Log the OpenAI call
-      const logEntry = {
-        user_id: user?.id,
-        request_type: 'parse_prd',
-        model: 'gpt-4o-mini',
-        request_payload: { prd_content: prdContent.substring(0, 500) + '...' } // Truncate for logging
-      };
-
-      // Make the OpenAI call with improved prompt
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -460,30 +481,6 @@ export function CreateProduct() {
         response_format: { type: 'json_object' }
       });
 
-      // Update the log with the response
-      if (!user?.id) {
-        throw new Error('User not authenticated');
-      }
-
-      const logResponse = await supabase
-        .from('openai_logs')
-        .insert({
-          user_id: user.id,
-          request_type: 'prd_generation',
-          model: 'gpt-4o-mini',
-          request_payload: {
-            messages: response.choices[0].message.content,
-            model: 'gpt-4o-mini',
-            temperature: 0.7,
-            max_tokens: 2000,
-          },
-          response_payload: response.choices[0].message.content,
-          input_tokens: response.usage?.prompt_tokens,
-          output_tokens: response.usage?.completion_tokens,
-        } as OpenAILog)
-        .select()
-        .single();
-
       // Parse and normalize the response
       const parsedData = JSON.parse(response.choices[0].message.content || '{}');
       
@@ -492,57 +489,101 @@ export function CreateProduct() {
         parsedData.features = parsedData.features.map(normalizeFeature);
       }
 
-      // First create a new product with the user-provided name and parsed description
-      const productResponse = await supabase
-        .from('products')
-        .insert({
-          name: productName.trim(),
-          description: parsedData.product_description || '',
-          user_id: user.id,
-        } as Product)
+      // Log the OpenAI call
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const logEntry: OpenAILogInsert = {
+        user_id: user.id,
+        request_type: 'prd_generation',
+        model: 'gpt-4o-mini',
+        request_payload: {
+          messages: response.choices[0].message.content,
+          model: 'gpt-4o-mini',
+          temperature: 0.7,
+          max_tokens: 2000,
+        } as Json,
+        response_payload: response.choices[0].message.content as Json,
+        input_tokens: response.usage?.prompt_tokens ?? null,
+        output_tokens: response.usage?.completion_tokens ?? null,
+        error: null
+      };
+
+      const { data: logData, error: logError } = await supabase
+        .from('openai_logs')
+        .insert(logEntry)
         .select()
         .single();
 
-      if (!productResponse.data) {
+      if (logError) {
+        throw new Error('Failed to create OpenAI log entry');
+      }
+
+      // Create product
+      const productEntry: ProductInsert = {
+        name: productName.trim(),
+        description: parsedData.product_description || '',
+        user_id: user.id,
+        slug: productName.trim().toLowerCase().replace(/\s+/g, '-')
+      };
+
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .insert(productEntry)
+        .select()
+        .single();
+
+      if (productError || !productData?.id) {
         throw new Error('Failed to create product');
       }
 
-      // Create initial PRD record with parsed data
-      const prdResponse = await supabase
+      // Create PRD
+      const prdEntry: PRDInsert = {
+        product_id: productData.id,
+        problem: parsedData.problem || '',
+        solution: parsedData.solution || '',
+        target_audience: parsedData.target_audience || '',
+        tech_stack: '',
+        success_metrics: '',
+        custom_sections: {}
+      };
+
+      const { data: prdData, error: prdError } = await supabase
         .from('prds')
-        .insert({
-          product_id: productResponse.data.id,
-          problem: parsedData.problem || '',
-          solution: parsedData.solution || '',
-          target_audience: parsedData.target_audience || '',
-          tech_stack: '',
-          success_metrics: '',
-          custom_sections: parsedData.custom_sections || {}
-        } as PRD)
+        .insert(prdEntry)
         .select()
         .single();
 
-      if (!prdResponse.data) {
+      if (prdError) {
         throw new Error('Failed to create PRD');
       }
 
-      // If there are features, create them
+      // Create features
       if (parsedData.features && Array.isArray(parsedData.features)) {
-        const features = parsedData.features.map((feature: any) => ({
-          product_id: productResponse.data.id,
+        const features: FeatureInsert[] = parsedData.features.map((feature: any) => ({
+          product_id: productData.id,
           name: feature.name || '',
           description: feature.description || null,
-          priority: feature.priority || 'not-prioritized',
-          implementation_status: 'not_started',
-        } as Feature));
+          priority: (feature.priority || 'not-prioritized') as FeatureInsert['priority'],
+          implementation_status: 'not_started'
+        }));
 
         if (features.length > 0) {
-          await supabase.from('features').insert(features);
+          const { error: featuresError } = await supabase
+            .from('features')
+            .insert(features);
+          
+          if (featuresError) {
+            console.error('Failed to create features:', featuresError);
+          }
         }
       }
 
       // Navigate to the PRD editor
-      navigate(`/product/${productResponse.data.slug}/prd`);
+      if (productData?.slug) {
+        navigate(`/product/${productData.slug}/prd`);
+      }
 
     } catch (error) {
       console.error('Error creating product:', error);
@@ -563,6 +604,7 @@ export function CreateProduct() {
       return;
     }
 
+    setIsLoading(true); // Set loading state immediately
     try {
       const requestPayload = {
         productName: formData.productName,
@@ -572,24 +614,24 @@ export function CreateProduct() {
       };
 
       // Log the OpenAI request
-      const logData = {
+      const logEntry: OpenAILogInsert = {
         user_id: user.data.user.id,
         request_type: 'generate_personas',
         model: 'gpt-4o',
-        request_payload: requestPayload as unknown as Json,
+        request_payload: requestPayload as Json,
         response_payload: null,
         error: null,
         input_tokens: null,
         output_tokens: null
-      } satisfies Database['public']['Tables']['openai_logs']['Insert'];
+      };
 
-      const { data: logEntry, error: logError } = await supabase
+      const { data: logData, error: logError } = await supabase
         .from('openai_logs')
-        .insert(logData)
+        .insert(logEntry)
         .select()
         .single();
 
-      if (logError || !logEntry) {
+      if (logError) {
         throw new Error('Failed to create OpenAI log entry');
       }
 
@@ -623,6 +665,8 @@ For each persona, provide:
    - Urgency to Solve
    - Ability to Pay
 
+The average of the profile scores cannot be the same for all personas.
+
 Return the response as a JSON object with exactly this structure:
 {
   "personas": [{
@@ -646,20 +690,17 @@ Return the response as a JSON object with exactly this structure:
       });
       
       // Update the OpenAI log with the response
-      const updateData = {
-        response_payload: response.choices[0].message.content as unknown as Json,
-        error: null,
+      const updatedLogEntry: Partial<OpenAILogInsert> = {
+        response_payload: response.choices[0].message.content as Json,
         input_tokens: response.usage?.prompt_tokens ?? null,
         output_tokens: response.usage?.completion_tokens ?? null
-      } satisfies Database['public']['Tables']['openai_logs']['Update'];
+      };
 
-      const { error: updateError } = await supabase
-        .from('openai_logs')
-        .update(updateData)
-        .eq('id', logEntry.id);
-
-      if (updateError) {
-        console.error('Failed to update OpenAI log:', updateError);
+      if (logData) {
+        await supabase
+          .from('openai_logs')
+          .update(updatedLogEntry)
+          .eq('id', logData.id);
       }
 
       // Parse and validate the response
@@ -680,23 +721,169 @@ Return the response as a JSON object with exactly this structure:
       // Update state with the personas
       setFormData(prev => ({
         ...prev,
-        step: 'personas',
-        personas: result.personas
+        personas: result.personas,
+        selectedPersonaIndex: null // Reset selection when regenerating
       }));
 
-      // Scroll to personas section
-      setTimeout(() => {
-        scrollToSection(personasRef);
-      }, 100);
+      toast.success('Successfully generated new personas');
 
     } catch (error) {
       console.error('Error generating personas:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to generate customer personas. Please try again.');
+    } finally {
+      setIsLoading(false); // Clear loading state after success or failure
+    }
+  };
+
+  const handleEnhanceVision = async () => {
+    if (!user) {
+      toast.error('You must be logged in to enhance vision');
+      return;
+    }
+
+    if (formData.selectedPersonaIndex === null || !formData.personas) {
+      toast.error('Please select a persona first');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const selectedPersona = formData.personas[formData.selectedPersonaIndex];
+      
+      const requestPayload = {
+        productName: formData.productName,
+        problemStatement: formData.problemStatement,
+        solution: formData.solution,
+        targetAudience: formData.targetAudience,
+        selectedPersona
+      };
+
+      // Log the OpenAI request
+      const logEntry: OpenAILogInsert = {
+        user_id: user.id,
+        request_type: 'enhance_vision',
+        model: 'gpt-4o',
+        request_payload: requestPayload as Json,
+        response_payload: null,
+        error: null,
+        input_tokens: null,
+        output_tokens: null
+      };
+
+      const { data: logData, error: logError } = await supabase
+        .from('openai_logs')
+        .insert(logEntry)
+        .select()
+        .single();
+
+      if (logError) {
+        throw new Error('Failed to create OpenAI log entry');
+      }
+
+      // Make the OpenAI call
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert product strategist specializing in refining product vision and problem-solution statements. Your task is to enhance the existing problem and solution statements by incorporating insights from the selected customer persona.
+
+Your goal is to make the statements more:
+- Precise and targeted
+- Emotionally resonant with the specific persona
+- Actionable and clear
+- Aligned with the persona's context and needs
+
+For each enhancement, provide a list of specific improvements made and explain how they better address the persona's needs.`
+          },
+          {
+            role: 'user',
+            content: `Please enhance the following problem and solution statements based on the selected customer persona:
+
+Product Name: ${formData.productName}
+Current Problem Statement: ${formData.problemStatement}
+Current Solution: ${formData.solution}
+
+Selected Persona:
+Name: ${selectedPersona.name}
+Overview: ${selectedPersona.overview}
+Top Pain Point: ${selectedPersona.topPainPoint}
+Biggest Frustration: ${selectedPersona.biggestFrustration}
+Current Solution: ${selectedPersona.currentSolution}
+Key Points:
+${selectedPersona.keyPoints.map(point => `- ${point}`).join('\n')}
+
+Return the response as a JSON object with this structure:
+{
+  "enhancedProblem": "Enhanced problem statement...",
+  "enhancedSolution": "Enhanced solution statement...",
+  "problemImprovements": [
+    "Specific improvement 1...",
+    "Specific improvement 2..."
+  ],
+  "solutionImprovements": [
+    "Specific improvement 1...",
+    "Specific improvement 2..."
+  ]
+}`
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: 'json_object' }
+      });
+
+      // Parse and validate the response
+      let result;
+      try {
+        result = JSON.parse(response.choices[0].message.content || '{}');
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', parseError);
+        throw new Error('Failed to parse the AI response. Please try again.');
+      }
+
+      // Validate the response structure
+      if (!result?.enhancedProblem || !result?.enhancedSolution) {
+        console.error('Invalid response structure:', result);
+        throw new Error('The AI response was not in the expected format. Please try again.');
+      }
+
+      // Update the OpenAI log with the response
+      const updatedLogEntry: Partial<OpenAILogInsert> = {
+        response_payload: response.choices[0].message.content as Json,
+        input_tokens: response.usage?.prompt_tokens ?? null,
+        output_tokens: response.usage?.completion_tokens ?? null
+      };
+
+      if (logData) {
+        await supabase
+          .from('openai_logs')
+          .update(updatedLogEntry)
+          .eq('id', logData.id);
+      }
+
+      // Update state with enhanced versions and set default selections
+      setFormData(prev => ({
+        ...prev,
+        step: 'vision',
+        enhancedProblem: result.enhancedProblem,
+        enhancedSolution: result.enhancedSolution,
+        problemImprovements: result.problemImprovements,
+        solutionImprovements: result.solutionImprovements,
+        selectedProblemVersion: 'enhanced',
+        selectedSolutionVersion: 'enhanced'
+      }));
+
+      toast.success('Successfully enhanced vision statements');
+    } catch (error) {
+      console.error('Error enhancing vision:', error);
+      toast.error('Failed to enhance vision statements. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container max-w-5xl py-8 space-y-16">
+    <div className="container py-8 space-y-16">
       {/* Header and Options Section */}
       <div ref={optionsRef} className="flex flex-col gap-8">
         <div className="flex items-center gap-4">
@@ -756,7 +943,7 @@ Return the response as a JSON object with exactly this structure:
                 <div className="rounded-full bg-primary/10 p-2.5">
                   <Sparkles className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle>Generate with AI</CardTitle>
+                <CardTitle>Generate PRD with AI</CardTitle>
               </div>
               <CardDescription className="text-base">
                 Fill in the key details about your product, and we'll help you generate a comprehensive PRD.
@@ -865,7 +1052,7 @@ Return the response as a JSON object with exactly this structure:
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                   <Sparkles className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle>Generate with AI</CardTitle>
+                <CardTitle>Generate PRD with AI</CardTitle>
               </div>
               <CardDescription className="text-base text-muted-foreground mt-1.5">
                 Fluxr will walk you through step by step to create a PRD.
@@ -1035,56 +1222,105 @@ Return the response as a JSON object with exactly this structure:
           {/* Customer Personas Section */}
           {formData.step === 'personas' && formData.personas && (
             <div ref={personasRef} className="flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between border-b pb-4">
-                <div className="space-y-1">
+              <Card className="shadow-sm border-muted/80">
+                <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                       <Users className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold tracking-tight">Customer Personas</h2>
-                      <p className="text-muted-foreground">Select the persona that best represents your target customer</p>
+                      <CardTitle>Customer Personas</CardTitle>
+                      <CardDescription className="text-base text-muted-foreground mt-1.5">
+                        Select the persona that best represents your target customer
+                      </CardDescription>
                     </div>
                   </div>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  className="gap-2 hover:bg-background w-fit"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Details
-                </Button>
-              </div>
-              
-              <div className="grid gap-6 md:grid-cols-3">
-                {formData.personas.map((persona, index) => (
-                  <PersonaCard
-                    key={index}
-                    persona={persona}
-                    isSelected={formData.selectedPersonaIndex === index}
-                    onClick={() => handlePersonaSelect(index)}
-                  />
-                ))}
-              </div>
-              
-              <div className="flex justify-end pt-4">
-                <Button
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      step: 'vision'
-                    }));
-                    // We'll implement the vision step next
-                  }}
-                  disabled={formData.selectedPersonaIndex === null}
-                  className="gap-2 shadow-sm hover:shadow-md transition-all"
-                >
-                  Continue to Vision
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="grid gap-6 md:grid-cols-3 w-[85%] mx-auto">
+                    {formData.personas.map((persona, index) => (
+                      <PersonaCard
+                        key={index}
+                        persona={persona}
+                        isSelected={formData.selectedPersonaIndex === index}
+                        onClick={() => handlePersonaSelect(index)}
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-end items-center gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleBack}
+                      className="gap-2 mr-auto hover:bg-background"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleGeneratePersonas}
+                      disabled={isLoading}
+                      className="gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Regenerating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="icon-button" />
+                          <span>Regenerate Personas</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={handleEnhanceVision}
+                      disabled={formData.selectedPersonaIndex === null || isLoading}
+                      className="gap-2 shadow-sm hover:shadow-md transition-all"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Enhancing...
+                        </>
+                      ) : (
+                        <>
+                          Continue
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+          )}
+
+          {/* Vision Refinement Section */}
+          {formData.step === 'vision' && (
+            <VisionRefinementView
+              originalProblem={formData.problemStatement}
+              enhancedProblem={formData.enhancedProblem!}
+              originalSolution={formData.solution}
+              enhancedSolution={formData.enhancedSolution!}
+              problemImprovements={formData.problemImprovements || []}
+              solutionImprovements={formData.solutionImprovements || []}
+              selectedProblemVersion={formData.selectedProblemVersion || 'enhanced'}
+              selectedSolutionVersion={formData.selectedSolutionVersion || 'enhanced'}
+              onProblemVersionChange={(version) => setFormData(prev => ({
+                ...prev,
+                selectedProblemVersion: version
+              }))}
+              onSolutionVersionChange={(version) => setFormData(prev => ({
+                ...prev,
+                selectedSolutionVersion: version
+              }))}
+              onBack={handleBack}
+              onNext={handleNext}
+              isLoading={isLoading}
+            />
           )}
         </div>
       )}

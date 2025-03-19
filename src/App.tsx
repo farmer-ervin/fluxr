@@ -31,6 +31,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/context/ThemeProvider';
 import { ProductDevelopment } from './pages/ProductDevelopment';
 import { CreateProduct } from './pages/CreateProduct';
+import { GeneratePRD } from './pages/GeneratePRD';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -306,6 +307,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <CreateProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product/generate-prd"
+          element={
+            <ProtectedRoute>
+              <GeneratePRD />
             </ProtectedRoute>
           }
         />
