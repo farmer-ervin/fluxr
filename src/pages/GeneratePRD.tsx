@@ -14,6 +14,7 @@ import { openai } from '@/lib/openai';
 import { supabase } from '@/lib/supabase';
 import { Database, Json } from '@/lib/database.types';
 import { VisionRefinementView } from '@/components/VisionRefinementView';
+import { FeatureGenerationView } from '@/components/FeatureGenerationView';
 
 // Define database types
 type Tables = Database['public']['Tables'];
@@ -48,6 +49,13 @@ interface FormData {
   solutionImprovements: string[] | null;
   selectedProblemVersion: 'original' | 'enhanced' | null;
   selectedSolutionVersion: 'original' | 'enhanced' | null;
+  generatedFeatures: {
+    id: string;
+    name: string;
+    description: string;
+    priority: 'must-have' | 'nice-to-have' | 'not-prioritized';
+    implementation_status: 'not_started' | 'in_progress' | 'completed';
+  }[] | null;
   id?: string; // For saving/resuming drafts
 }
 
@@ -262,6 +270,7 @@ export function GeneratePRD() {
     solutionImprovements: null,
     selectedProblemVersion: null,
     selectedSolutionVersion: null,
+    generatedFeatures: null,
     id: crypto.randomUUID() // Generate a unique ID for this draft
   });
 
@@ -628,6 +637,167 @@ Return the response as a JSON object with exactly this structure:
     }
   };
 
+  // Function to generate features
+  const generateFeatures = async () => {
+    if (!user) {
+      toast.error('You must be logged in to generate features');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Determine which problem and solution statements to use
+      const finalProblemStatement = formData.selectedProblemVersion === 'enhanced' && formData.enhancedProblem 
+        ? formData.enhancedProblem 
+        : formData.problemStatement;
+        
+      const finalSolution = formData.selectedSolutionVersion === 'enhanced' && formData.enhancedSolution 
+        ? formData.enhancedSolution 
+        : formData.solution;
+
+      // Get the selected persona
+      if (!formData.personas || formData.selectedPersonaIndex === null) {
+        throw new Error('No persona selected');
+      }
+      
+      const selectedPersona = formData.personas[formData.selectedPersonaIndex];
+      
+      // Build the request payload
+      const requestPayload = {
+        productName: formData.productName,
+        problemStatement: finalProblemStatement,
+        solution: finalSolution,
+        targetAudience: formData.targetAudience,
+        selectedPersona
+      };
+
+      // Log the OpenAI request
+      const logData: OpenAILogInsert = {
+        user_id: user.id,
+        request_type: 'generate_features',
+        model: 'gpt-4o',
+        request_payload: requestPayload as unknown as Json,
+        response_payload: null,
+        error: null,
+        input_tokens: null,
+        output_tokens: null
+      };
+
+      // Create log entry
+      const { data: logEntry, error: logError } = await supabase
+        .from('openai_logs')
+        .insert(logData)
+        .select()
+        .single();
+
+      if (logError) {
+        console.error('Failed to create OpenAI log entry:', logError);
+        // Continue anyway
+      }
+
+      // Make the OpenAI call
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an elite product strategist and PRD expert specializing in creating focused, impactful products. Your task is to analyze the product opportunity and define features for the MVP that delivers the maximum value with minimal complexity. MVP features are must haves, while other features are prioritized as nice to have or not prioritized.`
+          },
+          {
+            role: 'user',
+            content: `Help me generate features for the MVP version of this product that solves the problem for this customer persona.
+
+Product Name: ${formData.productName}
+Problem Statement: ${finalProblemStatement}
+Solution: ${finalSolution}
+Target Audience: ${formData.targetAudience}
+
+Selected Persona:
+Name: ${selectedPersona.name}
+Overview: ${selectedPersona.overview}
+Top Pain Point: ${selectedPersona.topPainPoint}
+Biggest Frustration: ${selectedPersona.biggestFrustration}
+Current Solution: ${selectedPersona.currentSolution}
+Key Points:
+${selectedPersona.keyPoints.map(point => `- ${point}`).join('\n')}
+
+Generate at least 15 features for this product. Features should include:
+1. Core MVP features that must be included (prioritized as "must-have")
+2. Important but not critical features for a later release (prioritized as "nice-to-have")
+3. Additional features that could be considered eventually (prioritized as "not-prioritized")
+
+Include features like authentication, database setup, and other technical requirements in addition to user-facing features.
+
+Return the response as a JSON array with this structure:
+[
+  {
+    "id": "unique-id",
+    "name": "Feature Name",
+    "description": "Multiple sentence feature description including key functionality and details needed to implement the feature.",
+    "priority": "must-have | nice-to-have | not-prioritized",
+    "implementation_status": "not_started"
+  }
+]`
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: 'json_object' }
+      });
+
+      // Parse and validate the response
+      let result;
+      try {
+        const content = response.choices[0].message.content || '{}';
+        result = JSON.parse(content);
+        // Check if the result is an array directly or needs to be extracted
+        const features = Array.isArray(result) ? result : (result.features || []);
+        
+        if (!Array.isArray(features) || features.length === 0) {
+          throw new Error('Invalid response format');
+        }
+        
+        // Ensure each feature has an id
+        const featuresWithIds = features.map(feature => ({
+          ...feature,
+          id: feature.id || crypto.randomUUID()
+        }));
+        
+        // Update the form data
+        setFormData(prev => ({
+          ...prev,
+          generatedFeatures: featuresWithIds
+        }));
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', parseError);
+        throw new Error('Failed to parse the AI response. Please try again.');
+      }
+
+      // Update the OpenAI log with the response if we have a log entry
+      if (logEntry) {
+        const updateData = {
+          response_payload: response.choices[0].message.content as unknown as Json,
+          input_tokens: response.usage?.prompt_tokens ?? null,
+          output_tokens: response.usage?.completion_tokens ?? null
+        };
+
+        await supabase
+          .from('openai_logs')
+          .update(updateData)
+          .eq('id', logEntry.id);
+      }
+
+      toast.success('Successfully generated features');
+      return true;
+    } catch (error) {
+      console.error('Error generating features:', error);
+      toast.error('Failed to generate features. Please try again.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handle progression to next step
   const handleNext = async () => {
     if (formData.step === 'details') {
@@ -663,10 +833,95 @@ Return the response as a JSON object with exactly this structure:
           ? prev.enhancedSolution 
           : prev.solution
       }));
+      
+      // Generate features
+      await generateFeatures();
     } else if (formData.step === 'features') {
       // Complete the PRD generation process
       toast.success("PRD generation completed!");
-      // Here you would normally save the final PRD or navigate to a summary/completion page
+      
+      // Prepare to save the PRD
+      if (user && formData.generatedFeatures) {
+        try {
+          // First create a product in the database
+          const { data: productData, error: productError } = await supabase
+            .from('products')
+            .insert({
+              name: formData.productName,
+              description: formData.problemStatement,
+              slug: formData.productName.toLowerCase().replace(/\s+/g, '-'),
+              created_by: user.id
+            })
+            .select()
+            .single();
+            
+          if (productError) throw productError;
+          
+          if (productData) {
+            // Add the user as a member of the product
+            await supabase
+              .from('product_members')
+              .insert({
+                product_id: productData.id,
+                user_id: user.id,
+                role: 'owner'
+              });
+            
+            // Create the PRD
+            const { data: prdData, error: prdError } = await supabase
+              .from('prds')
+              .insert({
+                product_id: productData.id,
+                problem: formData.problemStatement,
+                solution: formData.solution,
+                target_audience: formData.targetAudience
+              })
+              .select()
+              .single();
+              
+            if (prdError) throw prdError;
+            
+            // Save the features to the database
+            if (prdData) {
+              const featuresWithProductId = formData.generatedFeatures.map(feature => ({
+                ...feature,
+                product_id: productData.id
+              }));
+              
+              await supabase
+                .from('features')
+                .insert(featuresWithProductId);
+              
+              // Save the selected persona
+              if (formData.personas && formData.selectedPersonaIndex !== null) {
+                const selectedPersona = formData.personas[formData.selectedPersonaIndex];
+                
+                await supabase
+                  .from('customer_profiles')
+                  .insert({
+                    product_id: productData.id,
+                    name: selectedPersona.name,
+                    overview: selectedPersona.overview,
+                    is_selected: true,
+                    metadata: {
+                      topPainPoint: selectedPersona.topPainPoint,
+                      biggestFrustration: selectedPersona.biggestFrustration,
+                      currentSolution: selectedPersona.currentSolution,
+                      keyPoints: selectedPersona.keyPoints,
+                      scores: selectedPersona.scores
+                    }
+                  });
+              }
+              
+              // Navigate to the product page
+              navigate(`/product/${productData.slug}/prd`);
+            }
+          }
+        } catch (error) {
+          console.error('Error saving PRD:', error);
+          toast.error('Failed to save your PRD. Please try again.');
+        }
+      }
     }
   };
 
@@ -969,39 +1224,37 @@ Return the response as a JSON object with exactly this structure:
             )
           )}
 
-          {/* Placeholder for Feature Generation */}
+          {/* Feature Generation View */}
           {formData.step === 'features' && (
-            <Card className="shadow-sm border-muted/80">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                    <ListChecks className="h-5 w-5 text-primary" />
+            formData.generatedFeatures ? (
+              <FeatureGenerationView
+                features={formData.generatedFeatures}
+                isLoading={isLoading}
+                onBack={() => setFormData(prev => ({ ...prev, step: 'refine' }))}
+                onNext={handleNext}
+                onRegenerateFeatures={generateFeatures}
+              />
+            ) : (
+              <Card className="shadow-sm border-muted/80">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <ListChecks className="h-5 w-5 text-primary" />
+                    </div>
+                    <CardTitle>Generate Features</CardTitle>
                   </div>
-                  <CardTitle>Generate Features</CardTitle>
-                </div>
-                <CardDescription className="text-base text-muted-foreground mt-1.5">
-                  Generate and prioritize key features for your product.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setFormData(prev => ({ ...prev, step: 'refine' }))}
-                    className="gap-2 hover:bg-background"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                  </Button>
-                  <Button
-                    className="gap-2 shadow-sm hover:shadow-md transition-all"
-                  >
-                    Finish
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="text-base text-muted-foreground mt-1.5">
+                    We're generating features based on your product vision
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-3 text-muted-foreground">Generating features for your MVP...</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )
           )}
         </div>
       </div>
