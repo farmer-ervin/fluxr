@@ -11,8 +11,7 @@ interface Item {
   name: string;
   description?: string;
   priority?: string;
-  implementation_status?: string;
-  status?: string;
+  implementation_status: string;
   position?: number;
   type?: 'feature' | 'page' | 'bug' | 'task';
   bug_url?: string;
@@ -88,6 +87,27 @@ export function KanbanColumn({
     }
   };
 
+  const handleBugUpdate = async (bugId: string, updates: Partial<Item>) => {
+    try {
+      const { error } = await supabase
+        .from('bugs')
+        .update(updates)
+        .eq('id', bugId);
+      
+      if (error) {
+        console.error('Error updating bug:', error);
+        throw new Error('Failed to update bug');
+      }
+      
+      // If status is being updated, also call the status change handler
+      if (updates.implementation_status && onBugStatusChange) {
+        onBugStatusChange(bugId, updates.implementation_status);
+      }
+    } catch (error) {
+      console.error('Error in handleBugUpdate:', error);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 w-full h-full">
       <div className="flex items-center justify-between">
@@ -127,6 +147,7 @@ export function KanbanColumn({
                         index={index}
                         onStatusChange={onBugStatusChange}
                         onDelete={onDeleteBug}
+                        onEdit={handleBugUpdate}
                       />
                     ) : item.type === 'task' ? (
                       <TaskCard

@@ -4,7 +4,7 @@ export interface Bug {
   description: string;
   bug_url?: string;
   screenshot_url?: string;
-  status: BugStatus;
+  implementation_status: BugStatus;
   priority: BugPriority;
   position: number;
   product_id: string;

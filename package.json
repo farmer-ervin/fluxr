@@ -73,6 +73,9 @@
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/typography": "^0.5.16",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/lodash.debounce": "^4.0.9",
     "@types/mixpanel-browser": "^2.51.0",
     "@types/react": "^18.3.5",
@@ -84,6 +87,8 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
+    "happy-dom": "^17.4.4",
+    "jsdom": "^26.0.0",
     "knip": "^5.46.0",
     "netlify-cli": "^19.0.0",
     "postcss": "^8.4.35",
@@ -92,6 +97,7 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
+    "vite": "^5.4.2",
+    "vitest": "^3.0.9"
   }
 }

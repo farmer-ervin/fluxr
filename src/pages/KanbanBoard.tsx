@@ -12,8 +12,7 @@ interface KanbanItem {
   name: string;
   description?: string;
   priority?: string;
-  implementation_status?: string;
-  status?: string;
+  implementation_status: string;
   position?: number;
   type?: 'feature' | 'page' | 'bug' | 'task';
 }
