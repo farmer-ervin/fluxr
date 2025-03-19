@@ -195,7 +195,7 @@ export function KanbanColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex flex-col gap-3 min-h-[200px] p-2 rounded-md transition-colors ${
+            className={`flex flex-col gap-3 flex-grow min-h-[200px] p-2 rounded-md transition-colors ${
               snapshot.isDraggingOver ? 'bg-white/30 border-2 border-dashed border-gray-300' : 'border-2 border-transparent'
             }`}
           >
@@ -226,6 +226,7 @@ export function KanbanColumn({
                     ) : item.type === 'task' ? (
                       <TaskCard
                         task={item}
+                        index={index}
                         onStatusChange={onTaskStatusChange}
                         onDelete={onDeleteTask}
                         onEdit={handleTaskUpdate}
