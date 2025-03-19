@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -28,35 +28,350 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { AlertTriangle, Loader2, Upload, X } from 'lucide-react';
+import { uploadFile } from '@/lib/fileUpload';
 
-const formSchema = z.object({
+// Define separate schemas for different item types
+const baseSchema = {
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   priority: z.enum(['must-have', 'nice-to-have', 'not-prioritized']),
+};
+
+const featureSchema = z.object(baseSchema);
+const bugSchema = z.object({
+  ...baseSchema,
+  bug_url: z.string().optional(),
 });
+const taskSchema = z.object(baseSchema);
+
+const pageSchema = z.object({
+  ...baseSchema,
+  layout_description: z.string().optional(),
+  features: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof pageSchema>;
 
 interface KanbanDialogProps {
   type: 'feature' | 'page' | 'bug' | 'task';
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onSubmit: (data: any) => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-export function KanbanDialog({ type, isOpen, onClose, onSubmit }: KanbanDialogProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+export function KanbanDialog({ 
+  type, 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  isLoading = false,
+  error = null
+}: KanbanDialogProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<boolean>(false);
+
+  // For simple types, use react-hook-form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(
+      type === 'page' ? pageSchema : 
+      type === 'bug' ? bugSchema : 
+      featureSchema
+    ),
     defaultValues: {
       name: '',
       description: '',
       priority: 'not-prioritized',
+      layout_description: '',
+      features: '',
     },
   });
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onSubmit(data);
+  const handleSubmit = async (data: FormValues) => {
+    let processedData = { ...data };
+    
+    // Process features for page type
+    if (type === 'page' && data.features) {
+      processedData.features = data.features
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item !== '');
+    }
+    
+    // Handle file upload for bug type
+    if (type === 'bug' && selectedFile) {
+      setUploadProgress(true);
+      try {
+        const uploadedUrl = await uploadFile(selectedFile, 'bug-screenshots', 'bugs');
+        if (uploadedUrl) {
+          processedData.screenshot_url = uploadedUrl;
+        }
+      } catch (error) {
+        console.error('File upload error:', error);
+      } finally {
+        setUploadProgress(false);
+      }
+    }
+    
+    onSubmit(processedData);
     form.reset();
+    setSelectedFile(null);
   };
 
+  // Render specialized dialog for Pages
+  if (type === 'page') {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Page</DialogTitle>
+            <DialogDescription>
+              Update the page details below.
+            </DialogDescription>
+          </DialogHeader>
+
+          {error && (
+            <div className="bg-red-50 text-red-700 p-3 rounded-lg flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Page Name</Label>
+              <Input
+                id="name"
+                {...form.register('name')}
+                placeholder="e.g., Login Page"
+                required
+              />
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                {...form.register('description')}
+                placeholder="Describe the purpose and functionality of this page..."
+                rows={3}
+              />
+              {form.formState.errors.description && (
+                <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="layout_description">Layout Description</Label>
+              <Textarea
+                id="layout_description"
+                {...form.register('layout_description')}
+                placeholder="Describe the layout structure using design terminology..."
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="features">Features (comma-separated)</Label>
+              <Textarea
+                id="features"
+                {...form.register('features')}
+                placeholder="Login Form, Remember Me, Forgot Password..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select 
+                onValueChange={value => form.setValue('priority', value as 'must-have' | 'nice-to-have' | 'not-prioritized')} 
+                defaultValue={form.getValues('priority')}
+              >
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="must-have">Must Have</SelectItem>
+                  <SelectItem value="nice-to-have">Nice to Have</SelectItem>
+                  <SelectItem value="not-prioritized">Not Prioritized</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.priority && (
+                <p className="text-sm text-red-500">{form.formState.errors.priority.message}</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={form.handleSubmit(handleSubmit)} 
+              disabled={isLoading || !form.getValues('name')}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding...
+                </span>
+              ) : (
+                'Add Page'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Render specialized dialog for Bugs
+  if (type === 'bug') {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Bug</DialogTitle>
+            <DialogDescription>
+              Report a new bug by filling out the details below.
+            </DialogDescription>
+          </DialogHeader>
+
+          {error && (
+            <div className="bg-red-50 text-red-700 p-3 rounded-lg flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Bug Name</Label>
+              <Input
+                id="name"
+                {...form.register('name')}
+                placeholder="e.g., Login Form Validation Error"
+                required
+              />
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                {...form.register('description')}
+                placeholder="Describe the bug in detail..."
+                rows={3}
+              />
+              {form.formState.errors.description && (
+                <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bug_url">Bug URL</Label>
+              <Input
+                id="bug_url"
+                {...form.register('bug_url')}
+                placeholder="URL where the bug can be reproduced"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Screenshot</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('bug_screenshot')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {selectedFile ? selectedFile.name : 'Upload Screenshot'}
+                </Button>
+                {selectedFile && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedFile(null)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              <input
+                type="file"
+                id="bug_screenshot"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setSelectedFile(e.target.files[0]);
+                  }
+                }}
+                className="hidden"
+              />
+              {selectedFile && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">{selectedFile.name}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select 
+                onValueChange={value => form.setValue('priority', value as 'must-have' | 'nice-to-have' | 'not-prioritized')} 
+                defaultValue={form.getValues('priority')}
+              >
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="must-have">Must Have</SelectItem>
+                  <SelectItem value="nice-to-have">Nice to Have</SelectItem>
+                  <SelectItem value="not-prioritized">Not Prioritized</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.priority && (
+                <p className="text-sm text-red-500">{form.formState.errors.priority.message}</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose} disabled={isLoading || uploadProgress}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={form.handleSubmit(handleSubmit)} 
+              disabled={isLoading || uploadProgress || !form.getValues('name')}
+            >
+              {isLoading || uploadProgress ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {uploadProgress ? 'Uploading...' : 'Adding...'}
+                </span>
+              ) : (
+                'Add Bug'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Default dialog for feature, task
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -66,6 +381,14 @@ export function KanbanDialog({ type, isOpen, onClose, onSubmit }: KanbanDialogPr
             Fill in the details for the new {type}.
           </DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-3 rounded-lg flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            <p>{error}</p>
+          </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
@@ -121,7 +444,19 @@ export function KanbanDialog({ type, isOpen, onClose, onSubmit }: KanbanDialogPr
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add {type}</Button>
+              <Button variant="outline" onClick={onClose} disabled={isLoading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Adding...
+                  </span>
+                ) : (
+                  `Add ${type.charAt(0).toUpperCase() + type.slice(1)}`
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

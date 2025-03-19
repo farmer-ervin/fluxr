@@ -22,6 +22,8 @@ interface KanbanFormData {
   name: string;
   description: string;
   priority: 'must-have' | 'nice-to-have' | 'not-prioritized';
+  layout_description?: string;
+  features?: string[];
 }
 
 export function KanbanBoard() {
@@ -41,10 +43,27 @@ export function KanbanBoard() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<'feature' | 'page' | 'bug' | 'task'>('feature');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
   const handleAddItem = (type: 'feature' | 'page' | 'bug' | 'task') => {
     setDialogType(type);
+    setDialogError(null);
     setIsAddDialogOpen(true);
+  };
+
+  const handleSubmit = async (data: KanbanFormData) => {
+    try {
+      setIsSubmitting(true);
+      setDialogError(null);
+      await addItem({ ...data, type: dialogType });
+      setIsAddDialogOpen(false);
+    } catch (err) {
+      console.error('Error adding item:', err);
+      setDialogError(err instanceof Error ? err.message : 'Failed to add item');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -107,10 +126,9 @@ export function KanbanBoard() {
         type={dialogType}
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
-        onSubmit={(data: KanbanFormData) => {
-          addItem({ ...data, type: dialogType });
-          setIsAddDialogOpen(false);
-        }}
+        onSubmit={handleSubmit}
+        isLoading={isSubmitting}
+        error={dialogError}
       />
     </div>
   );
