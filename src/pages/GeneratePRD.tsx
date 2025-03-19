@@ -15,6 +15,21 @@ import { supabase } from '@/lib/supabase';
 import { Database, Json } from '@/lib/database.types';
 import { VisionRefinementView } from '@/components/VisionRefinementView';
 import { FeatureGenerationView } from '@/components/FeatureGenerationView';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useSupabase } from '@/lib/supabase/supabase-provider';
+import { useToast } from '@/components/ui/use-toast';
+import { useUser } from '@/lib/providers/user-provider';
+import { ProblemDefinitionView } from '@/components/ProblemDefinitionView';
+import { SolutionDefinitionView } from '@/components/SolutionDefinitionView';
+import { UserFlowGenerationView } from '@/components/UserFlowGenerationView';
+import { TechnicalRequirementsView } from '@/components/TechnicalRequirementsView';
+import { PRDPreviewView } from '@/components/PRDPreviewView';
+import { generateFeaturesPRD } from '@/lib/openai/generate-features';
+import { generateUserFlowsPRD } from '@/lib/openai/generate-user-flows';
+import { generateTechnicalRequirementsPRD } from '@/lib/openai/generate-technical-requirements';
+import { generatePRDPreview } from '@/lib/openai/generate-prd-preview';
 
 // Define database types
 type Tables = Database['public']['Tables'];
@@ -32,6 +47,14 @@ interface CustomerPersona {
     urgencyToSolve: number;
     abilityToPay: number;
   };
+}
+
+interface Feature {
+  id: string;
+  name: string;
+  description: string;
+  priority: 'must-have' | 'nice-to-have' | 'not-prioritized';
+  implementation_status: 'not_started' | 'in_progress' | 'completed';
 }
 
 // Update FormData interface to include vision enhancement fields
@@ -254,6 +277,8 @@ export function GeneratePRD() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
 
   // Form data with state management
   const [formData, setFormData] = useState<FormData>({
@@ -940,6 +965,31 @@ Return the response as a JSON array with this structure:
     navigate('/product/create');
   };
 
+  const handleUpdateFeature = (updatedFeature: Feature) => {
+    setFormData(prev => ({
+      ...prev,
+      generatedFeatures: prev.generatedFeatures?.map(feature =>
+        feature.id === updatedFeature.id ? updatedFeature : feature
+      ) || []
+    }));
+  };
+
+  const handleDeleteFeature = (featureId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      generatedFeatures: prev.generatedFeatures?.filter(feature =>
+        feature.id !== featureId
+      ) || []
+    }));
+  };
+
+  const handleAddFeature = (newFeature: Feature) => {
+    setFormData(prev => ({
+      ...prev,
+      generatedFeatures: [...(prev.generatedFeatures || []), newFeature]
+    }));
+  };
+
   return (
     <div className="container py-8">
       {/* Header */}
@@ -1233,6 +1283,9 @@ Return the response as a JSON array with this structure:
                 onBack={() => setFormData(prev => ({ ...prev, step: 'refine' }))}
                 onNext={handleNext}
                 onRegenerateFeatures={generateFeatures}
+                onUpdateFeature={handleUpdateFeature}
+                onDeleteFeature={handleDeleteFeature}
+                onAddFeature={handleAddFeature}
               />
             ) : (
               <Card className="shadow-sm border-muted/80">
