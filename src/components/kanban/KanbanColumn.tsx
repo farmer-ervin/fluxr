@@ -68,9 +68,26 @@ export function KanbanColumn({
 
   const handlePageUpdate = async (pageId: string, updates: Partial<Item>) => {
     try {
+      // Only include fields that exist in the flow_pages table
+      const validUpdates = {
+        name: updates.name,
+        description: updates.description,
+        implementation_status: updates.implementation_status,
+        position: updates.position,
+        priority: updates.priority,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined fields
+      Object.keys(validUpdates).forEach(key => {
+        if (validUpdates[key as keyof typeof validUpdates] === undefined) {
+          delete validUpdates[key as keyof typeof validUpdates];
+        }
+      });
+
       const { error } = await supabase
         .from('flow_pages')
-        .update(updates)
+        .update(validUpdates)
         .eq('id', pageId);
       
       if (error) {
@@ -89,9 +106,28 @@ export function KanbanColumn({
 
   const handleBugUpdate = async (bugId: string, updates: Partial<Item>) => {
     try {
+      // Only include fields that exist in the bugs table
+      const validUpdates = {
+        name: updates.name,
+        description: updates.description,
+        implementation_status: updates.implementation_status,
+        position: updates.position,
+        priority: updates.priority,
+        bug_url: updates.bug_url,
+        screenshot_url: updates.screenshot_url,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined fields
+      Object.keys(validUpdates).forEach(key => {
+        if (validUpdates[key as keyof typeof validUpdates] === undefined) {
+          delete validUpdates[key as keyof typeof validUpdates];
+        }
+      });
+
       const { error } = await supabase
         .from('bugs')
-        .update(updates)
+        .update(validUpdates)
         .eq('id', bugId);
       
       if (error) {
@@ -105,6 +141,44 @@ export function KanbanColumn({
       }
     } catch (error) {
       console.error('Error in handleBugUpdate:', error);
+    }
+  };
+
+  const handleTaskUpdate = async (taskId: string, updates: Partial<Item>) => {
+    try {
+      // Only include fields that exist in the tasks table
+      const validUpdates = {
+        name: updates.name,
+        description: updates.description,
+        implementation_status: updates.implementation_status,
+        position: updates.position,
+        priority: updates.priority,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined fields
+      Object.keys(validUpdates).forEach(key => {
+        if (validUpdates[key as keyof typeof validUpdates] === undefined) {
+          delete validUpdates[key as keyof typeof validUpdates];
+        }
+      });
+
+      const { error } = await supabase
+        .from('tasks')
+        .update(validUpdates)
+        .eq('id', taskId);
+      
+      if (error) {
+        console.error('Error updating task:', error);
+        throw new Error('Failed to update task');
+      }
+      
+      // If status is being updated, also call the status change handler
+      if (updates.implementation_status && onTaskStatusChange) {
+        onTaskStatusChange(taskId, updates.implementation_status);
+      }
+    } catch (error) {
+      console.error('Error in handleTaskUpdate:', error);
     }
   };
 
@@ -154,6 +228,7 @@ export function KanbanColumn({
                         task={item}
                         onStatusChange={onTaskStatusChange}
                         onDelete={onDeleteTask}
+                        onEdit={handleTaskUpdate}
                       />
                     ) : item.type === 'page' ? (
                       <KanbanCard

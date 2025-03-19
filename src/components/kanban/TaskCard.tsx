@@ -41,8 +41,12 @@ export function TaskCard({
 
   const handleEdit = async (taskData: Partial<Task>) => {
     if (onEdit) {
-      await onEdit(task.id, taskData);
-      setIsEditing(false);
+      try {
+        await onEdit(task.id, taskData);
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Error updating task:', error);
+      }
     }
   };
 
@@ -90,12 +94,8 @@ export function TaskCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${priorityClass}`}>
+          <span className={`text-xs px-2 py-1 rounded-full ${priorityClass}`}>
             {priorityText}
-          </span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <Tag className="w-3 h-3 mr-1" />
-            Task
           </span>
         </div>
       </div>
@@ -130,14 +130,16 @@ export function TaskCard({
         </DialogContent>
       </Dialog>
 
-      <EditTaskDialog
-        isOpen={isEditing}
-        onClose={() => setIsEditing(false)}
-        onSave={handleEdit}
-        isLoading={isLoading || false}
-        error={error || null}
-        task={task}
-      />
+      {isEditing && (
+        <EditTaskDialog
+          task={task}
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
+          onSubmit={handleEdit}
+          isLoading={isLoading}
+          error={error}
+        />
+      )}
     </>
   );
 } 

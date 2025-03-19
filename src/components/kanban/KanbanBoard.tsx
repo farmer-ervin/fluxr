@@ -23,31 +23,10 @@ interface KanbanBoardProps {
   loading: boolean;
   onUpdateItem: (itemId: string, updates: Partial<Item>) => Promise<void>;
   onDeleteItem: (itemId: string) => Promise<void>;
+  onDragEnd: (result: any) => Promise<void>;
 }
 
-export function KanbanBoard({ items, loading, onUpdateItem, onDeleteItem }: KanbanBoardProps) {
-  const handleDragEnd = async (result: any) => {
-    if (!result.destination) return;
-
-    const { source, destination, draggableId } = result;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-
-    try {
-      const item = items.find(i => i.id === draggableId);
-      if (!item) return;
-
-      const updates = {
-        ...item,
-        position: destination.index,
-        implementation_status: destination.droppableId
-      };
-
-      await onUpdateItem(draggableId, updates);
-    } catch (error) {
-      console.error('Error updating item:', error);
-    }
-  };
-
+export function KanbanBoard({ items, loading, onUpdateItem, onDeleteItem, onDragEnd }: KanbanBoardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -60,7 +39,7 @@ export function KanbanBoard({ items, loading, onUpdateItem, onDeleteItem }: Kanb
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex flex-col lg:flex-row gap-4 md:gap-6 overflow-x-auto">
         {COLUMNS.map((column) => (
           <div 

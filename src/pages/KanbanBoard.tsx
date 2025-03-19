@@ -65,6 +65,32 @@ export function KanbanBoard() {
     }
   };
 
+  const handleDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const { source, destination, draggableId } = result;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    try {
+      const item = items.find(i => i.id === draggableId);
+      if (!item) return;
+
+      const updates: Partial<KanbanItem> = {
+        position: destination.index,
+        implementation_status: destination.droppableId
+      };
+
+      // Remove type field for page, task, and bug updates as it doesn't exist in their tables
+      if (item.type !== 'page' && item.type !== 'task' && item.type !== 'bug') {
+        updates.type = item.type;
+      }
+
+      await updateItem(draggableId, updates);
+    } catch (error) {
+      console.error('Error updating item:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -119,6 +145,7 @@ export function KanbanBoard() {
         loading={loading}
         onUpdateItem={updateItem}
         onDeleteItem={deleteItem}
+        onDragEnd={handleDragEnd}
       />
 
       <KanbanDialog
