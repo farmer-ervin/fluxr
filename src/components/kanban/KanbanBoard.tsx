@@ -38,10 +38,9 @@ export function KanbanBoard({ items, loading, onUpdateItem, onDeleteItem }: Kanb
       if (!item) return;
 
       const updates = {
-        ...(item.type === 'feature' || item.type === 'page' 
-          ? { implementation_status: destination.droppableId }
-          : { status: destination.droppableId }),
-        position: destination.index
+        ...item,
+        position: destination.index,
+        implementation_status: destination.droppableId
       };
 
       await onUpdateItem(draggableId, updates);
@@ -72,10 +71,7 @@ export function KanbanBoard({ items, loading, onUpdateItem, onDeleteItem }: Kanb
             <KanbanColumn
               title={column.title}
               droppableId={column.id}
-              items={items.filter(item => 
-                item.implementation_status === column.id || 
-                item.status === column.id
-              )}
+              items={items.filter(item => item.implementation_status === column.id)}
               onFeatureStatusChange={(featureId, newStatus) => 
                 onUpdateItem(featureId, { implementation_status: newStatus })
               }
@@ -83,10 +79,10 @@ export function KanbanBoard({ items, loading, onUpdateItem, onDeleteItem }: Kanb
                 onUpdateItem(pageId, { implementation_status: newStatus })
               }
               onBugStatusChange={(bugId, newStatus) => 
-                onUpdateItem(bugId, { status: newStatus })
+                onUpdateItem(bugId, { implementation_status: newStatus })
               }
               onTaskStatusChange={(taskId, newStatus) => 
-                onUpdateItem(taskId, { status: newStatus })
+                onUpdateItem(taskId, { implementation_status: newStatus })
               }
               onDeleteFeature={onDeleteItem}
               onDeletePage={onDeleteItem}

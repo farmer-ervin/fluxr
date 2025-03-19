@@ -8,8 +8,7 @@ interface Item {
   name: string;
   description?: string;
   priority?: string;
-  implementation_status?: string;
-  status?: string;
+  implementation_status: string;
   position?: number;
   type?: 'feature' | 'page' | 'bug' | 'task';
 }
@@ -119,13 +118,42 @@ export function useKanban() {
 
       if (!product) throw new Error('Product not found');
 
+      // Base item data common to all types
       const itemData = {
-        ...newItem,
+        name: newItem.name,
+        description: newItem.description,
         product_id: product.id,
         implementation_status: 'not_started',
-        status: 'not_started',
-        position: items.length
+        priority: newItem.priority || 'not-prioritized'
       };
+
+      // Add type-specific fields
+      const itemDataWithTypeSpecificFields = (() => {
+        switch (newItem.type) {
+          case 'feature':
+            return {
+              ...itemData,
+              position: items.filter(i => i.type === 'feature').length
+            };
+          case 'page':
+            return {
+              ...itemData,
+              position: 0 // Pages use position_x/y for flow diagram
+            };
+          case 'bug':
+            return {
+              ...itemData,
+              position: items.filter(i => i.type === 'bug').length
+            };
+          case 'task':
+            return {
+              ...itemData,
+              position: items.filter(i => i.type === 'task').length
+            };
+          default:
+            return itemData;
+        }
+      })();
 
       let data;
       let error;
@@ -134,28 +162,28 @@ export function useKanban() {
         case 'feature':
           ({ data, error } = await supabase
             .from('features')
-            .insert([itemData])
+            .insert([itemDataWithTypeSpecificFields])
             .select()
             .single());
           break;
         case 'page':
           ({ data, error } = await supabase
             .from('flow_pages')
-            .insert([itemData])
+            .insert([itemDataWithTypeSpecificFields])
             .select()
             .single());
           break;
         case 'bug':
           ({ data, error } = await supabase
             .from('bugs')
-            .insert([itemData])
+            .insert([itemDataWithTypeSpecificFields])
             .select()
             .single());
           break;
         case 'task':
           ({ data, error } = await supabase
             .from('tasks')
-            .insert([itemData])
+            .insert([itemDataWithTypeSpecificFields])
             .select()
             .single());
           break;
