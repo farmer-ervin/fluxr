@@ -39,6 +39,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { Label } from "@/components/ui/label"
 
 interface Product {
   id: string;
@@ -97,6 +98,7 @@ export function AppSidebar({
         const { data, error } = await supabase
           .from('products')
           .select('*')
+          .eq('user_id', user?.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -108,8 +110,10 @@ export function AppSidebar({
       }
     }
 
-    fetchProducts();
-  }, []);
+    if (user?.id) {
+      fetchProducts();
+    }
+  }, [user?.id]);
   
   // Define navigation items based on context
   const navItems = React.useMemo(() => {
@@ -258,13 +262,13 @@ export function AppSidebar({
 
   return (
     <Sidebar variant="floating" {...props}>
-      <SidebarHeader className="pb-4">
+      <SidebarHeader className="pb-6">
         {/* Fluxr Logo */}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/" className="flex items-center">
-                <span className="text-xl font-bold text-primary">Fluxr</span>
+                <span className="text-3xl font-bold text-primary">Fluxr</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -272,9 +276,10 @@ export function AppSidebar({
       </SidebarHeader>
       
       {/* Product Dropdown */}
-      <SidebarContent className="pb-0">
+      <SidebarContent>
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem className="px-4">
+            <Label className="text-sm font-medium text-muted-foreground mb-3">Current Product:</Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
@@ -319,7 +324,7 @@ export function AppSidebar({
         </SidebarMenu>
 
         {/* Navigation Links */}
-        <SidebarMenu className="mt-2">
+        <SidebarMenu className="mt-4">
           {navItems.map((item) => (
             <SidebarMenuItem key={item.label} className="py-0">
               {item.subItems ? (
@@ -407,35 +412,35 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarContent>
       
-      <SidebarFooter className="space-y-4">
+      <SidebarFooter className="space-y-1">
         {/* Quick Note Input */}
         {isProductContext && (
           <>
-            <Separator className="mx-2" />
+            <Separator className="mx-1" />
             <SidebarMenu>
-              <SidebarMenuItem className="px-2 py-2">
-                <div className="w-full space-y-2">
+              <SidebarMenuItem className="px-1">
+                <div className="w-full space-y-1">
                   <Input
                     type="text"
                     value={quickNote}
                     onChange={(e) => setQuickNote(e.target.value)}
-                    placeholder="Enter a note"
-                    className="w-full h-9 text-sm"
+                    placeholder="Type something..."
+                    className="w-full h-8 text-sm bg-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                   />
                   <Button 
                     onClick={handleAddNote}
                     disabled={isSaving}
-                    className="w-full h-9 text-sm"
+                    className="w-full h-8 text-sm"
                     size="sm"
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                         Saving
                       </>
                     ) : (
                       <>
-                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <PlusCircle className="mr-1 h-4 w-4" />
                         Add Note
                       </>
                     )}
@@ -446,13 +451,13 @@ export function AppSidebar({
           </>
         )}
         
-        <Separator className="mx-2" />
+        <Separator className="mx-1" />
         
         {/* Support and Feedback Links */}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="transition-colors hover:text-primary hover:bg-primary/10">
-              <Link to="/support" className="flex items-center gap-2">
+              <Link to="/support" className="flex items-center gap-1">
                 <HelpCircle className="h-4 w-4" />
                 <span>Support</span>
               </Link>
@@ -460,7 +465,7 @@ export function AppSidebar({
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="transition-colors hover:text-primary hover:bg-primary/10">
-              <Link to="/feedback" className="flex items-center gap-2">
+              <Link to="/feedback" className="flex items-center gap-1">
                 <svg 
                   width="16" 
                   height="16" 
@@ -483,7 +488,7 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
         
-        <Separator className="mx-2" />
+        <Separator className="mx-1" />
         
         {/* Simplified Profile Section */}
         <SidebarMenu>
