@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Trash2, Rocket, Settings, Search } from 'lucide-react';
+import { FileText, Trash2, Rocket, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useProduct } from '@/components/context/ProductContext';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { ProductDescription } from '@/components/ProductDescription';
 import { Card, CardHeader, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
@@ -36,7 +35,6 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function fetchProducts() {
@@ -82,11 +80,6 @@ export function Dashboard() {
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   if (!user) {
     navigate('/');
     return null;
@@ -130,18 +123,6 @@ export function Dashboard() {
         </Card>
       </section>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="search-container w-full">
-          <Search className="search-icon" />
-          <Input
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-        </div>
-      </div>
-
       {error && (
         toast.error(error)
       )}
@@ -158,7 +139,7 @@ export function Dashboard() {
         </Card>
       ) : (
         <div className="grid-cards">
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <Card key={product.id} className="hover-blue">
               <CardHeader>
                 <div className="flex justify-between items-start">
