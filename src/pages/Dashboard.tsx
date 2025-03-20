@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Trash2, Rocket, Settings, Search } from 'lucide-react';
+import { FileText, Trash2, Rocket, Settings, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useProduct } from '@/components/context/ProductContext';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -131,7 +131,7 @@ export function Dashboard() {
       </section>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="search-container w-full sm:w-64">
+        <div className="search-container w-full">
           <Search className="search-icon" />
           <Input
             placeholder="Search products..."
@@ -140,13 +140,6 @@ export function Dashboard() {
             className="search-input"
           />
         </div>
-        <Button
-          onClick={() => navigate('/product/new')}
-          className="flex items-center gap-2 w-full sm:w-auto"
-        >
-          <Plus className="icon-button" />
-          New Product
-        </Button>
       </div>
 
       {error && (
@@ -161,13 +154,6 @@ export function Dashboard() {
             <p className="text-muted-foreground mb-6">
               Create your first product to get started with PRD generation.
             </p>
-            <Button
-              onClick={() => navigate('/product/new')}
-              className="flex items-center gap-2 mx-auto"
-            >
-              <Plus className="icon-button" />
-              Create First Product
-            </Button>
           </CardContent>
         </Card>
       ) : (
