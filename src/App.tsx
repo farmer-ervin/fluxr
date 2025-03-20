@@ -26,6 +26,12 @@ import { clearSubscriptionCache } from '@/lib/subscription';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useNavigationTracking } from '@/hooks/useNavigationTracking';
+import TestPage from './pages/test';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/context/ThemeProvider';
+import { ProductDevelopment } from './pages/ProductDevelopment';
+import { CreateProduct } from './pages/CreateProduct';
+import { GeneratePRD } from './pages/GeneratePRD';
 
 function PaymentReturn() {
   const navigate = useNavigate();
@@ -283,6 +289,7 @@ function AppRoutes() {
   return (
     <Layout>
       <Routes>
+        <Route path="/test" element={<TestPage />} />
         <Route
           path="/"
           element={
@@ -296,10 +303,34 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/product/create"
+          element={
+            <ProtectedRoute>
+              <CreateProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product/generate-prd"
+          element={
+            <ProtectedRoute>
+              <GeneratePRD />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/product/new"
           element={
             <ProtectedRoute>
               <ProductDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product-development"
+          element={
+            <ProtectedRoute>
+              <ProductDevelopment />
             </ProtectedRoute>
           }
         />
@@ -362,6 +393,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <ProfileSettings />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/payment" element={<PaymentWall />} />
       </Routes>
     </Layout>
@@ -371,15 +410,22 @@ function AppRoutes() {
 function App() {
   return (
     <HelmetProvider>
-      <Router>
-        <Elements stripe={stripePromise}>
+      <ThemeProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
           <AuthProvider>
             <ProductProvider>
-              <AppRoutes />
+              <Elements stripe={stripePromise}>
+                <AppRoutes />
+              </Elements>
             </ProductProvider>
           </AuthProvider>
-        </Elements>
-      </Router>
+        </Router>
+      </ThemeProvider>
     </HelmetProvider>
   );
 }

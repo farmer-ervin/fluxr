@@ -137,9 +137,27 @@ export function KanbanCard({ feature, index, onUpdate, onDelete }: KanbanCardPro
             {feature.priority.replace(/-/g, ' ')}
           </span>
         )}
-        {feature.implementation_status && (
+        {feature.implementation_status && feature.type === 'bug' && (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[feature.implementation_status] || 'bg-gray-100 text-gray-800'}`}>
             {feature.implementation_status.replace(/_/g, ' ')}
+          </span>
+        )}
+        {feature.type === 'task' && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <Tag className="w-3 h-3 mr-1" />
+            Task
+          </span>
+        )}
+        {feature.type === 'page' && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Tag className="w-3 h-3 mr-1" />
+            Page
+          </span>
+        )}
+        {feature.type === 'feature' && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <Tag className="w-3 h-3 mr-1" />
+            Feature
           </span>
         )}
         {feature.screenshot_url && (

@@ -16,7 +16,7 @@ interface BugCardProps {
   index: number;
   onStatusChange?: (bugId: string, newStatus: string) => void;
   onDelete?: (bugId: string) => void;
-  onEdit?: (bug: Bug) => Promise<void>;
+  onEdit?: (bugId: string, updates: Partial<Bug>) => Promise<void>;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -33,8 +33,14 @@ export function BugCard({ bug, index, onStatusChange, onDelete, onEdit, isLoadin
 
   const handleEdit = async (bugData: Partial<Bug>) => {
     if (onEdit) {
-      await onEdit(bugData as Bug);
+      await onEdit(bug.id, bugData);
       setIsEditing(false);
+    }
+  };
+
+  const handleStatusChange = (newStatus: string) => {
+    if (onStatusChange) {
+      onStatusChange(bug.id, newStatus);
     }
   };
 

@@ -48,7 +48,7 @@ Indexes:
 - `description` (text)
 - `bug_url` (text)
 - `screenshot_url` (text)
-- `status` (text, default 'not_started')
+- `implementation_status` (text, default 'not_started')
 - `priority` (text, default 'not-prioritized')
 - `position` (integer)
 - `created_at` (timestamp with time zone, default now())
@@ -155,6 +155,116 @@ Indexes:
 - Primary key on `id`
 - Foreign key on `user_id`
 
+### flow_pages
+- `id` (uuid primary key, default gen_random_uuid())
+- `product_id` (uuid, foreign key references products(id))
+- `name` (text, not null)
+- `description` (text)
+- `position_x` (double precision, default 0)
+- `position_y` (double precision, default 0)
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone, default now())
+- `layout_description` (text)
+- `features` (jsonb, default '[]')
+- `implementation_status` (text, default 'not_started')
+
+Indexes:
+- Primary key on `id`
+- Foreign key on `product_id`
+
+### flow_connections
+- `id` (uuid primary key, default gen_random_uuid())
+- `source_id` (uuid, foreign key references flow_pages(id))
+- `target_id` (uuid, foreign key references flow_pages(id))
+- `created_at` (timestamp with time zone, default now())
+- `product_id` (uuid, foreign key references products(id))
+
+Indexes:
+- Primary key on `id`
+- Foreign key on `source_id`
+- Foreign key on `target_id`
+- Foreign key on `product_id`
+
+### openai_logs
+- `id` (uuid primary key, default gen_random_uuid())
+- `user_id` (uuid, foreign key references users(id))
+- `request_type` (text, not null)
+- `request_payload` (jsonb, not null)
+- `response_payload` (jsonb)
+- `error` (text)
+- `created_at` (timestamp with time zone, default now())
+- `model` (text, default 'gpt-4')
+- `input_tokens` (integer)
+- `output_tokens` (integer)
+
+Indexes:
+- Primary key on `id`
+- Foreign key on `user_id`
+
+### prds
+- `id` (uuid primary key, default gen_random_uuid())
+- `product_id` (uuid, foreign key references products(id))
+- `problem` (text, default '')
+- `solution` (text, default '')
+- `target_audience` (text, default '')
+- `tech_stack` (text, default '')
+- `success_metrics` (text, default '')
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone, default now())
+- `custom_sections` (jsonb, default '{}')
+
+Indexes:
+- Primary key on `id`
+- Foreign key on `product_id`
+
+### product_prompts
+- `id` (uuid primary key)
+- `product_id` (uuid, foreign key references products(id))
+- `name` (text)
+- `description` (text)
+- `template` (text)
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone)
+- `category` (text)
+
+Indexes:
+- Primary key on `id`
+- Foreign key on `product_id`
+- Index on `category`
+
+### subscription_plans
+- `id` (uuid primary key)
+- `name` (text, not null)
+- `description` (text)
+- `price` (numeric, not null)
+- `currency` (text, default 'usd')
+- `interval` (text, not null)
+- `stripe_price_id` (text, unique)
+- `stripe_product_id` (text, unique)
+- `features` (jsonb, default '[]')
+- `is_active` (boolean, default true)
+- `trial_period_days` (integer)
+
+Indexes:
+- Primary key on `id`
+- Unique index on `stripe_price_id`
+- Unique index on `stripe_product_id`
+- Index on `is_active`
+
+### notes
+- `id` (uuid primary key)
+- `user_id` (uuid, foreign key references users(id))
+- `product_id` (uuid, foreign key references products(id))
+- `content` (text)
+- `created_at` (timestamp with time zone, default now())
+- `updated_at` (timestamp with time zone)
+- `title` (text)
+
+Indexes:
+- Primary key on `id`
+- Foreign key on `user_id`
+- Foreign key on `product_id`
+
 ## Row Level Security (RLS) Policies
 
 ### Users
@@ -202,9 +312,7 @@ Indexes:
    - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = customer_profiles.product_id AND products.user_id = auth.uid())))
 
 
-=======
 ### Bugs 
-
 
 1. Users can view bugs for their own products
    - Action: SELECT
@@ -319,3 +427,46 @@ Indexes:
    - Roles: authenticated
    - Definition: null
    - Check: true
+
+
+### Flow Pages
+
+1. Users can manage own flow pages
+   - Action: ALL
+   - Roles: authenticated
+   - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = flow_pages.product_id AND products.user_id = auth.uid())))
+
+### Flow Connections
+
+1. Users can manage own flow connections
+   - Action: ALL
+   - Roles: authenticated
+   - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = flow_connections.product_id AND products.user_id = auth.uid())))
+
+### OpenAI Logs
+
+1. Users can view own OpenAI logs
+   - Action: SELECT
+   - Roles: authenticated
+   - Definition: (user_id = auth.uid())
+
+2. Users can create OpenAI logs
+   - Action: INSERT
+   - Roles: authenticated
+   - Definition: null
+   - Check: (user_id = auth.uid())
+
+### PRDs
+
+1. Users can manage own PRDs
+   - Action: ALL
+   - Roles: authenticated
+   - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = prds.product_id AND products.user_id = auth.uid())))
+
+### Product Prompts
+
+1. Users can manage own product prompts
+   - Action: ALL
+   - Roles: authenticated
+   - Definition: (EXISTS (SELECT 1 FROM products WHERE (products.id = product_prompts.product_id AND products.user_id = auth.uid())))
+

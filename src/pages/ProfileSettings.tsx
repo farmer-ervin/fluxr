@@ -101,6 +101,16 @@ export function ProfileSettings() {
 
       if (updateError) throw updateError;
 
+      // Update auth metadata to reflect the new full name
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { full_name: profile.full_name }
+      });
+
+      if (metadataError) throw metadataError;
+
+      // Force a session refresh to update the user object in the auth context
+      const { data: sessionData } = await supabase.auth.getSession();
+
       setSuccess('Profile updated successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -163,6 +173,16 @@ export function ProfileSettings() {
 
       if (updateError) throw updateError;
 
+      // Update auth metadata to reflect the new avatar
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      if (metadataError) throw metadataError;
+
+      // Force a session refresh to update the user object in the auth context
+      const { data: sessionData } = await supabase.auth.getSession();
+      
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
       setSuccess('Avatar updated successfully');
       setTimeout(() => setSuccess(null), 3000);
@@ -287,7 +307,7 @@ export function ProfileSettings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="w-full space-y-6">
       <PageTitle title="Profile Settings" />
       
       <div className="space-y-6">
@@ -307,10 +327,10 @@ export function ProfileSettings() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <div className="flex items-center gap-6">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                 {profile.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -339,7 +359,7 @@ export function ProfileSettings() {
               />
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="space-y-2">
@@ -349,10 +369,10 @@ export function ProfileSettings() {
                       type="email"
                       value={user?.email || ''}
                       disabled
-                      className="bg-gray-50"
+                      className="bg-gray-50 w-full"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -382,7 +402,7 @@ export function ProfileSettings() {
                         placeholder="Enter new email"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -419,13 +439,14 @@ export function ProfileSettings() {
               value={profile.full_name || ''}
               onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
               placeholder="Enter your full name"
+              className="w-full"
             />
           </div>
 
           <Button
             onClick={handleUpdateProfile}
             disabled={saving}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             {saving ? (
               <span className="flex items-center gap-2">
@@ -438,12 +459,12 @@ export function ProfileSettings() {
           </Button>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Subscription</h2>
           
           {subscription ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <p className="font-medium text-gray-900">
                     {subscription.status === 'lifetime' ? 'Lifetime Access' : 'Active Subscription'}
@@ -458,7 +479,7 @@ export function ProfileSettings() {
                   <Button
                     variant="outline"
                     onClick={handleUpdateBilling}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 w-full sm:w-auto"
                   >
                     <CreditCard className="w-4 h-4" />
                     Manage Billing
@@ -480,6 +501,7 @@ export function ProfileSettings() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password"
+                    className="w-full"
                   />
                 </div>
                 <div className="space-y-2">
@@ -490,9 +512,10 @@ export function ProfileSettings() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
+                    className="w-full"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     onClick={() => {

@@ -11,8 +11,7 @@ interface Item {
   name: string;
   description?: string;
   priority?: string;
-  implementation_status?: string;
-  status?: string;
+  implementation_status: string;
   position?: number;
   type?: 'feature' | 'page' | 'bug' | 'task';
   bug_url?: string;
@@ -69,9 +68,26 @@ export function KanbanColumn({
 
   const handlePageUpdate = async (pageId: string, updates: Partial<Item>) => {
     try {
+      // Only include fields that exist in the flow_pages table
+      const validUpdates = {
+        name: updates.name,
+        description: updates.description,
+        implementation_status: updates.implementation_status,
+        position: updates.position,
+        priority: updates.priority,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined fields
+      Object.keys(validUpdates).forEach(key => {
+        if (validUpdates[key as keyof typeof validUpdates] === undefined) {
+          delete validUpdates[key as keyof typeof validUpdates];
+        }
+      });
+
       const { error } = await supabase
         .from('flow_pages')
-        .update(updates)
+        .update(validUpdates)
         .eq('id', pageId);
       
       if (error) {
@@ -88,6 +104,84 @@ export function KanbanColumn({
     }
   };
 
+  const handleBugUpdate = async (bugId: string, updates: Partial<Item>) => {
+    try {
+      // Only include fields that exist in the bugs table
+      const validUpdates = {
+        name: updates.name,
+        description: updates.description,
+        implementation_status: updates.implementation_status,
+        position: updates.position,
+        priority: updates.priority,
+        bug_url: updates.bug_url,
+        screenshot_url: updates.screenshot_url,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined fields
+      Object.keys(validUpdates).forEach(key => {
+        if (validUpdates[key as keyof typeof validUpdates] === undefined) {
+          delete validUpdates[key as keyof typeof validUpdates];
+        }
+      });
+
+      const { error } = await supabase
+        .from('bugs')
+        .update(validUpdates)
+        .eq('id', bugId);
+      
+      if (error) {
+        console.error('Error updating bug:', error);
+        throw new Error('Failed to update bug');
+      }
+      
+      // If status is being updated, also call the status change handler
+      if (updates.implementation_status && onBugStatusChange) {
+        onBugStatusChange(bugId, updates.implementation_status);
+      }
+    } catch (error) {
+      console.error('Error in handleBugUpdate:', error);
+    }
+  };
+
+  const handleTaskUpdate = async (taskId: string, updates: Partial<Item>) => {
+    try {
+      // Only include fields that exist in the tasks table
+      const validUpdates = {
+        name: updates.name,
+        description: updates.description,
+        implementation_status: updates.implementation_status,
+        position: updates.position,
+        priority: updates.priority,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined fields
+      Object.keys(validUpdates).forEach(key => {
+        if (validUpdates[key as keyof typeof validUpdates] === undefined) {
+          delete validUpdates[key as keyof typeof validUpdates];
+        }
+      });
+
+      const { error } = await supabase
+        .from('tasks')
+        .update(validUpdates)
+        .eq('id', taskId);
+      
+      if (error) {
+        console.error('Error updating task:', error);
+        throw new Error('Failed to update task');
+      }
+      
+      // If status is being updated, also call the status change handler
+      if (updates.implementation_status && onTaskStatusChange) {
+        onTaskStatusChange(taskId, updates.implementation_status);
+      }
+    } catch (error) {
+      console.error('Error in handleTaskUpdate:', error);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 w-full h-full">
       <div className="flex items-center justify-between">
@@ -101,7 +195,7 @@ export function KanbanColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex flex-col gap-3 min-h-[200px] p-2 rounded-md transition-colors ${
+            className={`flex flex-col gap-3 flex-grow min-h-[200px] p-2 rounded-md transition-colors ${
               snapshot.isDraggingOver ? 'bg-white/30 border-2 border-dashed border-gray-300' : 'border-2 border-transparent'
             }`}
           >
@@ -127,12 +221,15 @@ export function KanbanColumn({
                         index={index}
                         onStatusChange={onBugStatusChange}
                         onDelete={onDeleteBug}
+                        onEdit={handleBugUpdate}
                       />
                     ) : item.type === 'task' ? (
                       <TaskCard
                         task={item}
+                        index={index}
                         onStatusChange={onTaskStatusChange}
                         onDelete={onDeleteTask}
+                        onEdit={handleTaskUpdate}
                       />
                     ) : item.type === 'page' ? (
                       <KanbanCard
