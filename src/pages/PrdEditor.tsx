@@ -942,6 +942,61 @@ export function PrdEditor() {
     }
   }, [location.state]);
 
+  const handleExportPrd = () => {
+    if (!productDetails || !prdData) return;
+
+    // Format the PRD content
+    const content = [
+      `Product Name: ${productDetails.name}`,
+      `Product Description: ${productDetails.description || 'N/A'}`,
+      '\n--- Problem ---',
+      prdData.problem || 'N/A',
+      '\n--- Solution ---',
+      prdData.solution || 'N/A',
+      '\n--- Target Audience ---',
+      prdData.target_audience || 'N/A',
+      '\n--- Features ---'
+    ];
+
+    // Add features if they exist
+    const featuresSection = sections.find(s => s.id === 'features');
+    if (featuresSection) {
+      try {
+        const featureData = JSON.parse(featuresSection.content);
+        featureData.forEach((bucket: any) => {
+          if (bucket.features && bucket.features.length > 0) {
+            bucket.features.forEach((feature: any) => {
+              content.push(`\n• ${feature.name}`);
+              if (feature.description) {
+                content.push(`  ${feature.description}`);
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error parsing features:', error);
+      }
+    }
+
+    // Create the file content
+    const fileContent = content.join('\n');
+
+    // Create a blob and download link
+    const blob = new Blob([fileContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${productDetails.name.toLowerCase().replace(/\s+/g, '-')}-prd.txt`;
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -998,7 +1053,7 @@ export function PrdEditor() {
                     <Upload className="mr-2 h-4 w-4" />
                     Import PRD
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPrd}>
                     <FileText className="mr-2 h-4 w-4" />
                     Export PRD
                   </DropdownMenuItem>
