@@ -41,7 +41,9 @@ const baseSchema = {
 
 const featureSchema = z.object(baseSchema);
 const bugSchema = z.object({
-  ...baseSchema,
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().min(1, 'Description is required'),
+  priority: z.enum(['must-have', 'nice-to-have', 'not-prioritized']).optional(),
   bug_url: z.string().optional(),
 });
 const taskSchema = z.object(baseSchema);
@@ -312,7 +314,7 @@ export function KanbanDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Screenshot</Label>
+              <Label>Screenshot (Optional)</Label>
               <div className="flex items-center gap-4">
                 <Button
                   type="button"
@@ -379,7 +381,7 @@ export function KanbanDialog({
             </Button>
             <Button 
               onClick={form.handleSubmit(handleSubmit)} 
-              disabled={isLoading || uploadProgress || !form.getValues('name')}
+              disabled={isLoading || uploadProgress || !form.getValues('name') || !form.getValues('description')}
             >
               {isLoading || uploadProgress ? (
                 <span className="flex items-center gap-2">
