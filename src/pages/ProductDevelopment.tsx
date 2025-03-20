@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { SearchInput } from '@/components/SearchInput';
 import { cn, stripHtml } from '@/lib/utils';
 import { useProduct } from '@/components/context/ProductContext';
 
@@ -275,28 +276,12 @@ export function ProductDevelopment() {
 
         {/* Search and Filtering */}
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative w-full sm:w-72">
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 border rounded-md"
-            />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-2.5 top-2.5 h-5 w-5 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
+          <SearchInput
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full sm:w-72"
+          />
           
           <div className="flex items-center gap-2 ml-auto">
             <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>

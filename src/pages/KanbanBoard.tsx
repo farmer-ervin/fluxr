@@ -32,9 +32,11 @@ export function KanbanBoard() {
     error,
     filters,
     activeFilters,
+    searchQuery,
     onTypeFilterChange,
     onPriorityFilterChange,
     onClearFilters,
+    onSearchChange,
     addItem,
     updateItem,
     deleteItem,
@@ -138,6 +140,8 @@ export function KanbanBoard() {
         onPriorityFilterChange={onPriorityFilterChange}
         onClearFilters={onClearFilters}
         activeFilters={activeFilters}
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
       />
 
       <KanbanBoardComponent

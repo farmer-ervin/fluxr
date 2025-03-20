@@ -47,7 +47,6 @@ export function KanbanFilters({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
           className={activeFilters > 0 ? "border-brand-purple text-brand-purple" : ""}
         >
           <Filter className="w-4 h-4 mr-2" />
