@@ -80,6 +80,12 @@ export function Dashboard() {
     }
   };
 
+  const getFirstName = () => {
+    const fullName = user?.user_metadata?.full_name;
+    if (!fullName) return 'there';  // Default fallback if no name is set
+    return fullName.split(' ')[0];  // Get the first name
+  };
+
   if (!user) {
     navigate('/');
     return null;
@@ -96,7 +102,7 @@ export function Dashboard() {
   return (
     <div className="page-container">
       <PageHeader
-        title={`Welcome, ${user?.email}`}
+        title={`Welcome, ${getFirstName()}!`}
         description="Manage your product development process"
       />
 
