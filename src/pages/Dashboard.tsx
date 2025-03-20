@@ -140,13 +140,6 @@ export function Dashboard() {
             className="search-input"
           />
         </div>
-        <Button
-          onClick={() => navigate('/product/new')}
-          className="flex items-center gap-2 w-full sm:w-auto"
-        >
-          <Plus className="icon-button" />
-          New Product
-        </Button>
       </div>
 
       {error && (
@@ -162,11 +155,11 @@ export function Dashboard() {
               Create your first product to get started with PRD generation.
             </p>
             <Button
-              onClick={() => navigate('/product/new')}
+              onClick={() => navigate('/product/create')}
               className="flex items-center gap-2 mx-auto"
             >
               <Plus className="icon-button" />
-              Create First Product
+              Create Product
             </Button>
           </CardContent>
         </Card>
