@@ -28,6 +28,7 @@ export function useKanban() {
     types: new Set<string>(),
     priorities: new Set<string>()
   });
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilters, setActiveFilters] = useState<number>(0);
 
   useEffect(() => {
@@ -333,27 +334,41 @@ export function useKanban() {
     });
   };
 
+  const onSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
   return {
     items: items.filter(item => {
-      if (filters.types.size === 0 && filters.priorities.size === 0) {
-        return true;
-      }
-
+      // First apply type and priority filters
       const passesTypeFilter = filters.types.size === 0 || 
                            (item.type && filters.types.has(item.type));
       
       const passesPriorityFilter = filters.priorities.size === 0 || 
                                (item.priority && filters.priorities.has(item.priority));
       
-      return passesTypeFilter && passesPriorityFilter;
+      const passesBasicFilters = passesTypeFilter && passesPriorityFilter;
+      
+      // Then apply search filter if it exists
+      if (!passesBasicFilters) return false;
+      
+      if (!searchQuery.trim()) return true;
+      
+      const query = searchQuery.toLowerCase();
+      return (
+        (item.name && item.name.toLowerCase().includes(query)) || 
+        (item.description && item.description.toLowerCase().includes(query))
+      );
     }),
     loading,
     error,
     filters,
     activeFilters,
+    searchQuery,
     onTypeFilterChange,
     onPriorityFilterChange,
     onClearFilters,
+    onSearchChange,
     addItem,
     updateItem,
     deleteItem,
