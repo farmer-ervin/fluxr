@@ -47,7 +47,9 @@ const bugSchema = z.object({
 const taskSchema = z.object(baseSchema);
 
 const pageSchema = z.object({
-  ...baseSchema,
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().min(1, 'Description is required'),
+  priority: z.enum(['must-have', 'nice-to-have', 'not-prioritized']).optional(),
   layout_description: z.string().optional(),
   features: z.string().optional(),
 });
@@ -140,92 +142,115 @@ export function KanbanDialog({
             </div>
           )}
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Page Name</Label>
-              <Input
-                id="name"
-                {...form.register('name')}
-                placeholder="e.g., Login Page"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Page Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Login Page" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {form.formState.errors.name && (
-                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                {...form.register('description')}
-                placeholder="Describe the purpose and functionality of this page..."
-                rows={3}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe the purpose and functionality of this page..."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {form.formState.errors.description && (
-                <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="layout_description">Layout Description</Label>
-              <Textarea
-                id="layout_description"
-                {...form.register('layout_description')}
-                placeholder="Describe the layout structure using design terminology..."
-                rows={3}
+              <FormField
+                control={form.control}
+                name="layout_description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Layout Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe the layout structure using design terminology..."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="features">Features (comma-separated)</Label>
-              <Textarea
-                id="features"
-                {...form.register('features')}
-                placeholder="Login Form, Remember Me, Forgot Password..."
-                rows={2}
+              <FormField
+                control={form.control}
+                name="features"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Features (Optional, comma-separated)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Login Form, Remember Me, Forgot Password..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select 
-                onValueChange={value => form.setValue('priority', value as 'must-have' | 'nice-to-have' | 'not-prioritized')} 
-                defaultValue={form.getValues('priority')}
-              >
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="must-have">Must Have</SelectItem>
-                  <SelectItem value="nice-to-have">Nice to Have</SelectItem>
-                  <SelectItem value="not-prioritized">Not Prioritized</SelectItem>
-                </SelectContent>
-              </Select>
-              {form.formState.errors.priority && (
-                <p className="text-sm text-red-500">{form.formState.errors.priority.message}</p>
-              )}
-            </div>
-          </div>
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="must-have">Must Have</SelectItem>
+                        <SelectItem value="nice-to-have">Nice to Have</SelectItem>
+                        <SelectItem value="not-prioritized">Not Prioritized</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={form.handleSubmit(handleSubmit)} 
-              disabled={isLoading || !form.getValues('name')}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Adding...
-                </span>
-              ) : (
-                'Add Page'
-              )}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={onClose} disabled={isLoading}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Adding...
+                    </span>
+                  ) : (
+                    'Add Page'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     );
