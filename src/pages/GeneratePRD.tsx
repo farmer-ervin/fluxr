@@ -25,6 +25,7 @@ import { SolutionDefinitionView } from '@/components/SolutionDefinitionView';
 import { UserFlowGenerationView } from '@/components/UserFlowGenerationView';
 import { TechnicalRequirementsView } from '@/components/TechnicalRequirementsView';
 import { PRDPreviewView } from '@/components/PRDPreviewView';
+import { extractFirstParagraph } from '@/lib/utils/transformers';
 
 // Define database types
 type Tables = Database['public']['Tables'];
@@ -871,7 +872,7 @@ Return the response as a JSON array with this structure:
             .from('products')
             .insert({
               name: formData.productName,
-              description: formData.problemStatement,
+              description: extractFirstParagraph(formData.problemStatement),
               slug: formData.productName.toLowerCase().replace(/\s+/g, '-'),
               user_id: user.id
             })
