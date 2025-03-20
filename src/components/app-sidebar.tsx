@@ -311,13 +311,6 @@ export function AppSidebar({
                     </div>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/product/new" className="cursor-pointer">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create New Product
-                  </Link>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
