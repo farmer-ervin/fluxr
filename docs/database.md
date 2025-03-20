@@ -48,7 +48,7 @@ Indexes:
 - `description` (text)
 - `bug_url` (text)
 - `screenshot_url` (text)
-- `status` (text, default 'not_started')
+- `implementation_status` (text, default 'not_started')
 - `priority` (text, default 'not-prioritized')
 - `position` (integer)
 - `created_at` (timestamp with time zone, default now())
