@@ -191,46 +191,40 @@ function ProfileCard({
 }
 
 // Add this helper function before the CustomerProfiles component
-function transformProfileToHtml(profile: CustomerProfile): string {
+function transformProfileToHtml(profile: CustomerPersona): string {
   return `
-<h3><strong>${profile.name}<h3><strong>
+<div class="persona">
+  <h3><strong>${profile.name}</strong></h3>
 
-<div class="overview">
-  <p>${profile.overview.paragraph1}</p>
-  <p>${profile.overview.paragraph2}</p>
-  <p>${profile.overview.paragraph3}</p>
-</div>
+  <div class="overview">
+    <p>${profile.overview}</p>
+  </div>
 
-<h3>Background</h3>
-<ul>
-  <li><strong>Role:</strong> ${profile.background.role}</li>
-  <li><strong>Industry:</strong> ${profile.background.industry}</li>
-  <li><strong>Company:</strong> ${profile.background.companySize} • ${profile.background.companyType}</li>
-</ul>
+  <div class="key-points">
+    <h4>Key Points</h4>
+    <ul>
+      ${profile.keyPoints.map(point => `<li>${point}</li>`).join('\n      ')}
+    </ul>
+  </div>
 
-<h3>Daily Responsibilities</h3>
-<ul>
-  ${profile.background.dailyResponsibilities.map(resp => `<li>${resp}</li>`).join('\n  ')}
-</ul>
+  <div class="problems">
+    <h4>Problems & Solutions</h4>
+    <ul>
+      <li><strong>Top Pain Point:</strong> ${profile.topPainPoint}</li>
+      <li><strong>Biggest Frustration:</strong> ${profile.biggestFrustration}</li>
+      <li><strong>Current Solution:</strong> ${profile.currentSolution}</li>
+    </ul>
+  </div>
 
-<h3>Current Tools</h3>
-<ul>
-  ${profile.background.currentTools.map(tool => `<li>${tool}</li>`).join('\n  ')}
-</ul>
-
-<h3>Problems & Pain Points</h3>
-<p><strong>Biggest Frustration:</strong> ${profile.problems.biggestFrustration}</p>
-<p><strong>Pain Points:</strong> ${profile.problems.painPoints}</p>
-
-<h3>Manual Tasks</h3>
-<ul>
-  ${profile.problems.manualTasks.map(task => `<li>${task}</li>`).join('\n  ')}
-</ul>
-
-<h3>Inefficiencies</h3>
-<ul>
-  ${profile.problems.inefficiencies.map(inefficiency => `<li>${inefficiency}</li>`).join('\n  ')}
-</ul>`;
+  <div class="scores">
+    <h4>Persona Fit</h4>
+    <ul>
+      <li><strong>Problem Match:</strong> ${profile.scores.problemMatch}/5</li>
+      <li><strong>Urgency to Solve:</strong> ${profile.scores.urgencyToSolve}/5</li>
+      <li><strong>Ability to Pay:</strong> ${profile.scores.abilityToPay}/5</li>
+    </ul>
+  </div>
+</div>`;
 }
 
 export function CustomerProfiles() {
