@@ -586,7 +586,7 @@ For each persona, provide:
    - Urgency to Solve
    - Ability to Pay
 
-The average of the profile scores cannot be the same for all personas.
+The average of the scores cannot be the same for any twopersonas.
 
 Return the response as a JSON object with exactly this structure:
 {

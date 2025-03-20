@@ -1,0 +1,48 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Technical stack documentation for the project
+---
+
+# Technical stack for the project
+
+## Frontend
+- **React 18** with TypeScript
+- **Vite** as the build tool
+- **TailwindCSS** for styling
+- **Radix UI** and **shadcn/ui** for component library
+- **React Router** for routing
+- **React Hook Form** for form handling
+- **Zod** for schema validation
+- **Vitest** for testing
+
+## Styling and Components
+- Reference [test.tsx](mdc:src/pages/test.tsx), [tailwind.config.js](mdc:tailwind.config.js), and [index.css](mdc:src/index.css).
+- Use ShadCN/UI components with the appropriate styling whenever possible.
+
+## Backend
+- **Supabase** for backend services including:
+  - PostgreSQL database
+  - Authentication
+  - Edge Functions (serverless)
+  - Real-time subscriptions
+- **OpenAI** integration for AI features
+
+## Database
+- **PostgreSQL** (via Supabase)
+- Separate environments for dev, test, and prod
+- Database migrations for version control
+
+## Deployment & Infrastructure
+- **Netlify** for frontend hosting
+- **Supabase** for backend infrastructure
+- Environment-based configuration (`.env`)
+
+## Development Tools
+- **TypeScript** for type safety
+- **ESLint** for code linting
+- **Prettier** for code formatting
+- **Git** for version control 

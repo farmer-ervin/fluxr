@@ -240,6 +240,58 @@ function PersonaCard({
   );
 }
 
+/**
+ * Generates a unique slug for a product
+ * Uses check-and-increment strategy: first tries the base slug,
+ * then adds numeric suffixes until a unique slug is found
+ */
+const generateUniqueSlug = async (productName: string): Promise<string> => {
+  // Generate the base slug
+  const baseSlug = productName.trim().toLowerCase().replace(/\s+/g, '-');
+  
+  // Check if the base slug exists
+  let attemptCount = 0;
+  const MAX_ATTEMPTS = 100; // Safety limit
+  let slugToTry = baseSlug;
+  let isUnique = false;
+  
+  while (!isUnique && attemptCount < MAX_ATTEMPTS) {
+    try {
+      // Check if the current slug attempt exists in the database
+      const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .match({ slug: slugToTry });
+      
+      if (error) {
+        console.error('Error checking slug uniqueness:', error);
+        // Fall back to timestamp approach if there's a database error
+        return `${baseSlug}-${Date.now()}`;
+      }
+      
+      // If count is 0, the slug is unique
+      if (count === 0) {
+        isUnique = true;
+      } else {
+        // Increment counter and try again
+        attemptCount++;
+        slugToTry = `${baseSlug}-${attemptCount}`;
+      }
+    } catch (err) {
+      console.error('Error in slug generation:', err);
+      // Fall back to timestamp approach if there's an error
+      return `${baseSlug}-${Date.now()}`;
+    }
+  }
+  
+  // If we hit the max attempts, fall back to timestamp approach
+  if (attemptCount >= MAX_ATTEMPTS) {
+    return `${baseSlug}-${Date.now()}`;
+  }
+  
+  return slugToTry;
+};
+
 export function CreateProduct() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -351,6 +403,23 @@ export function CreateProduct() {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Check if product name already exists by checking the base slug
+      const baseSlug = productName.trim().toLowerCase().replace(/\s+/g, '-');
+      const { count, error: slugCheckError } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .match({ slug: baseSlug });
+
+      if (slugCheckError) {
+        throw new Error('Failed to check product name availability');
+      }
+
+      if (count && count > 0) {
+        setError('Product name already exists. Please change the product name and try again.');
+        setIsLoading(false);
+        return;
+      }
 
       // Log the OpenAI call
       const response = await openai.chat.completions.create({
@@ -480,7 +549,7 @@ export function CreateProduct() {
 
       const { data: logData, error: logError } = await supabase
         .from('openai_logs')
-        .insert(logEntry)
+        .insert([logEntry] as any)
         .select()
         .single();
 
@@ -488,21 +557,24 @@ export function CreateProduct() {
         throw new Error('Failed to create OpenAI log entry');
       }
 
+      // Generate a unique slug for the product
+      const uniqueSlug = await generateUniqueSlug(productName.trim());
+
       // Create product
       const productEntry: ProductInsert = {
         name: productName.trim(),
         description: parsedData.product_description || '',
         user_id: user.id,
-        slug: productName.trim().toLowerCase().replace(/\s+/g, '-')
+        slug: uniqueSlug
       };
 
       const { data: productData, error: productError } = await supabase
         .from('products')
-        .insert(productEntry)
+        .insert([productEntry] as any)
         .select()
         .single();
 
-      if (productError || !productData?.id) {
+      if (productError || !productData) {
         throw new Error('Failed to create product');
       }
 
@@ -513,13 +585,12 @@ export function CreateProduct() {
         solution: parsedData.solution || '',
         target_audience: parsedData.target_audience || '',
         tech_stack: '',
-        success_metrics: '',
-        custom_sections: {}
+        success_metrics: ''
       };
 
       const { data: prdData, error: prdError } = await supabase
         .from('prds')
-        .insert(prdEntry)
+        .insert([prdEntry] as any)
         .select()
         .single();
 
@@ -528,19 +599,20 @@ export function CreateProduct() {
       }
 
       // Create features
-      if (parsedData.features && Array.isArray(parsedData.features)) {
-        const features: FeatureInsert[] = parsedData.features.map((feature: any) => ({
+      if (parsedData.features && Array.isArray(parsedData.features) && productData) {
+        const features: FeatureInsert[] = parsedData.features.map((feature: any, index: number) => ({
           product_id: productData.id,
           name: feature.name || '',
           description: feature.description || null,
           priority: (feature.priority || 'not-prioritized') as FeatureInsert['priority'],
-          implementation_status: 'not_started'
+          implementation_status: 'not_started',
+          position: index // Use the index as position to maintain original order
         }));
 
         if (features.length > 0) {
           const { error: featuresError } = await supabase
             .from('features')
-            .insert(features);
+            .insert(features as any);
           
           if (featuresError) {
             console.error('Failed to create features:', featuresError);
@@ -549,7 +621,7 @@ export function CreateProduct() {
       }
 
       // Navigate to the PRD editor
-      if (productData?.slug) {
+      if (productData && 'slug' in productData) {
         navigate(`/product/${productData.slug}/prd`);
       }
 
@@ -595,7 +667,7 @@ export function CreateProduct() {
 
       const { data: logData, error: logError } = await supabase
         .from('openai_logs')
-        .insert(logEntry)
+        .insert([logEntry] as any)
         .select()
         .single();
 
@@ -658,16 +730,16 @@ Return the response as a JSON object with exactly this structure:
       });
       
       // Update the OpenAI log with the response
-      const updatedLogEntry: Partial<OpenAILogInsert> = {
+      const updatedLogEntry = {
         response_payload: response.choices[0].message.content as Json,
         input_tokens: response.usage?.prompt_tokens ?? null,
         output_tokens: response.usage?.completion_tokens ?? null
       };
 
-      if (logData) {
+      if (logData && typeof logData === 'object' && 'id' in logData && logData.id) {
         await supabase
           .from('openai_logs')
-          .update(updatedLogEntry)
+          .update(updatedLogEntry as any)
           .eq('id', logData.id);
       }
 
