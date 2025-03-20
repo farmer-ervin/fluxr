@@ -25,7 +25,6 @@ import {
 import { SaveIndicator, SaveStatus } from '../components/SaveIndicator';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { FeatureBuckets } from '../components/FeatureBuckets';
-import { AiDialog } from '../components/AiDialog';
 import { EditableField } from '../components/EditableField';
 import { EditableList } from '../components/EditableList';
 import { AutoTextarea } from '@/components/ui/auto-textarea';
@@ -716,10 +715,11 @@ export function PrdEditor() {
   const handlePrdParsed = (parsedData: ParsedPrdData) => {
     if (!prdData || !productDetails) return;
     
-    // Create updates object for the database
+    // Track successful PRD upload
+    trackSuccessfulPRDUpload(JSON.stringify(parsedData).length);
+    
     const updates: Partial<PRDData> = {};
     
-    // Update standard sections
     if (parsedData.problem) {
       updates.problem = parsedData.problem;
     }
@@ -935,62 +935,12 @@ export function PrdEditor() {
     };
   }, []);
 
-  // Handler for AI-generated content
-  const handleAiGenerated = (data: any) => {
-    if (!prdData) return;
-    
-    // Create updates object for the database
-    const updates: Partial<PRDData> = {};
-    
-    // Update standard sections if present in the data
-    if (data.problem) {
-      updates.problem = data.problem;
+  // Remove AI-related tracking functions
+  useEffect(() => {
+    if (location.state?.mvpData) {
+      // Remove this effect as it's no longer needed
     }
-    
-    if (data.solution) {
-      updates.solution = data.solution;
-    }
-    
-    if (data.target_audience) {
-      updates.target_audience = data.target_audience;
-    }
-    
-    if (data.tech_stack) {
-      updates.tech_stack = data.tech_stack;
-    }
-    
-    if (data.success_metrics) {
-      updates.success_metrics = data.success_metrics;
-    }
-    
-    // Update the PRD data in the database
-    if (Object.keys(updates).length > 0) {
-      setPrdData(prev => prev ? { ...prev, ...updates } : null);
-      debouncedPrdUpdate(prdData.id, updates);
-    
-      // Update sections in state
-      setSections(prev => 
-        prev.map(section => {
-          if (section.id === 'problem' && data.problem) {
-            return { ...section, content: data.problem };
-          }
-          if (section.id === 'solution' && data.solution) {
-            return { ...section, content: data.solution };
-          }
-          if (section.id === 'target_audience' && data.target_audience) {
-            return { ...section, content: data.target_audience };
-          }
-          if (section.id === 'tech_stack' && data.tech_stack) {
-            return { ...section, content: data.tech_stack };
-          }
-          if (section.id === 'success_metrics' && data.success_metrics) {
-            return { ...section, content: data.success_metrics };
-          }
-          return section;
-        })
-      );
-    }
-  };
+  }, [location.state]);
 
   if (loading) {
     return (
@@ -1055,17 +1005,6 @@ export function PrdEditor() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <AiDialog
-              productData={{
-                name: productDetails?.name || '',
-                description: productDetails?.description || '',
-                problem: prdData?.problem || '',
-                solution: prdData?.solution || '',
-                target_audience: prdData?.target_audience || '',
-              }}
-              sections={sections.slice(1)}
-              onAiGenerated={handleAiGenerated}
-            />
           </div>
         </div>
       </PageHeader>
