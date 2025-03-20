@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Trash2, Rocket, Settings } from 'lucide-react';
+import { FileText, Trash2, Rocket, Settings, Users, FileCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useProduct } from '@/components/context/ProductContext';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -106,7 +106,7 @@ export function Dashboard() {
         description="Manage your product development process"
       />
 
-      {/* Ship It Demo Card */}
+      {/* Product Development Steps */}
       <section className="section-space">
         <Card className="ship-it-card">
           <div className="flex-stack">
@@ -119,11 +119,34 @@ export function Dashboard() {
             <p className="section-description">
               Stay focused on your goals, and launch your product faster than ever.
             </p>
-            <div className="tip-card">
-              <p className="tip-text">
-                <span className="tip-label">Pro Tip:</span> 
-                Create your first product to get started
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-base font-medium">Create/Upload PRD</h4>
+                  <p className="text-sm text-muted-foreground">Define your product requirements</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-base font-medium">Generate User Flows</h4>
+                  <p className="text-sm text-muted-foreground">Map out user journeys</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <FileCheck className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-base font-medium">Track Development</h4>
+                  <p className="text-sm text-muted-foreground">Manage features & tasks</p>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
@@ -141,6 +164,13 @@ export function Dashboard() {
             <p className="text-muted-foreground mb-6">
               Create your first product to get started with PRD generation.
             </p>
+            <Button
+              variant="default"
+              onClick={() => navigate('/product/create')}
+              className="mx-auto"
+            >
+              Create Product
+            </Button>
           </CardContent>
         </Card>
       ) : (
