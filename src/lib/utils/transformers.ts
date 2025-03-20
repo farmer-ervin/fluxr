@@ -28,7 +28,7 @@ export function transformPersonaToHtml(persona: CustomerPersona): string {
   return `
 <div class="persona">
   <div class="persona-header">
-    <h3 class="persona-name">${persona.name}</h3>
+    <h3 class="persona-name"><strong>${persona.name}</strong></h3>
   </div>
 
   <div class="persona-overview">
@@ -36,14 +36,14 @@ export function transformPersonaToHtml(persona: CustomerPersona): string {
   </div>
 
   <div class="persona-key-points">
-    <h4>Key Points</h4>
+    <h4><strong>Key Points</strong></h4>
     <ul>
       ${persona.keyPoints.map((point: string) => `<li>${point}</li>`).join('\n      ')}
     </ul>
   </div>
 
   <div class="persona-problems">
-    <h4>Problems & Solutions</h4>
+    <h4><strong>Problems & Current Solutions</strong></h4>
     <ul>
       <li><strong>Top Pain Point:</strong> ${persona.topPainPoint}</li>
       <li><strong>Biggest Frustration:</strong> ${persona.biggestFrustration}</li>
@@ -52,11 +52,11 @@ export function transformPersonaToHtml(persona: CustomerPersona): string {
   </div>
 
   <div class="persona-scores">
-    <h4>Persona Fit</h4>
+    <h4><strong>Persona Fit</strong></h4>
     <ul>
-      <li><strong>Problem Match:</strong> ${persona.scores.problemMatch}/5</li>
-      <li><strong>Urgency to Solve:</strong> ${persona.scores.urgencyToSolve}/5</li>
-      <li><strong>Ability to Pay:</strong> ${persona.scores.abilityToPay}/5</li>
+      <li>Problem Match: ${persona.scores.problemMatch}/5</li>
+      <li>Urgency to Solve: ${persona.scores.urgencyToSolve}/5</li>
+      <li>Ability to Pay: ${persona.scores.abilityToPay}/5</li>
     </ul>
   </div>
 </div>`;

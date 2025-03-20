@@ -25,7 +25,7 @@ import { SolutionDefinitionView } from '@/components/SolutionDefinitionView';
 import { UserFlowGenerationView } from '@/components/UserFlowGenerationView';
 import { TechnicalRequirementsView } from '@/components/TechnicalRequirementsView';
 import { PRDPreviewView } from '@/components/PRDPreviewView';
-import { extractFirstParagraph } from '@/lib/utils/transformers';
+import { extractFirstParagraph, transformPersonaToHtml } from '@/lib/utils/transformers';
 
 // Define database types
 type Tables = Database['public']['Tables'];
@@ -882,6 +882,11 @@ Return the response as a JSON array with this structure:
           if (productError) throw productError;
           
           if (productData) {
+            // Transform selected persona to HTML if one is selected
+            const targetAudience = formData.personas && formData.selectedPersonaIndex !== null
+              ? transformPersonaToHtml(formData.personas[formData.selectedPersonaIndex])
+              : formData.targetAudience;
+
             // Create the PRD
             const { data: prdData, error: prdError } = await supabase
               .from('prds')
@@ -889,7 +894,7 @@ Return the response as a JSON array with this structure:
                 product_id: productData.id,
                 problem: formData.problemStatement,
                 solution: formData.solution,
-                target_audience: formData.targetAudience
+                target_audience: targetAudience
               })
               .select()
               .single();
