@@ -3,21 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, ArrowRight, Loader2, Sparkles, Pencil } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 
 interface VisionRefinementViewProps {
   originalProblem: string;
   enhancedProblem: string;
   originalSolution: string;
   enhancedSolution: string;
-  problemImprovements: string[];
-  solutionImprovements: string[];
-  selectedProblemVersion: 'original' | 'enhanced';
-  selectedSolutionVersion: 'original' | 'enhanced';
-  onProblemVersionChange: (version: 'original' | 'enhanced') => void;
-  onSolutionVersionChange: (version: 'original' | 'enhanced') => void;
-  onProblemChange: (version: 'original' | 'enhanced', value: string) => void;
-  onSolutionChange: (version: 'original' | 'enhanced', value: string) => void;
+  problemImprovements: string;
+  solutionImprovements: string;
+  onProblemChange: (value: string) => void;
+  onSolutionChange: (value: string) => void;
   onBack: () => void;
   onNext: () => void;
   isLoading: boolean;
@@ -30,10 +26,6 @@ export function VisionRefinementView({
   enhancedSolution,
   problemImprovements,
   solutionImprovements,
-  selectedProblemVersion,
-  selectedSolutionVersion,
-  onProblemVersionChange,
-  onSolutionVersionChange,
   onProblemChange,
   onSolutionChange,
   onBack,
@@ -47,162 +39,64 @@ export function VisionRefinementView({
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
-          <CardTitle>Problem Refinement</CardTitle>
+          <CardTitle>Improve your problem and solution statements</CardTitle>
         </div>
         <CardDescription className="text-base text-muted-foreground mt-1.5">
-          Let's improve your problem statement and solution based on the selected persona.
+          Now that we have selected your target audience, we know more information about the core problem to solve. Review and edit the suggested updates below.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-6">
-          {/* Problem Statement Comparison */}
+          {/* Problem Statement Section */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Problem Statement</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="originalProblem"
-                    name="problemVersion"
-                    checked={selectedProblemVersion === 'original'}
-                    onChange={() => onProblemVersionChange('original')}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <label htmlFor="originalProblem" className="font-medium">Original Version</label>
-                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
-                    <Pencil className="h-3 w-3" />
-                    <span>Editable</span>
-                  </div>
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="originalProblemText" className="sr-only">Original Problem Statement</Label>
-                  <div className="p-4 rounded-md border bg-muted/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                    <Textarea
-                      id="originalProblemText"
-                      value={originalProblem}
-                      onChange={(e) => onProblemChange('original', e.target.value)}
-                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
-                      placeholder="Enter your original problem statement..."
-                    />
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Your Input:</Label>
+                <p className="text-sm">{originalProblem}</p>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="enhancedProblem"
-                    name="problemVersion"
-                    checked={selectedProblemVersion === 'enhanced'}
-                    onChange={() => onProblemVersionChange('enhanced')}
-                    className="h-4 w-4 text-primary"
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Suggested Update:</Label>
+                <div className="p-4 rounded-md border bg-muted/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                  <div 
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: enhancedProblem }}
                   />
-                  <label htmlFor="enhancedProblem" className="font-medium">Enhanced Version</label>
-                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
-                    <Pencil className="h-3 w-3" />
-                    <span>Editable</span>
-                  </div>
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="enhancedProblemText" className="sr-only">Enhanced Problem Statement</Label>
-                  <div className="p-4 rounded-md border bg-primary/5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                    <Textarea
-                      id="enhancedProblemText"
-                      value={enhancedProblem}
-                      onChange={(e) => onProblemChange('enhanced', e.target.value)}
-                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
-                      placeholder="Enter your enhanced problem statement..."
-                    />
-                  </div>
                 </div>
                 
-                {problemImprovements && problemImprovements.length > 0 && (
+                {problemImprovements && (
                   <div className="mt-4 space-y-2">
                     <h4 className="text-sm font-medium text-muted-foreground">Improvements Made:</h4>
-                    <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
-                      {problemImprovements.map((improvement, i) => (
-                        <li key={i}>{improvement}</li>
-                      ))}
-                    </ul>
+                    <p className="text-sm text-muted-foreground">{problemImprovements}</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
           
-          {/* Solution Comparison */}
+          {/* Solution Section */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Solution</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="originalSolution"
-                    name="solutionVersion"
-                    checked={selectedSolutionVersion === 'original'}
-                    onChange={() => onSolutionVersionChange('original')}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <label htmlFor="originalSolution" className="font-medium">Original Version</label>
-                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
-                    <Pencil className="h-3 w-3" />
-                    <span>Editable</span>
-                  </div>
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="originalSolutionText" className="sr-only">Original Solution</Label>
-                  <div className="p-4 rounded-md border bg-muted/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                    <Textarea
-                      id="originalSolutionText"
-                      value={originalSolution}
-                      onChange={(e) => onSolutionChange('original', e.target.value)}
-                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
-                      placeholder="Enter your original solution..."
-                    />
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Your Input:</Label>
+                <p className="text-sm">{originalSolution}</p>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="enhancedSolution"
-                    name="solutionVersion"
-                    checked={selectedSolutionVersion === 'enhanced'}
-                    onChange={() => onSolutionVersionChange('enhanced')}
-                    className="h-4 w-4 text-primary"
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Suggested Update:</Label>
+                <div className="p-4 rounded-md border bg-muted/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                  <div 
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: enhancedSolution }}
                   />
-                  <label htmlFor="enhancedSolution" className="font-medium">Enhanced Version</label>
-                  <div className="ml-auto flex items-center gap-1 text-muted-foreground text-sm">
-                    <Pencil className="h-3 w-3" />
-                    <span>Editable</span>
-                  </div>
-                </div>
-                <div className="form-field">
-                  <Label htmlFor="enhancedSolutionText" className="sr-only">Enhanced Solution</Label>
-                  <div className="p-4 rounded-md border bg-primary/5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                    <Textarea
-                      id="enhancedSolutionText"
-                      value={enhancedSolution}
-                      onChange={(e) => onSolutionChange('enhanced', e.target.value)}
-                      className="resize-none border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[120px]"
-                      placeholder="Enter your enhanced solution..."
-                    />
-                  </div>
                 </div>
                 
-                {solutionImprovements && solutionImprovements.length > 0 && (
+                {solutionImprovements && (
                   <div className="mt-4 space-y-2">
                     <h4 className="text-sm font-medium text-muted-foreground">Improvements Made:</h4>
-                    <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
-                      {solutionImprovements.map((improvement, i) => (
-                        <li key={i}>{improvement}</li>
-                      ))}
-                    </ul>
+                    <p className="text-sm text-muted-foreground">{solutionImprovements}</p>
                   </div>
                 )}
               </div>

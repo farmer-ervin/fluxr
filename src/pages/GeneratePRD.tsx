@@ -21,15 +21,10 @@ import { z } from 'zod';
 import { useSupabase } from '@/lib/supabase/supabase-provider';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/lib/providers/user-provider';
-import { ProblemDefinitionView } from '@/components/ProblemDefinitionView';
 import { SolutionDefinitionView } from '@/components/SolutionDefinitionView';
 import { UserFlowGenerationView } from '@/components/UserFlowGenerationView';
 import { TechnicalRequirementsView } from '@/components/TechnicalRequirementsView';
 import { PRDPreviewView } from '@/components/PRDPreviewView';
-import { generateFeaturesPRD } from '@/lib/openai/generate-features';
-import { generateUserFlowsPRD } from '@/lib/openai/generate-user-flows';
-import { generateTechnicalRequirementsPRD } from '@/lib/openai/generate-technical-requirements';
-import { generatePRDPreview } from '@/lib/openai/generate-prd-preview';
 
 // Define database types
 type Tables = Database['public']['Tables'];
@@ -68,8 +63,8 @@ interface FormData {
   selectedPersonaIndex: number | null;
   enhancedProblem: string | null;
   enhancedSolution: string | null;
-  problemImprovements: string[] | null;
-  solutionImprovements: string[] | null;
+  problemImprovements: string | null;  // Changed from string[] to string
+  solutionImprovements: string | null; // Changed from string[] to string
   selectedProblemVersion: 'original' | 'enhanced' | null;
   selectedSolutionVersion: 'original' | 'enhanced' | null;
   generatedFeatures: {
@@ -383,7 +378,6 @@ export function GeneratePRD() {
         productName: formData.productName,
         problemStatement: formData.problemStatement,
         solution: formData.solution,
-        targetAudience: formData.targetAudience,
         selectedPersona
       };
 
@@ -417,15 +411,29 @@ export function GeneratePRD() {
         messages: [
           {
             role: 'system',
-            content: `You are an expert product strategist specializing in refining product vision and problem-solution statements. Your task is to enhance the existing problem and solution statements by incorporating insights from the selected customer persona.
+            content: `You are an elite product strategist and PRD expert specializing in creating focused, impactful products. Your task is to analyze the provided persona in depth and enhance the problem and solution statements to be more precise and targeted.
 
-Your goal is to make the statements more:
-- Precise and targeted
-- Emotionally resonant with the specific persona
-- Actionable and clear
-- Aligned with the persona's context and needs
+Key Analysis Areas:
+1. Problem Analysis
+   - Core pain point and its impact on users
+   - Market gaps and competitive landscape
+   - Current solutions and their limitations
+   - Urgency and timing of the solution
+   - Quantifiable impact on users
 
-For each enhancement, provide a list of specific improvements made and explain how they better address the persona's needs.`
+2. Solution Analysis
+   - Clear value proposition
+   - Key capabilities and features
+   - Competitive differentiators
+   - Implementation constraints
+   - Critical assumptions and risks
+
+Your goal is to transform the problem and solution statements into comprehensive analyses that include:
+- Problem Statement: A clear one-liner followed by detailed sections on market gaps, timing, and impact
+- Solution Statement: A compelling value proposition with details on capabilities, differentiators, constraints, and assumptions
+- Improvements Explanation: Clear rationale for each enhancement made
+
+Format the output with proper HTML structure using headings, paragraphs, and lists as specified in the response format.`
           },
           {
             role: 'user',
@@ -448,16 +456,10 @@ Don't use the name of the persona (e.g. Steve, John, etc.) in the enhanced probl
 
 Return the response as a JSON object with this structure:
 {
-  "enhancedProblem": "Enhanced problem statement...",
-  "enhancedSolution": "Enhanced solution statement...",
-  "problemImprovements": [
-    "Specific improvement 1...",
-    "Specific improvement 2..."
-  ],
-  "solutionImprovements": [
-    "Specific improvement 1...",
-    "Specific improvement 2..."
-  ]
+  "enhancedProblem": "<p>[One-line problem statement]</p><h3><strong>Details</strong></h3><p>[Comprehensive problem analysis]</p><h3><strong>Market Gap</strong></h3><p>[Specific gaps in the market including competitive gaps and how users are solving this today.]</p><h3><strong>Why Now?</strong></h3><p>[Why this needs solving now]</p><h3><strong>Problem Impact</strong></h3><p>[Quantified problem impact on users]</p>",
+  "enhancedSolution": "<p>[One-line solution value proposition]</p><h3><strong>Details</strong></h3><p>[Comprehensive solution description including value prop, key capabilities, and how it addresses the problem and the market gap]</p><h3><strong>Key Differentiators</strong></h3><ul><li>[2 sentences explaining #1 key differentiator]</li><li>[2 sentences explaining #2 key differentiator]</li></ul><h3><strong>MVP Constraints & Limitations</strong></h3><ul><li>[Limitation of MVP 1]</li><li>[Limitation of MVP 2]</li></ul><h3><strong>Critical Assumptions</strong></h3><ul><li>[Assumption 1]</li><li>[Assumption 2]</li></ul>",
+  "problemImprovements": "Comprehensive explanation of problem statement improvements and their rationale...",
+  "solutionImprovements": "Comprehensive explanation of solution statement improvements and their rationale..."
 }`
           }
         ],
@@ -693,7 +695,6 @@ Return the response as a JSON object with exactly this structure:
         productName: formData.productName,
         problemStatement: finalProblemStatement,
         solution: finalSolution,
-        targetAudience: formData.targetAudience,
         selectedPersona
       };
 
@@ -731,12 +732,9 @@ Return the response as a JSON object with exactly this structure:
           },
           {
             role: 'user',
-            content: `Help me generate features for the MVP version of this product that solves the problem for this customer persona.
+            content: `Help me generate features this product that solves the problem for this customer persona. You provide me must have features first, then nice to have features, and then not prioritized features.
 
 Product Name: ${formData.productName}
-Problem Statement: ${finalProblemStatement}
-Solution: ${finalSolution}
-Target Audience: ${formData.targetAudience}
 
 Selected Persona:
 Name: ${selectedPersona.name}
@@ -747,12 +745,12 @@ Current Solution: ${selectedPersona.currentSolution}
 Key Points:
 ${selectedPersona.keyPoints.map(point => `- ${point}`).join('\n')}
 
-Generate at least 15 features for this product. Features should include:
+Generate 20 features for this product. Features should include:
 1. Core MVP features that must be included (prioritized as "must-have")
-2. Important but not critical features for a later release (prioritized as "nice-to-have")
+2. Important value add features to consider for a later release (prioritized as "nice-to-have")
 3. Additional features that could be considered eventually (prioritized as "not-prioritized")
 
-Include features like authentication, database setup, and other technical requirements in addition to user-facing features.
+If the solution requires these, you must include authentication, database setup, and other technical requirements that are required to build the product in addition to user-facing features.
 
 Return the response as a JSON array with this structure:
 [
@@ -1224,27 +1222,17 @@ Return the response as a JSON array with this structure:
                 enhancedProblem={formData.enhancedProblem}
                 originalSolution={formData.solution}
                 enhancedSolution={formData.enhancedSolution}
-                problemImprovements={formData.problemImprovements || []}
-                solutionImprovements={formData.solutionImprovements || []}
-                selectedProblemVersion={formData.selectedProblemVersion || 'enhanced'}
-                selectedSolutionVersion={formData.selectedSolutionVersion || 'enhanced'}
-                onProblemVersionChange={(version) => setFormData(prev => ({
+                problemImprovements={formData.problemImprovements || ''}  // Changed from || [] to || ''
+                solutionImprovements={formData.solutionImprovements || ''} // Changed from || [] to || ''
+                onProblemChange={(value) => setFormData(prev => ({
                   ...prev,
-                  selectedProblemVersion: version
+                  enhancedProblem: value,
+                  selectedProblemVersion: 'enhanced'
                 }))}
-                onSolutionVersionChange={(version) => setFormData(prev => ({
+                onSolutionChange={(value) => setFormData(prev => ({
                   ...prev,
-                  selectedSolutionVersion: version
-                }))}
-                onProblemChange={(version, value) => setFormData(prev => ({
-                  ...prev,
-                  problemStatement: version === 'original' ? value : prev.problemStatement,
-                  enhancedProblem: version === 'enhanced' ? value : prev.enhancedProblem
-                }))}
-                onSolutionChange={(version, value) => setFormData(prev => ({
-                  ...prev,
-                  solution: version === 'original' ? value : prev.solution,
-                  enhancedSolution: version === 'enhanced' ? value : prev.enhancedSolution
+                  enhancedSolution: value,
+                  selectedSolutionVersion: 'enhanced'
                 }))}
                 onBack={handleBack}
                 onNext={handleNext}
