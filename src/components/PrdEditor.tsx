@@ -30,7 +30,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useProduct } from '@/components/context/ProductContext';
 import { supabase } from '@/lib/supabase';
-import { PrdTooltip } from '@/components/PrdTooltip';
 import { SectionBlock } from '@/components/SectionBlock';
 import { CustomSectionDialog } from '@/components/CustomSectionDialog';
 import { UploadPrdDialog, ParsedPrdData } from '@/components/UploadPrdDialog';
@@ -762,7 +761,6 @@ export function PrdEditor() {
             <AiDialog />
             <SaveIndicator status={saveStatus} error={saveError} />
           </div>
-          <PrdTooltip />
         </div>
       </div>
 

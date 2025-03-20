@@ -86,6 +86,11 @@ export function ProductDevelopment() {
       try {
         setLoading(true);
         
+        // NOTE: Important database schema information
+        // - Bugs use the 'implementation_status' column (not 'status') for tracking progress
+        // - Valid values are 'not_started', 'in_progress', and 'completed'
+        // - This matches the structure in the Bug interface (src/types/bug.ts)
+        
         // First, fetch all products
         const { data: productsData, error: productsError } = await supabase
           .from('products')
@@ -123,9 +128,10 @@ export function ProductDevelopment() {
               .eq('product_id', product.id);
 
             // Get bugs statistics
+            // Note: Bugs use implementation_status column instead of status column to track progress
             const { data: bugsData } = await supabase
               .from('bugs')
-              .select('status')
+              .select('implementation_status')
               .eq('product_id', product.id);
 
             // Calculate feature metrics
@@ -137,7 +143,8 @@ export function ProductDevelopment() {
             
             // Calculate bug metrics
             const bugsTotal = bugsData?.length || 0;
-            const bugsFixed = bugsData?.filter(b => b.status === 'completed')?.length || 0;
+            // Bugs use implementation_status field to align with the database schema
+            const bugsFixed = bugsData?.filter(b => b.implementation_status === 'completed')?.length || 0;
             const bugsOpen = bugsTotal - bugsFixed;
 
             // Return enhanced product object with metrics

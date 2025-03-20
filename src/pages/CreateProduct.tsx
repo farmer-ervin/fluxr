@@ -438,7 +438,7 @@ export function CreateProduct() {
             You must include all the details from the PRD. Do not summarize or truncate the PRD.
             
             IMPORTANT FORMATTING REQUIREMENTS:
-            For main sections (product_description, problem, solution, target_audience, custom_sections):
+            For main sections (product_description, problem, solution, target_audience):
             - Convert formatting to proper HTML tags:
               * Bold text: <strong> or <b>
               * Italic text: <em> or <i>
@@ -473,11 +473,7 @@ export function CreateProduct() {
                   "priority": "must-have" | "nice-to-have" | "not-prioritized",
                   "implementation_status": "not_started"
                 }
-              ],
-              "custom_sections": {
-                "custom_section_name_1": "section content in HTML format without headers",
-                "custom_section_name_2": "section content in HTML format without headers"
-              }
+              ]
             }
             
             CRITICAL FEATURE REQUIREMENTS:
@@ -487,12 +483,6 @@ export function CreateProduct() {
             4. Features without a priority should be marked as "not-prioritized"
             5. Features without a status should be marked as "not_started"
             6. Strip any HTML tags from feature names and descriptions
-            
-            For custom section names:
-            1. Prefix with "custom_"
-            2. Convert to lowercase with underscores
-            3. Remove special characters (but keep emojis in the content)
-            4. DO NOT include the section name in the content
 
             Example of formatted output:
             {
@@ -503,10 +493,7 @@ export function CreateProduct() {
                 "description": "🔍 Instantly find what you need with our powerful search feature",
                 "priority": "must-have",
                 "implementation_status": "not_started"
-              }],
-              "custom_sections": {
-                "custom_tech_stack": "<ul><li>Frontend: React Native</li><li>Backend: Node.js</li></ul>"
-              }
+              }]
             }`
           },
           {
@@ -583,9 +570,7 @@ export function CreateProduct() {
         product_id: productData.id,
         problem: parsedData.problem || '',
         solution: parsedData.solution || '',
-        target_audience: parsedData.target_audience || '',
-        tech_stack: '',
-        success_metrics: ''
+        target_audience: parsedData.target_audience || ''
       };
 
       const { data: prdData, error: prdError } = await supabase
