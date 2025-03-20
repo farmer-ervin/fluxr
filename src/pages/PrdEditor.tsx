@@ -33,7 +33,6 @@ import { ScoreBar } from '@/components/ScoreBar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useProduct } from '@/components/context/ProductContext';
 import { supabase } from '@/lib/supabase';
-import { PrdTooltip } from '@/components/PrdTooltip';
 import { SectionBlock } from '@/components/SectionBlock';
 import { CustomSectionDialog } from '@/components/CustomSectionDialog';
 import { UploadPrdDialog, ParsedPrdData } from '@/components/UploadPrdDialog';
@@ -1067,7 +1066,6 @@ export function PrdEditor() {
               sections={sections.slice(1)}
               onAiGenerated={handleAiGenerated}
             />
-            <PrdTooltip />
           </div>
         </div>
       </PageHeader>
