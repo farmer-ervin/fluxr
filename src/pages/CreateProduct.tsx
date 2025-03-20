@@ -480,7 +480,7 @@ export function CreateProduct() {
 
       const { data: logData, error: logError } = await supabase
         .from('openai_logs')
-        .insert(logEntry)
+        .insert([logEntry] as any)
         .select()
         .single();
 
@@ -498,11 +498,11 @@ export function CreateProduct() {
 
       const { data: productData, error: productError } = await supabase
         .from('products')
-        .insert(productEntry)
+        .insert([productEntry] as any)
         .select()
         .single();
 
-      if (productError || !productData?.id) {
+      if (productError || !productData) {
         throw new Error('Failed to create product');
       }
 
@@ -513,13 +513,12 @@ export function CreateProduct() {
         solution: parsedData.solution || '',
         target_audience: parsedData.target_audience || '',
         tech_stack: '',
-        success_metrics: '',
-        custom_sections: {}
+        success_metrics: ''
       };
 
       const { data: prdData, error: prdError } = await supabase
         .from('prds')
-        .insert(prdEntry)
+        .insert([prdEntry] as any)
         .select()
         .single();
 
@@ -528,7 +527,7 @@ export function CreateProduct() {
       }
 
       // Create features
-      if (parsedData.features && Array.isArray(parsedData.features)) {
+      if (parsedData.features && Array.isArray(parsedData.features) && productData) {
         const features: FeatureInsert[] = parsedData.features.map((feature: any) => ({
           product_id: productData.id,
           name: feature.name || '',
@@ -540,7 +539,7 @@ export function CreateProduct() {
         if (features.length > 0) {
           const { error: featuresError } = await supabase
             .from('features')
-            .insert(features);
+            .insert(features as any);
           
           if (featuresError) {
             console.error('Failed to create features:', featuresError);
@@ -549,7 +548,7 @@ export function CreateProduct() {
       }
 
       // Navigate to the PRD editor
-      if (productData?.slug) {
+      if (productData && 'slug' in productData) {
         navigate(`/product/${productData.slug}/prd`);
       }
 
@@ -595,7 +594,7 @@ export function CreateProduct() {
 
       const { data: logData, error: logError } = await supabase
         .from('openai_logs')
-        .insert(logEntry)
+        .insert([logEntry] as any)
         .select()
         .single();
 
@@ -658,17 +657,17 @@ Return the response as a JSON object with exactly this structure:
       });
       
       // Update the OpenAI log with the response
-      const updatedLogEntry: Partial<OpenAILogInsert> = {
+      const updatedLogEntry = {
         response_payload: response.choices[0].message.content as Json,
         input_tokens: response.usage?.prompt_tokens ?? null,
         output_tokens: response.usage?.completion_tokens ?? null
       };
 
-      if (logData) {
+      if (logData && typeof logData === 'object' && 'id' in logData && logData.id) {
         await supabase
           .from('openai_logs')
-          .update(updatedLogEntry)
-          .eq('id', logData.id);
+          .update(updatedLogEntry as any)
+          .eq('id', logData.id as string);
       }
 
       // Parse and validate the response

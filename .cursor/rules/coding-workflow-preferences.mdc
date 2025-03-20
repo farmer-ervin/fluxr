@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Coding workflow preferences
+-You should always first look thoroughly through the code so you understand how it works in great detail. Then you should always create a step by step implementation plan. You follow the plan step by step.
+-Focus on the areas of code relevant to the task.
+-Do not touch code that is unrelated to the task.
+-Avoid making major changes to the patterns and architecture of how a feature works, after it has shown to work well, unless explicitly instructed.
+-Always think about what other methods and areas of code might be affected by code changes. You must flag and identify if code changes affect a different page, component, or feature.
