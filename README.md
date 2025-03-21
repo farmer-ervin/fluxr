@@ -62,3 +62,5 @@ The test suite includes mocks for:
 - Authentication
 - Drag and drop functionality
 - Analytics tracking 
+
+<!-- Test comment to verify beta branch setup --> 
